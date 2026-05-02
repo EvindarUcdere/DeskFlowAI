@@ -1,12 +1,13 @@
 using System.Windows;
 using System.Windows.Input;
+using DeskFlowAI.Models;
+using DeskFlowAI.Services;
 
 namespace DeskFlowAI;
 
 public partial class MainWindow : Window
 {
-    private const string DemoEmail = "admin@deskflow.ai";
-    private const string DemoPassword = "Admin123";
+    private readonly DemoAuthService _authService = new();
 
     public MainWindow()
     {
@@ -39,20 +40,22 @@ public partial class MainWindow : Window
         string email = EmailTextBox.Text.Trim();
         string password = PasswordBox.Password;
 
-        if (email.Equals(DemoEmail, StringComparison.OrdinalIgnoreCase) && password == DemoPassword)
+        AuthResult result = _authService.SignIn(email, password);
+
+        if (result.IsSuccess && result.User is not null)
         {
-            ShowDashboard(email);
+            ShowDashboard(result.User);
             return;
         }
 
-        LoginErrorTextBlock.Text = "Email veya sifre hatali. Demo kullanici: admin@deskflow.ai / Admin123";
+        LoginErrorTextBlock.Text = result.ErrorMessage;
         LoginErrorTextBlock.Visibility = Visibility.Visible;
     }
 
-    private void ShowDashboard(string email)
+    private void ShowDashboard(UserSession user)
     {
         LoginErrorTextBlock.Visibility = Visibility.Collapsed;
-        SignedInUserTextBlock.Text = $"Signed in as {email}";
+        SignedInUserTextBlock.Text = $"{user.FullName} | {user.Role} | {user.Email}";
         LoginView.Visibility = Visibility.Collapsed;
         DashboardView.Visibility = Visibility.Visible;
     }

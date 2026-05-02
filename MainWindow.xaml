@@ -158,7 +158,7 @@
                                    FontWeight="SemiBold"
                                    Foreground="#1F2937" />
 
-                        <TextBlock x:Name="SignedInUserTextBlock"
+                            <TextBlock x:Name="SignedInUserTextBlock"
                                    Margin="0,3,0,0"
                                    FontSize="13"
                                    Foreground="#64748B" />

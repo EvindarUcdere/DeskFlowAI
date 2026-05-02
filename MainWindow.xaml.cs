@@ -133,6 +133,14 @@ public partial class MainWindow : Window
         }
 
         Customer updatedCustomer = _customerService.UpdateCustomer(_selectedCustomer, companyName, contactName, email);
+        string changeDetails = BuildCustomerChangeDetails(_selectedCustomer, updatedCustomer);
+
+        if (string.IsNullOrWhiteSpace(changeDetails))
+        {
+            ShowCustomerFormMessage("Guncellenecek bir degisiklik yok.", isError: true);
+            return;
+        }
+
         int selectedIndex = _customers.IndexOf(_selectedCustomer);
 
         if (selectedIndex >= 0)
@@ -141,7 +149,7 @@ public partial class MainWindow : Window
             ApplyCustomerFilter();
             CustomersDataGrid.SelectedItem = updatedCustomer;
             _selectedCustomer = updatedCustomer;
-            RecordAudit("Updated", "Customer", $"{updatedCustomer.CompanyName} guncellendi.");
+            RecordAudit("Updated", "Customer", $"{updatedCustomer.CompanyName}: {changeDetails}");
             ShowCustomerFormMessage("Selected customer guncellendi.", isError: false);
         }
     }
@@ -284,5 +292,27 @@ public partial class MainWindow : Window
 
         AuditLogEntry entry = _auditLogService.CreateEntry(_currentUser, action, entityName, details);
         _auditLogs.Insert(0, entry);
+    }
+
+    private static string BuildCustomerChangeDetails(Customer oldCustomer, Customer newCustomer)
+    {
+        List<string> changes = [];
+
+        AddChangeIfNeeded(changes, "Company", oldCustomer.CompanyName, newCustomer.CompanyName);
+        AddChangeIfNeeded(changes, "Contact", oldCustomer.ContactName, newCustomer.ContactName);
+        AddChangeIfNeeded(changes, "Email", oldCustomer.Email, newCustomer.Email);
+        AddChangeIfNeeded(changes, "Status", oldCustomer.Status, newCustomer.Status);
+
+        return string.Join("; ", changes);
+    }
+
+    private static void AddChangeIfNeeded(List<string> changes, string fieldName, string oldValue, string newValue)
+    {
+        if (oldValue.Equals(newValue, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        changes.Add($"{fieldName}: '{oldValue}' -> '{newValue}'");
     }
 }

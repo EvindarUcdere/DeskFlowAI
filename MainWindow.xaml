@@ -31,6 +31,15 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
         </Style>
+
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="38" />
+            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#CBD5E1" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#334155" />
+        </Style>
     </Window.Resources>
 
     <Grid Background="#EEF3F8">
@@ -176,6 +185,7 @@
             <Grid Grid.Row="1" Margin="28">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
@@ -194,6 +204,7 @@
                 <UniformGrid Grid.Row="1"
                              Columns="4"
                              Rows="1"
+                             Margin="0,0,0,22"
                              VerticalAlignment="Top">
                     <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,14,0">
                         <StackPanel>
@@ -223,6 +234,115 @@
                         </StackPanel>
                     </Border>
                 </UniformGrid>
+
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="1*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0"
+                            Padding="18"
+                            Background="White"
+                            BorderBrush="#D8E1EC"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Margin="0,0,18,0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <DockPanel Margin="0,0,0,14">
+                                <StackPanel DockPanel.Dock="Left">
+                                    <TextBlock Text="Customers"
+                                               FontSize="20"
+                                               FontWeight="SemiBold"
+                                               Foreground="#1F2937" />
+
+                                    <TextBlock Text="Sirket musterilerini sahte veriyle listeliyoruz."
+                                               Margin="0,4,0,0"
+                                               FontSize="13"
+                                               Foreground="#64748B" />
+                                </StackPanel>
+
+                                <Button DockPanel.Dock="Right"
+                                        Content="Delete selected"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        Click="DeleteCustomerButton_Click" />
+                            </DockPanel>
+
+                            <DataGrid x:Name="CustomersDataGrid"
+                                      Grid.Row="1"
+                                      AutoGenerateColumns="False"
+                                      CanUserAddRows="False"
+                                      IsReadOnly="True"
+                                      SelectionMode="Single"
+                                      HeadersVisibility="Column"
+                                      GridLinesVisibility="Horizontal"
+                                      BorderBrush="#E2E8F0"
+                                      BorderThickness="1">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Company" Binding="{Binding CompanyName}" Width="*" />
+                                    <DataGridTextColumn Header="Contact" Binding="{Binding ContactName}" Width="*" />
+                                    <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="1.3*" />
+                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="0.7*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="1"
+                            Padding="18"
+                            Background="White"
+                            BorderBrush="#D8E1EC"
+                            BorderThickness="1"
+                            CornerRadius="8">
+                        <StackPanel>
+                            <TextBlock Text="Add customer"
+                                       FontSize="20"
+                                       FontWeight="SemiBold"
+                                       Foreground="#1F2937" />
+
+                            <TextBlock Text="Company"
+                                       Margin="0,18,0,6"
+                                       Style="{StaticResource FieldLabelStyle}" />
+
+                            <TextBox x:Name="CustomerCompanyTextBox"
+                                     Style="{StaticResource InputStyle}" />
+
+                            <TextBlock Text="Contact"
+                                       Margin="0,14,0,6"
+                                       Style="{StaticResource FieldLabelStyle}" />
+
+                            <TextBox x:Name="CustomerContactTextBox"
+                                     Style="{StaticResource InputStyle}" />
+
+                            <TextBlock Text="Email"
+                                       Margin="0,14,0,6"
+                                       Style="{StaticResource FieldLabelStyle}" />
+
+                            <TextBox x:Name="CustomerEmailTextBox"
+                                     Style="{StaticResource InputStyle}" />
+
+                            <TextBlock x:Name="CustomerFormMessageTextBlock"
+                                       Margin="0,14,0,0"
+                                       FontSize="13"
+                                       TextWrapping="Wrap"
+                                       Visibility="Collapsed" />
+
+                            <Button Content="Add customer"
+                                    Height="42"
+                                    Margin="0,22,0,0"
+                                    Background="#2563EB"
+                                    Foreground="White"
+                                    BorderThickness="0"
+                                    FontWeight="SemiBold"
+                                    Click="AddCustomerButton_Click" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </Grid>
         </Grid>
     </Grid>

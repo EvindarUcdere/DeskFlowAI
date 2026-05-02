@@ -288,8 +288,8 @@ public partial class MainWindow : Window
         }
 
         WorkProject project = _projectService.CreateProject(_selectedCustomer.Id, projectName, status);
-        LoadProjectsForSelectedCustomer();
-        ProjectsDataGrid.SelectedItem = project;
+        LoadProjectsForSelectedCustomer(project.Id);
+        ProjectNameTextBox.Clear();
         RefreshDashboardSummary();
         RecordAudit("Created", "Project", $"{project.Name} projesi {_selectedCustomer.CompanyName} icin {project.Status} status ile eklendi.");
         ShowProjectFormMessage("Project eklendi.", isError: false);
@@ -318,9 +318,7 @@ public partial class MainWindow : Window
 
         string oldStatus = _selectedProject.Status;
         WorkProject updatedProject = _projectService.UpdateProjectStatus(_selectedProject, newStatus);
-        LoadProjectsForSelectedCustomer();
-        ProjectsDataGrid.SelectedItem = updatedProject;
-        _selectedProject = updatedProject;
+        LoadProjectsForSelectedCustomer(updatedProject.Id);
         RefreshDashboardSummary();
         RecordAudit("Updated", "Project", $"{updatedProject.Name}: Status '{oldStatus}' -> '{newStatus}'");
         ShowProjectFormMessage("Project status guncellendi.", isError: false);
@@ -431,7 +429,7 @@ public partial class MainWindow : Window
         changes.Add($"{fieldName}: '{oldValue}' -> '{newValue}'");
     }
 
-    private void LoadProjectsForSelectedCustomer()
+    private void LoadProjectsForSelectedCustomer(int? projectIdToSelect = null)
     {
         _projects.Clear();
         _selectedProject = null;
@@ -444,6 +442,20 @@ public partial class MainWindow : Window
         foreach (WorkProject project in _projectService.GetProjectsForCustomer(_selectedCustomer.Id))
         {
             _projects.Add(project);
+        }
+
+        if (projectIdToSelect is null)
+        {
+            return;
+        }
+
+        WorkProject? projectToSelect = _projects.FirstOrDefault(project => project.Id == projectIdToSelect.Value);
+
+        if (projectToSelect is not null)
+        {
+            ProjectsDataGrid.SelectedItem = projectToSelect;
+            ProjectsDataGrid.ScrollIntoView(projectToSelect);
+            _selectedProject = projectToSelect;
         }
     }
 

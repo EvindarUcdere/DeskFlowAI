@@ -49,6 +49,21 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Foreground" Value="#334155" />
         </Style>
+
+        <Style x:Key="SectionCardStyle" TargetType="Border">
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Margin" Value="0,0,0,14" />
+            <Setter Property="Background" Value="#FAFCFF" />
+            <Setter Property="BorderBrush" Value="#D8E1EC" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+
+        <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="#1F2937" />
+        </Style>
     </Window.Resources>
 
     <Grid Background="#EEF3F8">
@@ -350,74 +365,71 @@
                     </Border>
 
                     <Border Grid.Column="1"
-                            Padding="18"
+                            Padding="14"
                             Background="White"
                             BorderBrush="#D8E1EC"
                             BorderThickness="1"
                             CornerRadius="8">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <StackPanel>
-                                <TextBlock x:Name="CustomerFormTitleTextBlock"
-                                           Text="Add customer"
-                                           FontSize="20"
-                                           FontWeight="SemiBold"
-                                           Foreground="#1F2937" />
+                                <Border Style="{StaticResource SectionCardStyle}">
+                                    <StackPanel>
+                                        <TextBlock x:Name="CustomerFormTitleTextBlock"
+                                                   Text="Add customer"
+                                                   Style="{StaticResource SectionTitleStyle}" />
 
-                                <TextBlock Text="Company"
-                                           Margin="0,16,0,6"
-                                           Style="{StaticResource FieldLabelStyle}" />
+                                        <TextBlock Text="Company"
+                                                   Margin="0,16,0,6"
+                                                   Style="{StaticResource FieldLabelStyle}" />
 
-                                <TextBox x:Name="CustomerCompanyTextBox"
-                                         Style="{StaticResource InputStyle}" />
+                                        <TextBox x:Name="CustomerCompanyTextBox"
+                                                 Style="{StaticResource InputStyle}" />
 
-                                <TextBlock Text="Contact"
-                                           Margin="0,12,0,6"
-                                           Style="{StaticResource FieldLabelStyle}" />
+                                        <TextBlock Text="Contact"
+                                                   Margin="0,12,0,6"
+                                                   Style="{StaticResource FieldLabelStyle}" />
 
-                                <TextBox x:Name="CustomerContactTextBox"
-                                         Style="{StaticResource InputStyle}" />
+                                        <TextBox x:Name="CustomerContactTextBox"
+                                                 Style="{StaticResource InputStyle}" />
 
-                                <TextBlock Text="Email"
-                                           Margin="0,12,0,6"
-                                           Style="{StaticResource FieldLabelStyle}" />
+                                        <TextBlock Text="Email"
+                                                   Margin="0,12,0,6"
+                                                   Style="{StaticResource FieldLabelStyle}" />
 
-                                <TextBox x:Name="CustomerEmailTextBox"
-                                         Style="{StaticResource InputStyle}" />
+                                        <TextBox x:Name="CustomerEmailTextBox"
+                                                 Style="{StaticResource InputStyle}" />
 
-                                <TextBlock x:Name="CustomerFormMessageTextBlock"
-                                           Margin="0,12,0,0"
-                                           FontSize="13"
-                                           TextWrapping="Wrap"
-                                           Visibility="Collapsed" />
+                                        <TextBlock x:Name="CustomerFormMessageTextBlock"
+                                                   Margin="0,12,0,0"
+                                                   FontSize="13"
+                                                   TextWrapping="Wrap"
+                                                   Visibility="Collapsed" />
 
-                                <Button x:Name="AddCustomerButton"
-                                        Content="Add customer"
-                                        Margin="0,18,0,0"
-                                        Style="{StaticResource PrimaryButtonStyle}"
-                                        Click="AddCustomerButton_Click" />
+                                        <Button x:Name="AddCustomerButton"
+                                                Content="Add customer"
+                                                Margin="0,18,0,0"
+                                                Style="{StaticResource PrimaryButtonStyle}"
+                                                Click="AddCustomerButton_Click" />
 
-                                <UniformGrid Columns="2"
-                                             Margin="0,10,0,0">
-                                    <Button x:Name="UpdateCustomerButton"
-                                            Content="Update"
-                                            Margin="0,0,5,0"
-                                            Style="{StaticResource SecondaryButtonStyle}"
-                                            Click="UpdateCustomerButton_Click" />
+                                        <UniformGrid Columns="2"
+                                                     Margin="0,10,0,0">
+                                            <Button x:Name="UpdateCustomerButton"
+                                                    Content="Update"
+                                                    Margin="0,0,5,0"
+                                                    Style="{StaticResource SecondaryButtonStyle}"
+                                                    Click="UpdateCustomerButton_Click" />
 
-                                    <Button Content="Clear"
-                                            Margin="5,0,0,0"
-                                            Style="{StaticResource SecondaryButtonStyle}"
-                                            Click="ClearCustomerFormButton_Click" />
-                                </UniformGrid>
+                                            <Button Content="Clear"
+                                                    Margin="5,0,0,0"
+                                                    Style="{StaticResource SecondaryButtonStyle}"
+                                                    Click="ClearCustomerFormButton_Click" />
+                                        </UniformGrid>
+                                    </StackPanel>
+                                </Border>
 
-                                <Border Margin="0,18,0,14"
-                                        BorderBrush="#E2E8F0"
-                                        BorderThickness="0,1,0,0" />
-
-                                <TextBlock Text="Projects"
-                                           FontSize="18"
-                                           FontWeight="SemiBold"
-                                           Foreground="#1F2937" />
+                                <Border Style="{StaticResource SectionCardStyle}">
+                                    <StackPanel>
+                                <TextBlock Text="Projects" Style="{StaticResource SectionTitleStyle}" />
 
                                 <TextBlock Text="Selected customer icin proje ekle ve status yonet."
                                            Margin="0,4,0,0"
@@ -504,15 +516,12 @@
                                            FontSize="13"
                                            Foreground="#64748B"
                                            Visibility="Collapsed" />
+                                    </StackPanel>
+                                </Border>
 
-                                <Border Margin="0,18,0,14"
-                                        BorderBrush="#E2E8F0"
-                                        BorderThickness="0,1,0,0" />
-
-                                <TextBlock Text="Due soon"
-                                           FontSize="18"
-                                           FontWeight="SemiBold"
-                                           Foreground="#1F2937" />
+                                <Border Style="{StaticResource SectionCardStyle}">
+                                    <StackPanel>
+                                <TextBlock Text="Due soon" Style="{StaticResource SectionTitleStyle}" />
 
                                 <TextBlock x:Name="DueSoonNotificationTextBlock"
                                            Text="Son 7 gun icinde teslimi olan proje yok."
@@ -537,15 +546,12 @@
                                         <DataGridTextColumn Header="Due" Binding="{Binding DueDate, StringFormat={}{0:dd.MM.yyyy}}" Width="0.8*" />
                                     </DataGrid.Columns>
                                 </DataGrid>
+                                    </StackPanel>
+                                </Border>
 
-                                <Border Margin="0,18,0,14"
-                                        BorderBrush="#E2E8F0"
-                                        BorderThickness="0,1,0,0" />
-
-                                <TextBlock Text="All projects"
-                                           FontSize="18"
-                                           FontWeight="SemiBold"
-                                           Foreground="#1F2937" />
+                                <Border Style="{StaticResource SectionCardStyle}" Margin="0">
+                                    <StackPanel>
+                                <TextBlock Text="All projects" Style="{StaticResource SectionTitleStyle}" />
 
                                 <DataGrid x:Name="AllProjectsDataGrid"
                                           Height="150"
@@ -564,6 +570,8 @@
                                         <DataGridTextColumn Header="Due" Binding="{Binding DueDate, StringFormat={}{0:dd.MM.yyyy}}" Width="0.8*" />
                                     </DataGrid.Columns>
                                 </DataGrid>
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
                         </ScrollViewer>
                     </Border>

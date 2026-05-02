@@ -31,6 +31,8 @@ public sealed class WorkProject
 
     public DateTime CreatedAt { get; private set; }
 
+    public List<WorkTask> Tasks { get; private set; } = [];
+
     public void ChangeStatus(string status)
     {
         Status = status;

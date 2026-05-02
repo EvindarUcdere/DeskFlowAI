@@ -13,15 +13,18 @@ public partial class MainWindow : Window
     private readonly DemoDashboardService _dashboardService = new();
     private readonly DemoCustomerService _customerService = new();
     private readonly DemoProjectService _projectService = new();
+    private readonly DemoTaskService _taskService = new();
     private readonly DemoAuditLogService _auditLogService = new();
     private readonly ObservableCollection<Customer> _customers = [];
     private readonly ObservableCollection<Customer> _filteredCustomers = [];
     private readonly ObservableCollection<WorkProject> _projects = [];
+    private readonly ObservableCollection<WorkTask> _tasks = [];
     private readonly ObservableCollection<WorkProject> _allProjects = [];
     private readonly ObservableCollection<WorkProject> _dueSoonProjects = [];
     private readonly ObservableCollection<AuditLogEntry> _auditLogs = [];
     private Customer? _selectedCustomer;
     private WorkProject? _selectedProject;
+    private WorkTask? _selectedTask;
     private UserSession? _currentUser;
 
     public MainWindow()
@@ -31,12 +34,15 @@ public partial class MainWindow : Window
         LoadCustomers();
         LoadAuditLogs();
         ProjectsDataGrid.ItemsSource = _projects;
+        TasksDataGrid.ItemsSource = _tasks;
         AllProjectsDataGrid.ItemsSource = _allProjects;
         DueSoonProjectsDataGrid.ItemsSource = _dueSoonProjects;
         ProjectDueDatePicker.SelectedDate = DateTime.Today.AddDays(14);
+        TaskDueDatePicker.SelectedDate = DateTime.Today.AddDays(7);
         LoadProjectsForSelectedCustomer();
         RefreshProjectOverview();
         UpdateProjectActionState();
+        UpdateTaskActionState();
     }
 
     private void SignInButton_Click(object sender, RoutedEventArgs e)
@@ -85,6 +91,7 @@ public partial class MainWindow : Window
         SignedInUserTextBlock.Text = $"{user.FullName} | {user.Role} | {user.Email}";
         ApplyCustomerPermissions(user);
         ApplyProjectPermissions(user);
+        ApplyTaskPermissions(user);
         RefreshDashboardSummary();
         LoginView.Visibility = Visibility.Collapsed;
         DashboardView.Visibility = Visibility.Visible;
@@ -252,7 +259,26 @@ public partial class MainWindow : Window
         SelectProjectStatus(selectedProject.Status);
         ProjectDueDatePicker.SelectedDate = selectedProject.DueDate;
         ProjectFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        LoadTasksForSelectedProject(selectFirstTask: true);
         UpdateProjectActionState();
+    }
+
+    private void TasksDataGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (TasksDataGrid.SelectedItem is not WorkTask selectedTask)
+        {
+            _selectedTask = null;
+            UpdateTaskActionState();
+            return;
+        }
+
+        _selectedTask = selectedTask;
+        TaskTitleTextBox.Text = selectedTask.Title;
+        SelectTaskStatus(selectedTask.Status);
+        SelectTaskPriority(selectedTask.Priority);
+        TaskDueDatePicker.SelectedDate = selectedTask.DueDate;
+        TaskFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        UpdateTaskActionState();
     }
 
     private void ClearCustomerFormButton_Click(object sender, RoutedEventArgs e)
@@ -264,8 +290,10 @@ public partial class MainWindow : Window
     {
         _selectedCustomer = null;
         _selectedProject = null;
+        _selectedTask = null;
         CustomersDataGrid.SelectedItem = null;
         ProjectsDataGrid.SelectedItem = null;
+        TasksDataGrid.SelectedItem = null;
         CustomerFormTitleTextBlock.Text = "Add customer";
         CustomerCompanyTextBox.Clear();
         CustomerContactTextBox.Clear();
@@ -274,8 +302,15 @@ public partial class MainWindow : Window
         ProjectNameTextBox.Clear();
         ProjectDueDatePicker.SelectedDate = DateTime.Today.AddDays(14);
         ProjectFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        TaskTitleTextBox.Clear();
+        TaskDueDatePicker.SelectedDate = DateTime.Today.AddDays(7);
+        TaskFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        _tasks.Clear();
+        SelectedProjectForTaskTextBlock.Text = "Once Projects sekmesinden bir project sec.";
+        TasksEmptyTextBlock.Visibility = Visibility.Collapsed;
         LoadProjectsForSelectedCustomer();
         UpdateProjectActionState();
+        UpdateTaskActionState();
         CustomerCompanyTextBox.Focus();
     }
 
@@ -348,6 +383,69 @@ public partial class MainWindow : Window
         ShowProjectFormMessage("Project status guncellendi.", isError: false);
     }
 
+    private void AddTaskButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsurePermission(PermissionNames.TaskCreate, "gorev ekleme"))
+        {
+            return;
+        }
+
+        if (_selectedProject is null)
+        {
+            ShowTaskFormMessage("Gorev eklemek icin once bir project sec.", isError: true);
+            return;
+        }
+
+        string title = TaskTitleTextBox.Text.Trim();
+        string status = GetSelectedTaskStatus();
+        string priority = GetSelectedTaskPriority();
+        DateTime? dueDate = TaskDueDatePicker.SelectedDate;
+
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            ShowTaskFormMessage("Task title zorunludur.", isError: true);
+            return;
+        }
+
+        WorkTask task = _taskService.CreateTask(_selectedProject.Id, title, status, priority, dueDate);
+        LoadTasksForSelectedProject(task.Id);
+        RefreshDashboardSummary();
+        string dueDateText = dueDate.HasValue ? dueDate.Value.ToString("dd.MM.yyyy") : "teslim tarihi yok";
+        RecordAudit("Created", "Task", $"{task.Title} gorevi {_selectedProject.Name} projesine {priority} priority ile eklendi. Due: {dueDateText}.");
+        ShowTaskFormMessage("Task eklendi ve listede secildi.", isError: false);
+    }
+
+    private void UpdateTaskButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsurePermission(PermissionNames.TaskUpdate, "gorev guncelleme"))
+        {
+            return;
+        }
+
+        if (_selectedTask is null)
+        {
+            ShowTaskFormMessage("Guncellemek icin listeden bir task sec.", isError: true);
+            return;
+        }
+
+        string newStatus = GetSelectedTaskStatus();
+        string newPriority = GetSelectedTaskPriority();
+        DateTime? newDueDate = TaskDueDatePicker.SelectedDate;
+
+        string oldStatus = _selectedTask.Status;
+        string oldPriority = _selectedTask.Priority;
+        DateTime? oldDueDate = _selectedTask.DueDate;
+
+        WorkTask updatedTask = _taskService.UpdateTaskWorkflow(_selectedTask, newStatus, newPriority, newDueDate);
+        LoadTasksForSelectedProject(updatedTask.Id);
+        RefreshDashboardSummary();
+
+        string oldDueDateText = oldDueDate.HasValue ? oldDueDate.Value.ToString("dd.MM.yyyy") : "none";
+        string newDueDateText = newDueDate.HasValue ? newDueDate.Value.ToString("dd.MM.yyyy") : "none";
+        RecordAudit("Updated", "Task", $"{updatedTask.Title}: Status '{oldStatus}' -> '{newStatus}'; Priority '{oldPriority}' -> '{newPriority}'; Due '{oldDueDateText}' -> '{newDueDateText}'");
+        ShowTaskFormMessage("Task guncellendi.", isError: false);
+    }
+
     private bool TryReadCustomerForm(out string companyName, out string contactName, out string email)
     {
         companyName = CustomerCompanyTextBox.Text.Trim();
@@ -409,6 +507,12 @@ public partial class MainWindow : Window
         UpdateProjectActionState();
     }
 
+    private void ApplyTaskPermissions(UserSession user)
+    {
+        AddTaskButton.IsEnabled = user.HasPermission(PermissionNames.TaskCreate);
+        UpdateTaskActionState();
+    }
+
     private bool EnsurePermission(string permission, string operationName)
     {
         if (_currentUser?.HasPermission(permission) == true)
@@ -457,8 +561,14 @@ public partial class MainWindow : Window
     {
         _projects.Clear();
         _selectedProject = null;
+        _selectedTask = null;
         ProjectsDataGrid.SelectedItem = null;
+        TasksDataGrid.SelectedItem = null;
+        _tasks.Clear();
+        SelectedProjectForTaskTextBlock.Text = "Once Projects sekmesinden bir project sec.";
+        TasksEmptyTextBlock.Visibility = Visibility.Collapsed;
         UpdateProjectActionState();
+        UpdateTaskActionState();
 
         IEnumerable<WorkProject> projects = _selectedCustomer is null
             ? _projectService.GetAllProjects()
@@ -488,6 +598,8 @@ public partial class MainWindow : Window
             ProjectNameTextBox.Clear();
             SelectProjectStatus(ProjectStatusNames.Planning);
             ProjectDueDatePicker.SelectedDate = DateTime.Today.AddDays(14);
+            TaskTitleTextBox.Clear();
+            TaskDueDatePicker.SelectedDate = DateTime.Today.AddDays(7);
             return;
         }
 
@@ -507,7 +619,65 @@ public partial class MainWindow : Window
         ProjectNameTextBox.Text = project.Name;
         SelectProjectStatus(project.Status);
         ProjectDueDatePicker.SelectedDate = project.DueDate;
+        LoadTasksForSelectedProject();
         UpdateProjectActionState();
+    }
+
+    private void LoadTasksForSelectedProject(int? taskIdToSelect = null, bool selectFirstTask = false)
+    {
+        _tasks.Clear();
+        _selectedTask = null;
+        TasksDataGrid.SelectedItem = null;
+        UpdateTaskActionState();
+
+        if (_selectedProject is null)
+        {
+            SelectedProjectForTaskTextBlock.Text = "Once Projects sekmesinden bir project sec.";
+            TasksEmptyTextBlock.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        SelectedProjectForTaskTextBlock.Text = $"Selected project: {_selectedProject.Name}";
+
+        foreach (WorkTask task in _taskService.GetTasksForProject(_selectedProject.Id))
+        {
+            _tasks.Add(task);
+        }
+
+        TasksEmptyTextBlock.Visibility = _tasks.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+
+        if (taskIdToSelect is null && selectFirstTask && _tasks.Count > 0)
+        {
+            taskIdToSelect = _tasks[0].Id;
+        }
+
+        if (taskIdToSelect is null)
+        {
+            TaskTitleTextBox.Clear();
+            SelectTaskStatus(TaskStatusNames.ToDo);
+            SelectTaskPriority(TaskPriorityNames.Normal);
+            TaskDueDatePicker.SelectedDate = DateTime.Today.AddDays(7);
+            return;
+        }
+
+        WorkTask? taskToSelect = _tasks.FirstOrDefault(task => task.Id == taskIdToSelect.Value);
+
+        if (taskToSelect is not null)
+        {
+            SelectTask(taskToSelect);
+        }
+    }
+
+    private void SelectTask(WorkTask task)
+    {
+        _selectedTask = task;
+        TasksDataGrid.SelectedItem = task;
+        TasksDataGrid.ScrollIntoView(task);
+        TaskTitleTextBox.Text = task.Title;
+        SelectTaskStatus(task.Status);
+        SelectTaskPriority(task.Priority);
+        TaskDueDatePicker.SelectedDate = task.DueDate;
+        UpdateTaskActionState();
     }
 
     private void RefreshProjectOverview()
@@ -540,6 +710,14 @@ public partial class MainWindow : Window
             && _selectedProject is not null;
 
         UpdateProjectStatusButton.IsEnabled = canUpdateProject;
+    }
+
+    private void UpdateTaskActionState()
+    {
+        bool canUpdateTask = _currentUser?.HasPermission(PermissionNames.TaskUpdate) == true
+            && _selectedTask is not null;
+
+        UpdateTaskButton.IsEnabled = canUpdateTask;
     }
 
     private string GetSelectedProjectStatus()
@@ -576,5 +754,66 @@ public partial class MainWindow : Window
             ? System.Windows.Media.Brushes.Firebrick
             : System.Windows.Media.Brushes.SeaGreen;
         ProjectFormMessageTextBlock.Visibility = Visibility.Visible;
+    }
+
+    private string GetSelectedTaskStatus()
+    {
+        if (TaskStatusComboBox.SelectedItem is System.Windows.Controls.ComboBoxItem item
+            && item.Content is string status)
+        {
+            return status;
+        }
+
+        return TaskStatusNames.ToDo;
+    }
+
+    private void SelectTaskStatus(string status)
+    {
+        foreach (object item in TaskStatusComboBox.Items)
+        {
+            if (item is System.Windows.Controls.ComboBoxItem comboBoxItem
+                && comboBoxItem.Content?.ToString() == status)
+            {
+                TaskStatusComboBox.SelectedItem = comboBoxItem;
+                return;
+            }
+        }
+
+        TaskStatusComboBox.SelectedIndex = 0;
+    }
+
+    private string GetSelectedTaskPriority()
+    {
+        if (TaskPriorityComboBox.SelectedItem is System.Windows.Controls.ComboBoxItem item
+            && item.Content is string priority)
+        {
+            return priority;
+        }
+
+        return TaskPriorityNames.Normal;
+    }
+
+    private void SelectTaskPriority(string priority)
+    {
+        foreach (object item in TaskPriorityComboBox.Items)
+        {
+            if (item is System.Windows.Controls.ComboBoxItem comboBoxItem
+                && comboBoxItem.Content?.ToString() == priority)
+            {
+                TaskPriorityComboBox.SelectedItem = comboBoxItem;
+                return;
+            }
+        }
+
+        TaskPriorityComboBox.SelectedIndex = 1;
+    }
+
+    private void ShowTaskFormMessage(string message, bool isError)
+    {
+        TaskFormMessageTextBlock.Text = message;
+        TaskFormMessageTextBlock.Foreground = isError
+            ? System.Windows.Media.Brushes.Firebrick
+            : System.Windows.Media.Brushes.SeaGreen;
+        TaskFormMessageTextBlock.Visibility = Visibility.Visible;
     }
 }

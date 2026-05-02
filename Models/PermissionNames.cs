@@ -7,4 +7,6 @@ public static class PermissionNames
     public const string CustomerDelete = "Customer.Delete";
     public const string ProjectCreate = "Project.Create";
     public const string ProjectUpdate = "Project.Update";
+    public const string TaskCreate = "Task.Create";
+    public const string TaskUpdate = "Task.Update";
 }

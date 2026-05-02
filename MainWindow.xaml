@@ -2,10 +2,10 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="DeskFlow AI"
-        Width="1040"
-        Height="650"
+        Width="1160"
+        Height="720"
         MinWidth="900"
-        MinHeight="600"
+        MinHeight="640"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
@@ -25,11 +25,20 @@
         </Style>
 
         <Style x:Key="MetricCardStyle" TargetType="Border">
-            <Setter Property="Padding" Value="18" />
+            <Setter Property="Padding" Value="16" />
             <Setter Property="Background" Value="White" />
             <Setter Property="BorderBrush" Value="#D8E1EC" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
+        </Style>
+
+        <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="Background" Value="#2563EB" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
 
         <Style x:Key="SecondaryButtonStyle" TargetType="Button">
@@ -182,7 +191,7 @@
                 </DockPanel>
             </Border>
 
-            <Grid Grid.Row="1" Margin="28">
+            <Grid Grid.Row="1" Margin="24">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -191,12 +200,12 @@
 
                 <StackPanel>
                     <TextBlock Text="Dashboard"
-                               FontSize="30"
+                               FontSize="28"
                                FontWeight="SemiBold"
                                Foreground="#1F2937" />
 
                     <TextBlock Text="Operasyon ozeti ve bekleyen isler."
-                               Margin="0,6,0,22"
+                               Margin="0,6,0,16"
                                FontSize="15"
                                Foreground="#64748B" />
                 </StackPanel>
@@ -204,40 +213,40 @@
                 <UniformGrid Grid.Row="1"
                              Columns="4"
                              Rows="1"
-                             Margin="0,0,0,22"
+                             Margin="0,0,0,18"
                              VerticalAlignment="Top">
                     <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,14,0">
                         <StackPanel>
                             <TextBlock Text="Aktif projeler" Foreground="#64748B" />
-                            <TextBlock x:Name="ActiveProjectsTextBlock" Text="0" Margin="0,10,0,0" FontSize="34" FontWeight="SemiBold" Foreground="#1F2937" />
+                            <TextBlock x:Name="ActiveProjectsTextBlock" Text="0" Margin="0,8,0,0" FontSize="28" FontWeight="SemiBold" Foreground="#1F2937" />
                         </StackPanel>
                     </Border>
 
                     <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,14,0">
                         <StackPanel>
                             <TextBlock Text="Acik gorevler" Foreground="#64748B" />
-                            <TextBlock x:Name="OpenTasksTextBlock" Text="0" Margin="0,10,0,0" FontSize="34" FontWeight="SemiBold" Foreground="#1F2937" />
+                            <TextBlock x:Name="OpenTasksTextBlock" Text="0" Margin="0,8,0,0" FontSize="28" FontWeight="SemiBold" Foreground="#1F2937" />
                         </StackPanel>
                     </Border>
 
                     <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,14,0">
                         <StackPanel>
                             <TextBlock Text="Geciken isler" Foreground="#64748B" />
-                            <TextBlock x:Name="OverdueTasksTextBlock" Text="0" Margin="0,10,0,0" FontSize="34" FontWeight="SemiBold" Foreground="#B91C1C" />
+                            <TextBlock x:Name="OverdueTasksTextBlock" Text="0" Margin="0,8,0,0" FontSize="28" FontWeight="SemiBold" Foreground="#B91C1C" />
                         </StackPanel>
                     </Border>
 
                     <Border Style="{StaticResource MetricCardStyle}">
                         <StackPanel>
                             <TextBlock Text="AI bekleyen belgeler" Foreground="#64748B" />
-                            <TextBlock x:Name="PendingAiDocumentsTextBlock" Text="0" Margin="0,10,0,0" FontSize="34" FontWeight="SemiBold" Foreground="#1F2937" />
+                            <TextBlock x:Name="PendingAiDocumentsTextBlock" Text="0" Margin="0,8,0,0" FontSize="28" FontWeight="SemiBold" Foreground="#1F2937" />
                         </StackPanel>
                     </Border>
                 </UniformGrid>
 
                 <Grid Grid.Row="2">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="1.75*" />
                         <ColumnDefinition Width="1*" />
                     </Grid.ColumnDefinitions>
 
@@ -300,61 +309,60 @@
                             BorderBrush="#D8E1EC"
                             BorderThickness="1"
                             CornerRadius="8">
-                        <StackPanel>
-                            <TextBlock x:Name="CustomerFormTitleTextBlock"
-                                       Text="Add customer"
-                                       FontSize="20"
-                                       FontWeight="SemiBold"
-                                       Foreground="#1F2937" />
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <TextBlock x:Name="CustomerFormTitleTextBlock"
+                                           Text="Add customer"
+                                           FontSize="20"
+                                           FontWeight="SemiBold"
+                                           Foreground="#1F2937" />
 
-                            <TextBlock Text="Company"
-                                       Margin="0,18,0,6"
-                                       Style="{StaticResource FieldLabelStyle}" />
+                                <TextBlock Text="Company"
+                                           Margin="0,16,0,6"
+                                           Style="{StaticResource FieldLabelStyle}" />
 
-                            <TextBox x:Name="CustomerCompanyTextBox"
-                                     Style="{StaticResource InputStyle}" />
+                                <TextBox x:Name="CustomerCompanyTextBox"
+                                         Style="{StaticResource InputStyle}" />
 
-                            <TextBlock Text="Contact"
-                                       Margin="0,14,0,6"
-                                       Style="{StaticResource FieldLabelStyle}" />
+                                <TextBlock Text="Contact"
+                                           Margin="0,12,0,6"
+                                           Style="{StaticResource FieldLabelStyle}" />
 
-                            <TextBox x:Name="CustomerContactTextBox"
-                                     Style="{StaticResource InputStyle}" />
+                                <TextBox x:Name="CustomerContactTextBox"
+                                         Style="{StaticResource InputStyle}" />
 
-                            <TextBlock Text="Email"
-                                       Margin="0,14,0,6"
-                                       Style="{StaticResource FieldLabelStyle}" />
+                                <TextBlock Text="Email"
+                                           Margin="0,12,0,6"
+                                           Style="{StaticResource FieldLabelStyle}" />
 
-                            <TextBox x:Name="CustomerEmailTextBox"
-                                     Style="{StaticResource InputStyle}" />
+                                <TextBox x:Name="CustomerEmailTextBox"
+                                         Style="{StaticResource InputStyle}" />
 
-                            <TextBlock x:Name="CustomerFormMessageTextBlock"
-                                       Margin="0,14,0,0"
-                                       FontSize="13"
-                                       TextWrapping="Wrap"
-                                       Visibility="Collapsed" />
+                                <TextBlock x:Name="CustomerFormMessageTextBlock"
+                                           Margin="0,12,0,0"
+                                           FontSize="13"
+                                           TextWrapping="Wrap"
+                                           Visibility="Collapsed" />
 
-                            <Button Content="Add customer"
-                                    Height="42"
-                                    Margin="0,22,0,0"
-                                    Background="#2563EB"
-                                    Foreground="White"
-                                    BorderThickness="0"
-                                    FontWeight="SemiBold"
-                                    Click="AddCustomerButton_Click" />
+                                <Button Content="Add customer"
+                                        Margin="0,18,0,0"
+                                        Style="{StaticResource PrimaryButtonStyle}"
+                                        Click="AddCustomerButton_Click" />
 
-                            <Button Content="Update selected"
-                                    Height="42"
-                                    Margin="0,10,0,0"
-                                    Style="{StaticResource SecondaryButtonStyle}"
-                                    Click="UpdateCustomerButton_Click" />
+                                <UniformGrid Columns="2"
+                                             Margin="0,10,0,0">
+                                    <Button Content="Update"
+                                            Margin="0,0,5,0"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            Click="UpdateCustomerButton_Click" />
 
-                            <Button Content="Clear form"
-                                    Height="42"
-                                    Margin="0,10,0,0"
-                                    Style="{StaticResource SecondaryButtonStyle}"
-                                    Click="ClearCustomerFormButton_Click" />
-                        </StackPanel>
+                                    <Button Content="Clear"
+                                            Margin="5,0,0,0"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            Click="ClearCustomerFormButton_Click" />
+                                </UniformGrid>
+                            </StackPanel>
+                        </ScrollViewer>
                     </Border>
                 </Grid>
             </Grid>

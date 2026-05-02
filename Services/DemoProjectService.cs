@@ -12,6 +12,7 @@ public sealed class DemoProjectService
     {
         return _dbContext.Projects
             .AsNoTracking()
+            .Include(project => project.Customer)
             .Where(project => project.CustomerId == customerId)
             .OrderBy(project => project.DueDate == null)
             .ThenBy(project => project.DueDate)

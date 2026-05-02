@@ -34,6 +34,7 @@ public partial class MainWindow : Window
         AllProjectsDataGrid.ItemsSource = _allProjects;
         DueSoonProjectsDataGrid.ItemsSource = _dueSoonProjects;
         ProjectDueDatePicker.SelectedDate = DateTime.Today.AddDays(14);
+        LoadProjectsForSelectedCustomer();
         RefreshProjectOverview();
         UpdateProjectActionState();
     }
@@ -234,7 +235,6 @@ public partial class MainWindow : Window
         CustomerContactTextBox.Text = selectedCustomer.ContactName;
         CustomerEmailTextBox.Text = selectedCustomer.Email;
         CustomerFormMessageTextBlock.Visibility = Visibility.Collapsed;
-        SelectedCustomerForProjectTextBlock.Text = $"Selected customer: {selectedCustomer.CompanyName}";
         LoadProjectsForSelectedCustomer(selectFirstProject: true);
     }
 
@@ -274,9 +274,7 @@ public partial class MainWindow : Window
         ProjectNameTextBox.Clear();
         ProjectDueDatePicker.SelectedDate = DateTime.Today.AddDays(14);
         ProjectFormMessageTextBlock.Visibility = Visibility.Collapsed;
-        SelectedCustomerForProjectTextBlock.Text = "Once listeden bir customer sec.";
-        ProjectsEmptyTextBlock.Visibility = Visibility.Collapsed;
-        _projects.Clear();
+        LoadProjectsForSelectedCustomer();
         UpdateProjectActionState();
         CustomerCompanyTextBox.Focus();
     }
@@ -305,9 +303,7 @@ public partial class MainWindow : Window
         }
 
         WorkProject project = _projectService.CreateProject(_selectedCustomer.Id, projectName, status, dueDate);
-        _projects.Add(project);
-        SelectProject(project);
-        ProjectsEmptyTextBlock.Visibility = Visibility.Collapsed;
+        LoadProjectsForSelectedCustomer(project.Id);
         RefreshDashboardSummary();
         RefreshProjectOverview();
         string dueDateText = dueDate.HasValue ? dueDate.Value.ToString("dd.MM.yyyy") : "teslim tarihi yok";
@@ -464,20 +460,23 @@ public partial class MainWindow : Window
         ProjectsDataGrid.SelectedItem = null;
         UpdateProjectActionState();
 
-        if (_selectedCustomer is null)
-        {
-            ProjectsEmptyTextBlock.Visibility = Visibility.Collapsed;
-            return;
-        }
+        IEnumerable<WorkProject> projects = _selectedCustomer is null
+            ? _projectService.GetAllProjects()
+            : _projectService.GetProjectsForCustomer(_selectedCustomer.Id);
 
-        foreach (WorkProject project in _projectService.GetProjectsForCustomer(_selectedCustomer.Id))
+        SelectedCustomerForProjectTextBlock.Text = _selectedCustomer is null
+            ? "All projects: customer secilmedigi icin tum projeler listeleniyor."
+            : $"Selected customer: {_selectedCustomer.CompanyName}";
+
+        foreach (WorkProject project in projects)
         {
             _projects.Add(project);
         }
 
-        ProjectsEmptyTextBlock.Visibility = _projects.Count == 0
-            ? Visibility.Visible
-            : Visibility.Collapsed;
+        ProjectsEmptyTextBlock.Text = _selectedCustomer is null
+            ? "Henuz hic proje yok."
+            : "Bu customer icin henuz proje yok.";
+        ProjectsEmptyTextBlock.Visibility = _projects.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
         if (projectIdToSelect is null && selectFirstProject && _projects.Count > 0)
         {

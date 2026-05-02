@@ -453,6 +453,13 @@
                                     <ComboBoxItem Content="Completed" />
                                 </ComboBox>
 
+                                <TextBlock Text="Due date"
+                                           Margin="0,12,0,6"
+                                           Style="{StaticResource FieldLabelStyle}" />
+
+                                <DatePicker x:Name="ProjectDueDatePicker"
+                                            Height="38" />
+
                                 <Button x:Name="AddProjectButton"
                                         Content="Add project"
                                         Margin="0,14,0,0"
@@ -487,6 +494,7 @@
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Project" Binding="{Binding Name}" Width="*" />
                                         <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="0.8*" />
+                                        <DataGridTextColumn Header="Due" Binding="{Binding DueDate, StringFormat={}{0:dd.MM.yyyy}}" Width="0.8*" />
                                     </DataGrid.Columns>
                                 </DataGrid>
 
@@ -496,6 +504,66 @@
                                            FontSize="13"
                                            Foreground="#64748B"
                                            Visibility="Collapsed" />
+
+                                <Border Margin="0,18,0,14"
+                                        BorderBrush="#E2E8F0"
+                                        BorderThickness="0,1,0,0" />
+
+                                <TextBlock Text="Due soon"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           Foreground="#1F2937" />
+
+                                <TextBlock x:Name="DueSoonNotificationTextBlock"
+                                           Text="Son 7 gun icinde teslimi olan proje yok."
+                                           Margin="0,8,0,0"
+                                           FontSize="13"
+                                           TextWrapping="Wrap"
+                                           Foreground="#64748B" />
+
+                                <DataGrid x:Name="DueSoonProjectsDataGrid"
+                                          Height="110"
+                                          Margin="0,10,0,0"
+                                          AutoGenerateColumns="False"
+                                          CanUserAddRows="False"
+                                          IsReadOnly="True"
+                                          HeadersVisibility="Column"
+                                          GridLinesVisibility="Horizontal"
+                                          BorderBrush="#E2E8F0"
+                                          BorderThickness="1">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Project" Binding="{Binding Name}" Width="*" />
+                                        <DataGridTextColumn Header="Customer" Binding="{Binding Customer.CompanyName}" Width="*" />
+                                        <DataGridTextColumn Header="Due" Binding="{Binding DueDate, StringFormat={}{0:dd.MM.yyyy}}" Width="0.8*" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <Border Margin="0,18,0,14"
+                                        BorderBrush="#E2E8F0"
+                                        BorderThickness="0,1,0,0" />
+
+                                <TextBlock Text="All projects"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           Foreground="#1F2937" />
+
+                                <DataGrid x:Name="AllProjectsDataGrid"
+                                          Height="150"
+                                          Margin="0,10,0,0"
+                                          AutoGenerateColumns="False"
+                                          CanUserAddRows="False"
+                                          IsReadOnly="True"
+                                          HeadersVisibility="Column"
+                                          GridLinesVisibility="Horizontal"
+                                          BorderBrush="#E2E8F0"
+                                          BorderThickness="1">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Project" Binding="{Binding Name}" Width="*" />
+                                        <DataGridTextColumn Header="Customer" Binding="{Binding Customer.CompanyName}" Width="*" />
+                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="0.8*" />
+                                        <DataGridTextColumn Header="Due" Binding="{Binding DueDate, StringFormat={}{0:dd.MM.yyyy}}" Width="0.8*" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
                             </StackPanel>
                         </ScrollViewer>
                     </Border>

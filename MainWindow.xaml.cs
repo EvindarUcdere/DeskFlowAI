@@ -17,6 +17,8 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<Customer> _customers = [];
     private readonly ObservableCollection<Customer> _filteredCustomers = [];
     private readonly ObservableCollection<WorkProject> _projects = [];
+    private readonly ObservableCollection<WorkProject> _allProjects = [];
+    private readonly ObservableCollection<WorkProject> _dueSoonProjects = [];
     private readonly ObservableCollection<AuditLogEntry> _auditLogs = [];
     private Customer? _selectedCustomer;
     private WorkProject? _selectedProject;
@@ -29,6 +31,10 @@ public partial class MainWindow : Window
         LoadCustomers();
         LoadAuditLogs();
         ProjectsDataGrid.ItemsSource = _projects;
+        AllProjectsDataGrid.ItemsSource = _allProjects;
+        DueSoonProjectsDataGrid.ItemsSource = _dueSoonProjects;
+        ProjectDueDatePicker.SelectedDate = DateTime.Today.AddDays(14);
+        RefreshProjectOverview();
         UpdateProjectActionState();
     }
 
@@ -244,6 +250,7 @@ public partial class MainWindow : Window
         _selectedProject = selectedProject;
         ProjectNameTextBox.Text = selectedProject.Name;
         SelectProjectStatus(selectedProject.Status);
+        ProjectDueDatePicker.SelectedDate = selectedProject.DueDate;
         ProjectFormMessageTextBlock.Visibility = Visibility.Collapsed;
         UpdateProjectActionState();
     }
@@ -265,6 +272,7 @@ public partial class MainWindow : Window
         CustomerEmailTextBox.Clear();
         CustomerFormMessageTextBlock.Visibility = Visibility.Collapsed;
         ProjectNameTextBox.Clear();
+        ProjectDueDatePicker.SelectedDate = DateTime.Today.AddDays(14);
         ProjectFormMessageTextBlock.Visibility = Visibility.Collapsed;
         SelectedCustomerForProjectTextBlock.Text = "Once listeden bir customer sec.";
         ProjectsEmptyTextBlock.Visibility = Visibility.Collapsed;
@@ -288,6 +296,7 @@ public partial class MainWindow : Window
 
         string projectName = ProjectNameTextBox.Text.Trim();
         string status = GetSelectedProjectStatus();
+        DateTime? dueDate = ProjectDueDatePicker.SelectedDate;
 
         if (string.IsNullOrWhiteSpace(projectName))
         {
@@ -295,12 +304,14 @@ public partial class MainWindow : Window
             return;
         }
 
-        WorkProject project = _projectService.CreateProject(_selectedCustomer.Id, projectName, status);
+        WorkProject project = _projectService.CreateProject(_selectedCustomer.Id, projectName, status, dueDate);
         _projects.Add(project);
         SelectProject(project);
         ProjectsEmptyTextBlock.Visibility = Visibility.Collapsed;
         RefreshDashboardSummary();
-        RecordAudit("Created", "Project", $"{project.Name} projesi {_selectedCustomer.CompanyName} icin {project.Status} status ile eklendi.");
+        RefreshProjectOverview();
+        string dueDateText = dueDate.HasValue ? dueDate.Value.ToString("dd.MM.yyyy") : "teslim tarihi yok";
+        RecordAudit("Created", "Project", $"{project.Name} projesi {_selectedCustomer.CompanyName} icin {project.Status} status ile eklendi. Due: {dueDateText}.");
         ShowProjectFormMessage("Project eklendi ve listede secildi.", isError: false);
     }
 
@@ -336,6 +347,7 @@ public partial class MainWindow : Window
 
         SelectProject(updatedProject);
         RefreshDashboardSummary();
+        RefreshProjectOverview();
         RecordAudit("Updated", "Project", $"{updatedProject.Name}: Status '{oldStatus}' -> '{newStatus}'");
         ShowProjectFormMessage("Project status guncellendi.", isError: false);
     }
@@ -476,6 +488,7 @@ public partial class MainWindow : Window
         {
             ProjectNameTextBox.Clear();
             SelectProjectStatus(ProjectStatusNames.Planning);
+            ProjectDueDatePicker.SelectedDate = DateTime.Today.AddDays(14);
             return;
         }
 
@@ -494,7 +507,32 @@ public partial class MainWindow : Window
         ProjectsDataGrid.ScrollIntoView(project);
         ProjectNameTextBox.Text = project.Name;
         SelectProjectStatus(project.Status);
+        ProjectDueDatePicker.SelectedDate = project.DueDate;
         UpdateProjectActionState();
+    }
+
+    private void RefreshProjectOverview()
+    {
+        _allProjects.Clear();
+        _dueSoonProjects.Clear();
+
+        foreach (WorkProject project in _projectService.GetAllProjects())
+        {
+            _allProjects.Add(project);
+        }
+
+        foreach (WorkProject project in _projectService.GetProjectsDueWithinDays(7))
+        {
+            _dueSoonProjects.Add(project);
+        }
+
+        DueSoonNotificationTextBlock.Text = _dueSoonProjects.Count == 0
+            ? "Son 7 gun icinde teslimi olan proje yok."
+            : $"{_dueSoonProjects.Count} project icin teslim tarihi 7 gun icinde.";
+
+        DueSoonNotificationTextBlock.Foreground = _dueSoonProjects.Count == 0
+            ? System.Windows.Media.Brushes.SlateGray
+            : System.Windows.Media.Brushes.Firebrick;
     }
 
     private void UpdateProjectActionState()

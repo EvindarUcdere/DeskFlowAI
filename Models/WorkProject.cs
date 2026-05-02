@@ -8,11 +8,12 @@ public sealed class WorkProject
         Status = string.Empty;
     }
 
-    public WorkProject(int customerId, string name, string status)
+    public WorkProject(int customerId, string name, string status, DateTime? dueDate)
     {
         CustomerId = customerId;
         Name = name;
         Status = status;
+        DueDate = dueDate;
         CreatedAt = DateTime.Now;
     }
 
@@ -25,6 +26,8 @@ public sealed class WorkProject
     public string Name { get; private set; }
 
     public string Status { get; private set; }
+
+    public DateTime? DueDate { get; private set; }
 
     public DateTime CreatedAt { get; private set; }
 

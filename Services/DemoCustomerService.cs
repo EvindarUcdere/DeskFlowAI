@@ -23,4 +23,14 @@ public sealed class DemoCustomerService
 
         return customer;
     }
+
+    public Customer UpdateCustomer(Customer existingCustomer, string companyName, string contactName, string email)
+    {
+        return new Customer(
+            existingCustomer.Id,
+            companyName,
+            contactName,
+            email,
+            existingCustomer.Status);
+    }
 }

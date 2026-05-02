@@ -12,6 +12,7 @@ public partial class MainWindow : Window
     private readonly DemoDashboardService _dashboardService = new();
     private readonly DemoCustomerService _customerService = new();
     private readonly ObservableCollection<Customer> _customers = [];
+    private Customer? _selectedCustomer;
 
     public MainWindow()
     {
@@ -85,13 +86,8 @@ public partial class MainWindow : Window
 
     private void AddCustomerButton_Click(object sender, RoutedEventArgs e)
     {
-        string companyName = CustomerCompanyTextBox.Text.Trim();
-        string contactName = CustomerContactTextBox.Text.Trim();
-        string email = CustomerEmailTextBox.Text.Trim();
-
-        if (string.IsNullOrWhiteSpace(companyName) || string.IsNullOrWhiteSpace(contactName) || string.IsNullOrWhiteSpace(email))
+        if (!TryReadCustomerForm(out string companyName, out string contactName, out string email))
         {
-            ShowCustomerFormMessage("Company, contact ve email alanlari zorunludur.", isError: true);
             return;
         }
 
@@ -99,6 +95,31 @@ public partial class MainWindow : Window
         _customers.Add(customer);
         ClearCustomerForm();
         ShowCustomerFormMessage("Customer eklendi.", isError: false);
+    }
+
+    private void UpdateCustomerButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selectedCustomer is null)
+        {
+            ShowCustomerFormMessage("Guncellemek icin listeden bir customer sec.", isError: true);
+            return;
+        }
+
+        if (!TryReadCustomerForm(out string companyName, out string contactName, out string email))
+        {
+            return;
+        }
+
+        Customer updatedCustomer = _customerService.UpdateCustomer(_selectedCustomer, companyName, contactName, email);
+        int selectedIndex = _customers.IndexOf(_selectedCustomer);
+
+        if (selectedIndex >= 0)
+        {
+            _customers[selectedIndex] = updatedCustomer;
+            CustomersDataGrid.SelectedItem = updatedCustomer;
+            _selectedCustomer = updatedCustomer;
+            ShowCustomerFormMessage("Selected customer guncellendi.", isError: false);
+        }
     }
 
     private void DeleteCustomerButton_Click(object sender, RoutedEventArgs e)
@@ -110,15 +131,57 @@ public partial class MainWindow : Window
         }
 
         _customers.Remove(selectedCustomer);
+        ClearCustomerForm();
         ShowCustomerFormMessage("Selected customer silindi.", isError: false);
+    }
+
+    private void CustomersDataGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (CustomersDataGrid.SelectedItem is not Customer selectedCustomer)
+        {
+            return;
+        }
+
+        _selectedCustomer = selectedCustomer;
+        CustomerFormTitleTextBlock.Text = "Edit customer";
+        CustomerCompanyTextBox.Text = selectedCustomer.CompanyName;
+        CustomerContactTextBox.Text = selectedCustomer.ContactName;
+        CustomerEmailTextBox.Text = selectedCustomer.Email;
+        CustomerFormMessageTextBlock.Visibility = Visibility.Collapsed;
+    }
+
+    private void ClearCustomerFormButton_Click(object sender, RoutedEventArgs e)
+    {
+        ClearCustomerForm();
     }
 
     private void ClearCustomerForm()
     {
+        _selectedCustomer = null;
+        CustomersDataGrid.SelectedItem = null;
+        CustomerFormTitleTextBlock.Text = "Add customer";
         CustomerCompanyTextBox.Clear();
         CustomerContactTextBox.Clear();
         CustomerEmailTextBox.Clear();
+        CustomerFormMessageTextBlock.Visibility = Visibility.Collapsed;
         CustomerCompanyTextBox.Focus();
+    }
+
+    private bool TryReadCustomerForm(out string companyName, out string contactName, out string email)
+    {
+        companyName = CustomerCompanyTextBox.Text.Trim();
+        contactName = CustomerContactTextBox.Text.Trim();
+        email = CustomerEmailTextBox.Text.Trim();
+
+        if (!string.IsNullOrWhiteSpace(companyName)
+            && !string.IsNullOrWhiteSpace(contactName)
+            && !string.IsNullOrWhiteSpace(email))
+        {
+            return true;
+        }
+
+        ShowCustomerFormMessage("Company, contact ve email alanlari zorunludur.", isError: true);
+        return false;
     }
 
     private void ShowCustomerFormMessage(string message, bool isError)

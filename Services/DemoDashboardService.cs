@@ -1,22 +1,18 @@
+using DeskFlowAI.Data;
 using DeskFlowAI.Models;
 
 namespace DeskFlowAI.Services;
 
 public sealed class DemoDashboardService
 {
+    private readonly DeskFlowDbContext _dbContext = new();
+
     public DashboardSummary GetSummaryFor(UserSession user)
     {
-        if (user.Role == "Admin")
-        {
-            return new DashboardSummary(
-                activeProjects: 12,
-                openTasks: 38,
-                overdueTasks: 5,
-                pendingAiDocuments: 9);
-        }
+        int activeProjects = _dbContext.Projects.Count(project => project.Status == ProjectStatusNames.Active);
 
         return new DashboardSummary(
-            activeProjects: 4,
+            activeProjects: activeProjects,
             openTasks: 11,
             overdueTasks: 1,
             pendingAiDocuments: 2);

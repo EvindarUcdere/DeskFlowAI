@@ -409,6 +409,77 @@
                                             Style="{StaticResource SecondaryButtonStyle}"
                                             Click="ClearCustomerFormButton_Click" />
                                 </UniformGrid>
+
+                                <Border Margin="0,18,0,14"
+                                        BorderBrush="#E2E8F0"
+                                        BorderThickness="0,1,0,0" />
+
+                                <TextBlock Text="Projects"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           Foreground="#1F2937" />
+
+                                <TextBlock Text="Selected customer icin proje ekle ve status yonet."
+                                           Margin="0,4,0,0"
+                                           FontSize="13"
+                                           TextWrapping="Wrap"
+                                           Foreground="#64748B" />
+
+                                <TextBlock Text="Project name"
+                                           Margin="0,14,0,6"
+                                           Style="{StaticResource FieldLabelStyle}" />
+
+                                <TextBox x:Name="ProjectNameTextBox"
+                                         Style="{StaticResource InputStyle}" />
+
+                                <TextBlock Text="Status"
+                                           Margin="0,12,0,6"
+                                           Style="{StaticResource FieldLabelStyle}" />
+
+                                <ComboBox x:Name="ProjectStatusComboBox"
+                                          Height="38"
+                                          SelectedIndex="0">
+                                    <ComboBoxItem Content="Planning" />
+                                    <ComboBoxItem Content="Active" />
+                                    <ComboBoxItem Content="On Hold" />
+                                    <ComboBoxItem Content="Completed" />
+                                </ComboBox>
+
+                                <Button x:Name="AddProjectButton"
+                                        Content="Add project"
+                                        Margin="0,14,0,0"
+                                        Style="{StaticResource PrimaryButtonStyle}"
+                                        Click="AddProjectButton_Click" />
+
+                                <Button x:Name="UpdateProjectStatusButton"
+                                        Content="Update project status"
+                                        Margin="0,10,0,0"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        Click="UpdateProjectStatusButton_Click" />
+
+                                <TextBlock x:Name="ProjectFormMessageTextBlock"
+                                           Margin="0,12,0,0"
+                                           FontSize="13"
+                                           TextWrapping="Wrap"
+                                           Visibility="Collapsed" />
+
+                                <DataGrid x:Name="ProjectsDataGrid"
+                                          Height="150"
+                                          Margin="0,14,0,0"
+                                          AutoGenerateColumns="False"
+                                          CanUserAddRows="False"
+                                          IsReadOnly="True"
+                                          SelectionMode="Single"
+                                          SelectionChanged="ProjectsDataGrid_SelectionChanged"
+                                          HeadersVisibility="Column"
+                                          GridLinesVisibility="Horizontal"
+                                          BorderBrush="#E2E8F0"
+                                          BorderThickness="1">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Project" Binding="{Binding Name}" Width="*" />
+                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="0.8*" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
                             </StackPanel>
                         </ScrollViewer>
                     </Border>

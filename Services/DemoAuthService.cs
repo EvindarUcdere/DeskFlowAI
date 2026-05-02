@@ -32,13 +32,24 @@ public sealed class DemoAuthService
                 "Evin D.",
                 email,
                 "Admin",
-                [PermissionNames.CustomerCreate, PermissionNames.CustomerUpdate, PermissionNames.CustomerDelete]),
+                [
+                    PermissionNames.CustomerCreate,
+                    PermissionNames.CustomerUpdate,
+                    PermissionNames.CustomerDelete,
+                    PermissionNames.ProjectCreate,
+                    PermissionNames.ProjectUpdate
+                ]),
 
             "manager@deskflow.ai" => new UserSession(
                 "Merve A.",
                 email,
                 "Manager",
-                [PermissionNames.CustomerCreate, PermissionNames.CustomerUpdate]),
+                [
+                    PermissionNames.CustomerCreate,
+                    PermissionNames.CustomerUpdate,
+                    PermissionNames.ProjectCreate,
+                    PermissionNames.ProjectUpdate
+                ]),
 
             _ => new UserSession(
                 "Can K.",

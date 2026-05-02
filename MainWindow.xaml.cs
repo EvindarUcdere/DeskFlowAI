@@ -12,11 +12,14 @@ public partial class MainWindow : Window
     private readonly DemoAuthService _authService = new();
     private readonly DemoDashboardService _dashboardService = new();
     private readonly DemoCustomerService _customerService = new();
+    private readonly DemoProjectService _projectService = new();
     private readonly DemoAuditLogService _auditLogService = new();
     private readonly ObservableCollection<Customer> _customers = [];
     private readonly ObservableCollection<Customer> _filteredCustomers = [];
+    private readonly ObservableCollection<WorkProject> _projects = [];
     private readonly ObservableCollection<AuditLogEntry> _auditLogs = [];
     private Customer? _selectedCustomer;
+    private WorkProject? _selectedProject;
     private UserSession? _currentUser;
 
     public MainWindow()
@@ -25,6 +28,7 @@ public partial class MainWindow : Window
         new DatabaseInitializer().Initialize();
         LoadCustomers();
         LoadAuditLogs();
+        ProjectsDataGrid.ItemsSource = _projects;
     }
 
     private void SignInButton_Click(object sender, RoutedEventArgs e)
@@ -69,17 +73,27 @@ public partial class MainWindow : Window
     private void ShowDashboard(UserSession user)
     {
         _currentUser = user;
-        DashboardSummary summary = _dashboardService.GetSummaryFor(user);
-
         LoginErrorTextBlock.Visibility = Visibility.Collapsed;
         SignedInUserTextBlock.Text = $"{user.FullName} | {user.Role} | {user.Email}";
         ApplyCustomerPermissions(user);
+        ApplyProjectPermissions(user);
+        RefreshDashboardSummary();
+        LoginView.Visibility = Visibility.Collapsed;
+        DashboardView.Visibility = Visibility.Visible;
+    }
+
+    private void RefreshDashboardSummary()
+    {
+        if (_currentUser is null)
+        {
+            return;
+        }
+
+        DashboardSummary summary = _dashboardService.GetSummaryFor(_currentUser);
         ActiveProjectsTextBlock.Text = summary.ActiveProjects.ToString();
         OpenTasksTextBlock.Text = summary.OpenTasks.ToString();
         OverdueTasksTextBlock.Text = summary.OverdueTasks.ToString();
         PendingAiDocumentsTextBlock.Text = summary.PendingAiDocuments.ToString();
-        LoginView.Visibility = Visibility.Collapsed;
-        DashboardView.Visibility = Visibility.Visible;
     }
 
     private void LoadCustomers()
@@ -213,6 +227,20 @@ public partial class MainWindow : Window
         CustomerContactTextBox.Text = selectedCustomer.ContactName;
         CustomerEmailTextBox.Text = selectedCustomer.Email;
         CustomerFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        LoadProjectsForSelectedCustomer();
+    }
+
+    private void ProjectsDataGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (ProjectsDataGrid.SelectedItem is not WorkProject selectedProject)
+        {
+            return;
+        }
+
+        _selectedProject = selectedProject;
+        ProjectNameTextBox.Text = selectedProject.Name;
+        SelectProjectStatus(selectedProject.Status);
+        ProjectFormMessageTextBlock.Visibility = Visibility.Collapsed;
     }
 
     private void ClearCustomerFormButton_Click(object sender, RoutedEventArgs e)
@@ -223,13 +251,79 @@ public partial class MainWindow : Window
     private void ClearCustomerForm()
     {
         _selectedCustomer = null;
+        _selectedProject = null;
         CustomersDataGrid.SelectedItem = null;
+        ProjectsDataGrid.SelectedItem = null;
         CustomerFormTitleTextBlock.Text = "Add customer";
         CustomerCompanyTextBox.Clear();
         CustomerContactTextBox.Clear();
         CustomerEmailTextBox.Clear();
         CustomerFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        ProjectNameTextBox.Clear();
+        ProjectFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        _projects.Clear();
         CustomerCompanyTextBox.Focus();
+    }
+
+    private void AddProjectButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsurePermission(PermissionNames.ProjectCreate, "proje ekleme"))
+        {
+            return;
+        }
+
+        if (_selectedCustomer is null)
+        {
+            ShowProjectFormMessage("Proje eklemek icin once bir customer sec.", isError: true);
+            return;
+        }
+
+        string projectName = ProjectNameTextBox.Text.Trim();
+        string status = GetSelectedProjectStatus();
+
+        if (string.IsNullOrWhiteSpace(projectName))
+        {
+            ShowProjectFormMessage("Project name zorunludur.", isError: true);
+            return;
+        }
+
+        WorkProject project = _projectService.CreateProject(_selectedCustomer.Id, projectName, status);
+        LoadProjectsForSelectedCustomer();
+        ProjectsDataGrid.SelectedItem = project;
+        RefreshDashboardSummary();
+        RecordAudit("Created", "Project", $"{project.Name} projesi {_selectedCustomer.CompanyName} icin {project.Status} status ile eklendi.");
+        ShowProjectFormMessage("Project eklendi.", isError: false);
+    }
+
+    private void UpdateProjectStatusButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsurePermission(PermissionNames.ProjectUpdate, "proje guncelleme"))
+        {
+            return;
+        }
+
+        if (_selectedProject is null)
+        {
+            ShowProjectFormMessage("Status guncellemek icin listeden bir project sec.", isError: true);
+            return;
+        }
+
+        string newStatus = GetSelectedProjectStatus();
+
+        if (_selectedProject.Status == newStatus)
+        {
+            ShowProjectFormMessage("Project status zaten bu degerde.", isError: true);
+            return;
+        }
+
+        string oldStatus = _selectedProject.Status;
+        WorkProject updatedProject = _projectService.UpdateProjectStatus(_selectedProject, newStatus);
+        LoadProjectsForSelectedCustomer();
+        ProjectsDataGrid.SelectedItem = updatedProject;
+        _selectedProject = updatedProject;
+        RefreshDashboardSummary();
+        RecordAudit("Updated", "Project", $"{updatedProject.Name}: Status '{oldStatus}' -> '{newStatus}'");
+        ShowProjectFormMessage("Project status guncellendi.", isError: false);
     }
 
     private bool TryReadCustomerForm(out string companyName, out string contactName, out string email)
@@ -287,6 +381,12 @@ public partial class MainWindow : Window
         DeleteCustomerButton.IsEnabled = user.HasPermission(PermissionNames.CustomerDelete);
     }
 
+    private void ApplyProjectPermissions(UserSession user)
+    {
+        AddProjectButton.IsEnabled = user.HasPermission(PermissionNames.ProjectCreate);
+        UpdateProjectStatusButton.IsEnabled = user.HasPermission(PermissionNames.ProjectUpdate);
+    }
+
     private bool EnsurePermission(string permission, string operationName)
     {
         if (_currentUser?.HasPermission(permission) == true)
@@ -329,5 +429,57 @@ public partial class MainWindow : Window
         }
 
         changes.Add($"{fieldName}: '{oldValue}' -> '{newValue}'");
+    }
+
+    private void LoadProjectsForSelectedCustomer()
+    {
+        _projects.Clear();
+        _selectedProject = null;
+
+        if (_selectedCustomer is null)
+        {
+            return;
+        }
+
+        foreach (WorkProject project in _projectService.GetProjectsForCustomer(_selectedCustomer.Id))
+        {
+            _projects.Add(project);
+        }
+    }
+
+    private string GetSelectedProjectStatus()
+    {
+        if (ProjectStatusComboBox.SelectedItem is System.Windows.Controls.ComboBoxItem selectedItem
+            && selectedItem.Content is string status)
+        {
+            return status;
+        }
+
+        return ProjectStatusNames.Planning;
+    }
+
+    private void SelectProjectStatus(string status)
+    {
+        foreach (object item in ProjectStatusComboBox.Items)
+        {
+            if (item is System.Windows.Controls.ComboBoxItem comboBoxItem
+                && comboBoxItem.Content is string itemStatus
+                && itemStatus == status)
+            {
+                ProjectStatusComboBox.SelectedItem = comboBoxItem;
+                return;
+            }
+        }
+
+        ProjectStatusComboBox.SelectedIndex = 0;
+    }
+
+    private void ShowProjectFormMessage(string message, bool isError)
+    {
+        ProjectFormMessageTextBlock.Text = message;
+        ProjectFormMessageTextBlock.Foreground = isError
+            ? System.Windows.Media.Brushes.Firebrick
+            : System.Windows.Media.Brushes.SeaGreen;
+        ProjectFormMessageTextBlock.Visibility = Visibility.Visible;
     }
 }

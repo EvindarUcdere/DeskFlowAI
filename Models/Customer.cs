@@ -37,6 +37,8 @@ public sealed class Customer
 
     public string Status { get; private set; }
 
+    public List<WorkProject> Projects { get; private set; } = [];
+
     public void UpdateDetails(string companyName, string contactName, string email)
     {
         CompanyName = companyName;

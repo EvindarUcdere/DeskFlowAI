@@ -7,6 +7,8 @@ public sealed class DeskFlowDbContext : DbContext
 {
     public DbSet<Customer> Customers => Set<Customer>();
 
+    public DbSet<WorkProject> Projects => Set<WorkProject>();
+
     public DbSet<AuditLogEntry> AuditLogs => Set<AuditLogEntry>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -22,6 +24,17 @@ public sealed class DeskFlowDbContext : DbContext
             entity.Property(customer => customer.ContactName).HasMaxLength(120);
             entity.Property(customer => customer.Email).HasMaxLength(180);
             entity.Property(customer => customer.Status).HasMaxLength(40);
+        });
+
+        modelBuilder.Entity<WorkProject>(entity =>
+        {
+            entity.Property(project => project.Name).HasMaxLength(180);
+            entity.Property(project => project.Status).HasMaxLength(40);
+
+            entity.HasOne(project => project.Customer)
+                .WithMany(customer => customer.Projects)
+                .HasForeignKey(project => project.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<AuditLogEntry>(entity =>

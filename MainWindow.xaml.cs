@@ -8,6 +8,7 @@ namespace DeskFlowAI;
 public partial class MainWindow : Window
 {
     private readonly DemoAuthService _authService = new();
+    private readonly DemoDashboardService _dashboardService = new();
 
     public MainWindow()
     {
@@ -54,8 +55,14 @@ public partial class MainWindow : Window
 
     private void ShowDashboard(UserSession user)
     {
+        DashboardSummary summary = _dashboardService.GetSummaryFor(user);
+
         LoginErrorTextBlock.Visibility = Visibility.Collapsed;
         SignedInUserTextBlock.Text = $"{user.FullName} | {user.Role} | {user.Email}";
+        ActiveProjectsTextBlock.Text = summary.ActiveProjects.ToString();
+        OpenTasksTextBlock.Text = summary.OpenTasks.ToString();
+        OverdueTasksTextBlock.Text = summary.OverdueTasks.ToString();
+        PendingAiDocumentsTextBlock.Text = summary.PendingAiDocuments.ToString();
         LoginView.Visibility = Visibility.Collapsed;
         DashboardView.Visibility = Visibility.Visible;
     }

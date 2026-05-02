@@ -158,7 +158,7 @@
                                    FontWeight="SemiBold"
                                    Foreground="#1F2937" />
 
-                            <TextBlock x:Name="SignedInUserTextBlock"
+                        <TextBlock x:Name="SignedInUserTextBlock"
                                    Margin="0,3,0,0"
                                    FontSize="13"
                                    Foreground="#64748B" />
@@ -198,28 +198,28 @@
                     <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,14,0">
                         <StackPanel>
                             <TextBlock Text="Aktif projeler" Foreground="#64748B" />
-                            <TextBlock Text="12" Margin="0,10,0,0" FontSize="34" FontWeight="SemiBold" Foreground="#1F2937" />
+                            <TextBlock x:Name="ActiveProjectsTextBlock" Text="0" Margin="0,10,0,0" FontSize="34" FontWeight="SemiBold" Foreground="#1F2937" />
                         </StackPanel>
                     </Border>
 
                     <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,14,0">
                         <StackPanel>
                             <TextBlock Text="Acik gorevler" Foreground="#64748B" />
-                            <TextBlock Text="38" Margin="0,10,0,0" FontSize="34" FontWeight="SemiBold" Foreground="#1F2937" />
+                            <TextBlock x:Name="OpenTasksTextBlock" Text="0" Margin="0,10,0,0" FontSize="34" FontWeight="SemiBold" Foreground="#1F2937" />
                         </StackPanel>
                     </Border>
 
                     <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,14,0">
                         <StackPanel>
                             <TextBlock Text="Geciken isler" Foreground="#64748B" />
-                            <TextBlock Text="5" Margin="0,10,0,0" FontSize="34" FontWeight="SemiBold" Foreground="#B91C1C" />
+                            <TextBlock x:Name="OverdueTasksTextBlock" Text="0" Margin="0,10,0,0" FontSize="34" FontWeight="SemiBold" Foreground="#B91C1C" />
                         </StackPanel>
                     </Border>
 
                     <Border Style="{StaticResource MetricCardStyle}">
                         <StackPanel>
                             <TextBlock Text="AI bekleyen belgeler" Foreground="#64748B" />
-                            <TextBlock Text="9" Margin="0,10,0,0" FontSize="34" FontWeight="SemiBold" Foreground="#1F2937" />
+                            <TextBlock x:Name="PendingAiDocumentsTextBlock" Text="0" Margin="0,10,0,0" FontSize="34" FontWeight="SemiBold" Foreground="#1F2937" />
                         </StackPanel>
                     </Border>
                 </UniformGrid>

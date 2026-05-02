@@ -425,6 +425,14 @@
                                            TextWrapping="Wrap"
                                            Foreground="#64748B" />
 
+                                <TextBlock x:Name="SelectedCustomerForProjectTextBlock"
+                                           Text="Once listeden bir customer sec."
+                                           Margin="0,10,0,0"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           TextWrapping="Wrap"
+                                           Foreground="#334155" />
+
                                 <TextBlock Text="Project name"
                                            Margin="0,14,0,6"
                                            Style="{StaticResource FieldLabelStyle}" />
@@ -480,6 +488,13 @@
                                         <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="0.8*" />
                                     </DataGrid.Columns>
                                 </DataGrid>
+
+                                <TextBlock x:Name="ProjectsEmptyTextBlock"
+                                           Text="Bu customer icin henuz proje yok."
+                                           Margin="0,8,0,0"
+                                           FontSize="13"
+                                           Foreground="#64748B"
+                                           Visibility="Collapsed" />
                             </StackPanel>
                         </ScrollViewer>
                     </Border>

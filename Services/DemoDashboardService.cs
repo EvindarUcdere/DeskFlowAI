@@ -5,11 +5,10 @@ namespace DeskFlowAI.Services;
 
 public sealed class DemoDashboardService
 {
-    private readonly DeskFlowDbContext _dbContext = new();
-
     public DashboardSummary GetSummaryFor(UserSession user)
     {
-        int activeProjects = _dbContext.Projects.Count(project => project.Status == ProjectStatusNames.Active);
+        using DeskFlowDbContext dbContext = new();
+        int activeProjects = dbContext.Projects.Count(project => project.Status == ProjectStatusNames.Active);
 
         return new DashboardSummary(
             activeProjects: activeProjects,

@@ -227,7 +227,8 @@ public partial class MainWindow : Window
         CustomerContactTextBox.Text = selectedCustomer.ContactName;
         CustomerEmailTextBox.Text = selectedCustomer.Email;
         CustomerFormMessageTextBlock.Visibility = Visibility.Collapsed;
-        LoadProjectsForSelectedCustomer();
+        SelectedCustomerForProjectTextBlock.Text = $"Selected customer: {selectedCustomer.CompanyName}";
+        LoadProjectsForSelectedCustomer(selectFirstProject: true);
     }
 
     private void ProjectsDataGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -261,6 +262,8 @@ public partial class MainWindow : Window
         CustomerFormMessageTextBlock.Visibility = Visibility.Collapsed;
         ProjectNameTextBox.Clear();
         ProjectFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        SelectedCustomerForProjectTextBlock.Text = "Once listeden bir customer sec.";
+        ProjectsEmptyTextBlock.Visibility = Visibility.Collapsed;
         _projects.Clear();
         CustomerCompanyTextBox.Focus();
     }
@@ -289,10 +292,9 @@ public partial class MainWindow : Window
 
         WorkProject project = _projectService.CreateProject(_selectedCustomer.Id, projectName, status);
         LoadProjectsForSelectedCustomer(project.Id);
-        ProjectNameTextBox.Clear();
         RefreshDashboardSummary();
         RecordAudit("Created", "Project", $"{project.Name} projesi {_selectedCustomer.CompanyName} icin {project.Status} status ile eklendi.");
-        ShowProjectFormMessage("Project eklendi.", isError: false);
+        ShowProjectFormMessage("Project eklendi ve listede secildi.", isError: false);
     }
 
     private void UpdateProjectStatusButton_Click(object sender, RoutedEventArgs e)
@@ -429,13 +431,15 @@ public partial class MainWindow : Window
         changes.Add($"{fieldName}: '{oldValue}' -> '{newValue}'");
     }
 
-    private void LoadProjectsForSelectedCustomer(int? projectIdToSelect = null)
+    private void LoadProjectsForSelectedCustomer(int? projectIdToSelect = null, bool selectFirstProject = false)
     {
         _projects.Clear();
         _selectedProject = null;
+        ProjectsDataGrid.SelectedItem = null;
 
         if (_selectedCustomer is null)
         {
+            ProjectsEmptyTextBlock.Visibility = Visibility.Collapsed;
             return;
         }
 
@@ -444,8 +448,19 @@ public partial class MainWindow : Window
             _projects.Add(project);
         }
 
+        ProjectsEmptyTextBlock.Visibility = _projects.Count == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        if (projectIdToSelect is null && selectFirstProject && _projects.Count > 0)
+        {
+            projectIdToSelect = _projects[0].Id;
+        }
+
         if (projectIdToSelect is null)
         {
+            ProjectNameTextBox.Clear();
+            SelectProjectStatus(ProjectStatusNames.Planning);
             return;
         }
 

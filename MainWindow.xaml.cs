@@ -22,7 +22,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         LoadCustomers();
-        AuditLogsDataGrid.ItemsSource = _auditLogs;
+        LoadAuditLogs();
     }
 
     private void SignInButton_Click(object sender, RoutedEventArgs e)
@@ -91,6 +91,18 @@ public partial class MainWindow : Window
 
         ApplyCustomerFilter();
         CustomersDataGrid.ItemsSource = _filteredCustomers;
+    }
+
+    private void LoadAuditLogs()
+    {
+        _auditLogs.Clear();
+
+        foreach (AuditLogEntry auditLog in _auditLogService.GetEntries())
+        {
+            _auditLogs.Add(auditLog);
+        }
+
+        AuditLogsDataGrid.ItemsSource = _auditLogs;
     }
 
     private void AddCustomerButton_Click(object sender, RoutedEventArgs e)
@@ -167,6 +179,7 @@ public partial class MainWindow : Window
             return;
         }
 
+        _customerService.DeleteCustomer(selectedCustomer);
         _customers.Remove(selectedCustomer);
         ApplyCustomerFilter();
         ClearCustomerForm();

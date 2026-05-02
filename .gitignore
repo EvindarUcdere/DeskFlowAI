@@ -3,3 +3,6 @@ obj/
 .vs/
 *.user
 *.suo
+deskflow.db
+deskflow.db-shm
+deskflow.db-wal

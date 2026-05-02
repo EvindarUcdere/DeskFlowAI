@@ -12,6 +12,7 @@ public partial class MainWindow : Window
     private readonly DemoDashboardService _dashboardService = new();
     private readonly DemoCustomerService _customerService = new();
     private readonly ObservableCollection<Customer> _customers = [];
+    private readonly ObservableCollection<Customer> _filteredCustomers = [];
     private Customer? _selectedCustomer;
 
     public MainWindow()
@@ -81,7 +82,8 @@ public partial class MainWindow : Window
             _customers.Add(customer);
         }
 
-        CustomersDataGrid.ItemsSource = _customers;
+        ApplyCustomerFilter();
+        CustomersDataGrid.ItemsSource = _filteredCustomers;
     }
 
     private void AddCustomerButton_Click(object sender, RoutedEventArgs e)
@@ -93,6 +95,8 @@ public partial class MainWindow : Window
 
         Customer customer = _customerService.CreateCustomer(companyName, contactName, email);
         _customers.Add(customer);
+        ApplyCustomerFilter();
+        CustomersDataGrid.SelectedItem = customer;
         ClearCustomerForm();
         ShowCustomerFormMessage("Customer eklendi.", isError: false);
     }
@@ -116,6 +120,7 @@ public partial class MainWindow : Window
         if (selectedIndex >= 0)
         {
             _customers[selectedIndex] = updatedCustomer;
+            ApplyCustomerFilter();
             CustomersDataGrid.SelectedItem = updatedCustomer;
             _selectedCustomer = updatedCustomer;
             ShowCustomerFormMessage("Selected customer guncellendi.", isError: false);
@@ -131,8 +136,20 @@ public partial class MainWindow : Window
         }
 
         _customers.Remove(selectedCustomer);
+        ApplyCustomerFilter();
         ClearCustomerForm();
         ShowCustomerFormMessage("Selected customer silindi.", isError: false);
+    }
+
+    private void CustomerSearchTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        ApplyCustomerFilter();
+    }
+
+    private void ClearCustomerSearchButton_Click(object sender, RoutedEventArgs e)
+    {
+        CustomerSearchTextBox.Clear();
+        ApplyCustomerFilter();
     }
 
     private void CustomersDataGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -182,6 +199,28 @@ public partial class MainWindow : Window
 
         ShowCustomerFormMessage("Company, contact ve email alanlari zorunludur.", isError: true);
         return false;
+    }
+
+    private void ApplyCustomerFilter()
+    {
+        string searchTerm = CustomerSearchTextBox.Text.Trim();
+        _filteredCustomers.Clear();
+
+        IEnumerable<Customer> query = _customers;
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            query = query.Where(customer =>
+                customer.CompanyName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                || customer.ContactName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                || customer.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                || customer.Status.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+        }
+
+        foreach (Customer customer in query)
+        {
+            _filteredCustomers.Add(customer);
+        }
     }
 
     private void ShowCustomerFormMessage(string message, bool isError)

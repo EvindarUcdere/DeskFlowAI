@@ -260,6 +260,7 @@
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
 
@@ -282,8 +283,26 @@
                                         Click="DeleteCustomerButton_Click" />
                             </DockPanel>
 
+                            <DockPanel Grid.Row="1"
+                                       Margin="0,0,0,12">
+                                <Button DockPanel.Dock="Right"
+                                        Content="Clear search"
+                                        Margin="10,0,0,0"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        Click="ClearCustomerSearchButton_Click" />
+
+                                <TextBox x:Name="CustomerSearchTextBox"
+                                         Height="38"
+                                         Padding="12,0"
+                                         FontSize="14"
+                                         VerticalContentAlignment="Center"
+                                         BorderBrush="#CBD5E1"
+                                         BorderThickness="1"
+                                         TextChanged="CustomerSearchTextBox_TextChanged" />
+                            </DockPanel>
+
                             <DataGrid x:Name="CustomersDataGrid"
-                                      Grid.Row="1"
+                                      Grid.Row="2"
                                       AutoGenerateColumns="False"
                                       CanUserAddRows="False"
                                       IsReadOnly="True"

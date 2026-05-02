@@ -8,12 +8,6 @@ public sealed class DemoCustomerService
 {
     private readonly DeskFlowDbContext _dbContext = new();
 
-    public DemoCustomerService()
-    {
-        _dbContext.Database.EnsureCreated();
-        SeedCustomersIfNeeded();
-    }
-
     public List<Customer> GetCustomers()
     {
         return _dbContext.Customers
@@ -45,21 +39,6 @@ public sealed class DemoCustomerService
     {
         Customer customerToDelete = _dbContext.Customers.Single(existingCustomer => existingCustomer.Id == customer.Id);
         _dbContext.Customers.Remove(customerToDelete);
-        _dbContext.SaveChanges();
-    }
-
-    private void SeedCustomersIfNeeded()
-    {
-        if (_dbContext.Customers.Any())
-        {
-            return;
-        }
-
-        _dbContext.Customers.AddRange(
-            new Customer("Northwind Consulting", "Aylin Kara", "aylin@northwind.example", "Active"),
-            new Customer("BluePeak Logistics", "Mert Yilmaz", "mert@bluepeak.example", "Active"),
-            new Customer("Atlas Finance", "Selin Demir", "selin@atlas.example", "On Hold"));
-
         _dbContext.SaveChanges();
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
+using DeskFlowAI.Data;
 using DeskFlowAI.Models;
 using DeskFlowAI.Services;
 
@@ -21,6 +22,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        new DatabaseInitializer().Initialize();
         LoadCustomers();
         LoadAuditLogs();
     }

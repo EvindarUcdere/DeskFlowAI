@@ -8,11 +8,6 @@ public sealed class DemoAuditLogService
 {
     private readonly DeskFlowDbContext _dbContext = new();
 
-    public DemoAuditLogService()
-    {
-        _dbContext.Database.EnsureCreated();
-    }
-
     public List<AuditLogEntry> GetEntries()
     {
         return _dbContext.AuditLogs

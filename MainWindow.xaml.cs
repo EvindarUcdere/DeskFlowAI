@@ -29,6 +29,7 @@ public partial class MainWindow : Window
         LoadCustomers();
         LoadAuditLogs();
         ProjectsDataGrid.ItemsSource = _projects;
+        UpdateProjectActionState();
     }
 
     private void SignInButton_Click(object sender, RoutedEventArgs e)
@@ -235,6 +236,8 @@ public partial class MainWindow : Window
     {
         if (ProjectsDataGrid.SelectedItem is not WorkProject selectedProject)
         {
+            _selectedProject = null;
+            UpdateProjectActionState();
             return;
         }
 
@@ -242,6 +245,7 @@ public partial class MainWindow : Window
         ProjectNameTextBox.Text = selectedProject.Name;
         SelectProjectStatus(selectedProject.Status);
         ProjectFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        UpdateProjectActionState();
     }
 
     private void ClearCustomerFormButton_Click(object sender, RoutedEventArgs e)
@@ -265,6 +269,7 @@ public partial class MainWindow : Window
         SelectedCustomerForProjectTextBlock.Text = "Once listeden bir customer sec.";
         ProjectsEmptyTextBlock.Visibility = Visibility.Collapsed;
         _projects.Clear();
+        UpdateProjectActionState();
         CustomerCompanyTextBox.Focus();
     }
 
@@ -291,7 +296,9 @@ public partial class MainWindow : Window
         }
 
         WorkProject project = _projectService.CreateProject(_selectedCustomer.Id, projectName, status);
-        LoadProjectsForSelectedCustomer(project.Id);
+        _projects.Add(project);
+        SelectProject(project);
+        ProjectsEmptyTextBlock.Visibility = Visibility.Collapsed;
         RefreshDashboardSummary();
         RecordAudit("Created", "Project", $"{project.Name} projesi {_selectedCustomer.CompanyName} icin {project.Status} status ile eklendi.");
         ShowProjectFormMessage("Project eklendi ve listede secildi.", isError: false);
@@ -320,7 +327,14 @@ public partial class MainWindow : Window
 
         string oldStatus = _selectedProject.Status;
         WorkProject updatedProject = _projectService.UpdateProjectStatus(_selectedProject, newStatus);
-        LoadProjectsForSelectedCustomer(updatedProject.Id);
+        int selectedIndex = _projects.IndexOf(_selectedProject);
+
+        if (selectedIndex >= 0)
+        {
+            _projects[selectedIndex] = updatedProject;
+        }
+
+        SelectProject(updatedProject);
         RefreshDashboardSummary();
         RecordAudit("Updated", "Project", $"{updatedProject.Name}: Status '{oldStatus}' -> '{newStatus}'");
         ShowProjectFormMessage("Project status guncellendi.", isError: false);
@@ -384,7 +398,7 @@ public partial class MainWindow : Window
     private void ApplyProjectPermissions(UserSession user)
     {
         AddProjectButton.IsEnabled = user.HasPermission(PermissionNames.ProjectCreate);
-        UpdateProjectStatusButton.IsEnabled = user.HasPermission(PermissionNames.ProjectUpdate);
+        UpdateProjectActionState();
     }
 
     private bool EnsurePermission(string permission, string operationName)
@@ -436,6 +450,7 @@ public partial class MainWindow : Window
         _projects.Clear();
         _selectedProject = null;
         ProjectsDataGrid.SelectedItem = null;
+        UpdateProjectActionState();
 
         if (_selectedCustomer is null)
         {
@@ -468,10 +483,26 @@ public partial class MainWindow : Window
 
         if (projectToSelect is not null)
         {
-            ProjectsDataGrid.SelectedItem = projectToSelect;
-            ProjectsDataGrid.ScrollIntoView(projectToSelect);
-            _selectedProject = projectToSelect;
+            SelectProject(projectToSelect);
         }
+    }
+
+    private void SelectProject(WorkProject project)
+    {
+        _selectedProject = project;
+        ProjectsDataGrid.SelectedItem = project;
+        ProjectsDataGrid.ScrollIntoView(project);
+        ProjectNameTextBox.Text = project.Name;
+        SelectProjectStatus(project.Status);
+        UpdateProjectActionState();
+    }
+
+    private void UpdateProjectActionState()
+    {
+        bool canUpdateProject = _currentUser?.HasPermission(PermissionNames.ProjectUpdate) == true
+            && _selectedProject is not null;
+
+        UpdateProjectStatusButton.IsEnabled = canUpdateProject;
     }
 
     private string GetSelectedProjectStatus()

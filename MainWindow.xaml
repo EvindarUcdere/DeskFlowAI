@@ -64,6 +64,42 @@
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Foreground" Value="#1F2937" />
         </Style>
+
+        <Style TargetType="TabControl">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+
+        <Style TargetType="TabItem">
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Padding" Value="16,9" />
+            <Setter Property="Foreground" Value="#64748B" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="TabBorder"
+                                Padding="{TemplateBinding Padding}"
+                                Background="#EEF3F8"
+                                BorderBrush="#D8E1EC"
+                                BorderThickness="1"
+                                CornerRadius="8,8,0,0">
+                            <ContentPresenter ContentSource="Header"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="White" />
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="#2563EB" />
+                                <Setter Property="Foreground" Value="#1D4ED8" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid Background="#EEF3F8">
@@ -370,8 +406,10 @@
                             BorderBrush="#D8E1EC"
                             BorderThickness="1"
                             CornerRadius="8">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel>
+                        <TabControl>
+                            <TabItem Header="Customer">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <StackPanel Margin="0,12,0,0">
                                 <Border Style="{StaticResource SectionCardStyle}">
                                     <StackPanel>
                                         <TextBlock x:Name="CustomerFormTitleTextBlock"
@@ -427,9 +465,16 @@
                                     </StackPanel>
                                 </Border>
 
-                                <Border Style="{StaticResource SectionCardStyle}">
-                                    <StackPanel>
-                                <TextBlock Text="Projects" Style="{StaticResource SectionTitleStyle}" />
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </TabItem>
+
+                            <TabItem Header="Projects">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <StackPanel Margin="0,12,0,0">
+                                        <Border Style="{StaticResource SectionCardStyle}">
+                                            <StackPanel>
+                                                <TextBlock Text="Projects" Style="{StaticResource SectionTitleStyle}" />
 
                                 <TextBlock Text="Selected customer icin proje ekle ve status yonet."
                                            Margin="0,4,0,0"
@@ -516,12 +561,18 @@
                                            FontSize="13"
                                            Foreground="#64748B"
                                            Visibility="Collapsed" />
+                                            </StackPanel>
+                                        </Border>
                                     </StackPanel>
-                                </Border>
+                                </ScrollViewer>
+                            </TabItem>
 
-                                <Border Style="{StaticResource SectionCardStyle}">
-                                    <StackPanel>
-                                <TextBlock Text="Due soon" Style="{StaticResource SectionTitleStyle}" />
+                            <TabItem Header="Overview">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <StackPanel Margin="0,12,0,0">
+                                        <Border Style="{StaticResource SectionCardStyle}">
+                                            <StackPanel>
+                                                <TextBlock Text="Due soon" Style="{StaticResource SectionTitleStyle}" />
 
                                 <TextBlock x:Name="DueSoonNotificationTextBlock"
                                            Text="Son 7 gun icinde teslimi olan proje yok."
@@ -546,12 +597,12 @@
                                         <DataGridTextColumn Header="Due" Binding="{Binding DueDate, StringFormat={}{0:dd.MM.yyyy}}" Width="0.8*" />
                                     </DataGrid.Columns>
                                 </DataGrid>
-                                    </StackPanel>
-                                </Border>
+                                            </StackPanel>
+                                        </Border>
 
-                                <Border Style="{StaticResource SectionCardStyle}" Margin="0">
-                                    <StackPanel>
-                                <TextBlock Text="All projects" Style="{StaticResource SectionTitleStyle}" />
+                                        <Border Style="{StaticResource SectionCardStyle}" Margin="0">
+                                            <StackPanel>
+                                                <TextBlock Text="All projects" Style="{StaticResource SectionTitleStyle}" />
 
                                 <DataGrid x:Name="AllProjectsDataGrid"
                                           Height="150"
@@ -570,10 +621,12 @@
                                         <DataGridTextColumn Header="Due" Binding="{Binding DueDate, StringFormat={}{0:dd.MM.yyyy}}" Width="0.8*" />
                                     </DataGrid.Columns>
                                 </DataGrid>
+                                            </StackPanel>
+                                        </Border>
                                     </StackPanel>
-                                </Border>
-                            </StackPanel>
-                        </ScrollViewer>
+                                </ScrollViewer>
+                            </TabItem>
+                        </TabControl>
                     </Border>
                 </Grid>
             </Grid>

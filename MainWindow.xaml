@@ -86,7 +86,7 @@
                                        FontWeight="SemiBold"
                                        Foreground="White" />
 
-                            <TextBlock Text="admin@deskflow.ai / Admin123"
+                            <TextBlock Text="admin, manager veya staff @deskflow.ai / Admin123"
                                        Margin="0,8,0,0"
                                        FontSize="14"
                                        Foreground="#CFE0EF" />
@@ -261,6 +261,8 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="2*" />
+                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
 
@@ -277,7 +279,8 @@
                                                Foreground="#64748B" />
                                 </StackPanel>
 
-                                <Button DockPanel.Dock="Right"
+                                <Button x:Name="DeleteCustomerButton"
+                                        DockPanel.Dock="Right"
                                         Content="Delete selected"
                                         Style="{StaticResource SecondaryButtonStyle}"
                                         Click="DeleteCustomerButton_Click" />
@@ -317,6 +320,30 @@
                                     <DataGridTextColumn Header="Contact" Binding="{Binding ContactName}" Width="*" />
                                     <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="1.3*" />
                                     <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="0.7*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <TextBlock Grid.Row="3"
+                                       Text="Audit log"
+                                       Margin="0,14,0,8"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       Foreground="#1F2937" />
+
+                            <DataGrid x:Name="AuditLogsDataGrid"
+                                      Grid.Row="4"
+                                      AutoGenerateColumns="False"
+                                      CanUserAddRows="False"
+                                      IsReadOnly="True"
+                                      HeadersVisibility="Column"
+                                      GridLinesVisibility="Horizontal"
+                                      BorderBrush="#E2E8F0"
+                                      BorderThickness="1">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Time" Binding="{Binding OccurredAt, StringFormat={}{0:HH:mm:ss}}" Width="0.7*" />
+                                    <DataGridTextColumn Header="Actor" Binding="{Binding ActorEmail}" Width="1.2*" />
+                                    <DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="0.8*" />
+                                    <DataGridTextColumn Header="Details" Binding="{Binding Details}" Width="2*" />
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Grid>
@@ -363,14 +390,16 @@
                                            TextWrapping="Wrap"
                                            Visibility="Collapsed" />
 
-                                <Button Content="Add customer"
+                                <Button x:Name="AddCustomerButton"
+                                        Content="Add customer"
                                         Margin="0,18,0,0"
                                         Style="{StaticResource PrimaryButtonStyle}"
                                         Click="AddCustomerButton_Click" />
 
                                 <UniformGrid Columns="2"
                                              Margin="0,10,0,0">
-                                    <Button Content="Update"
+                                    <Button x:Name="UpdateCustomerButton"
+                                            Content="Update"
                                             Margin="0,0,5,0"
                                             Style="{StaticResource SecondaryButtonStyle}"
                                             Click="UpdateCustomerButton_Click" />

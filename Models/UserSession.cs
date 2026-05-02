@@ -2,11 +2,12 @@ namespace DeskFlowAI.Models;
 
 public sealed class UserSession
 {
-    public UserSession(string fullName, string email, string role)
+    public UserSession(string fullName, string email, string role, IReadOnlyCollection<string> permissions)
     {
         FullName = fullName;
         Email = email;
         Role = role;
+        Permissions = permissions;
     }
 
     public string FullName { get; }
@@ -14,4 +15,11 @@ public sealed class UserSession
     public string Email { get; }
 
     public string Role { get; }
+
+    public IReadOnlyCollection<string> Permissions { get; }
+
+    public bool HasPermission(string permission)
+    {
+        return Permissions.Contains(permission);
+    }
 }

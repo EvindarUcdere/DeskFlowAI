@@ -11,14 +11,18 @@ public partial class MainWindow : Window
     private readonly DemoAuthService _authService = new();
     private readonly DemoDashboardService _dashboardService = new();
     private readonly DemoCustomerService _customerService = new();
+    private readonly DemoAuditLogService _auditLogService = new();
     private readonly ObservableCollection<Customer> _customers = [];
     private readonly ObservableCollection<Customer> _filteredCustomers = [];
+    private readonly ObservableCollection<AuditLogEntry> _auditLogs = [];
     private Customer? _selectedCustomer;
+    private UserSession? _currentUser;
 
     public MainWindow()
     {
         InitializeComponent();
         LoadCustomers();
+        AuditLogsDataGrid.ItemsSource = _auditLogs;
     }
 
     private void SignInButton_Click(object sender, RoutedEventArgs e)
@@ -36,6 +40,7 @@ public partial class MainWindow : Window
 
     private void SignOutButton_Click(object sender, RoutedEventArgs e)
     {
+        _currentUser = null;
         PasswordBox.Clear();
         DashboardView.Visibility = Visibility.Collapsed;
         LoginView.Visibility = Visibility.Visible;
@@ -61,10 +66,12 @@ public partial class MainWindow : Window
 
     private void ShowDashboard(UserSession user)
     {
+        _currentUser = user;
         DashboardSummary summary = _dashboardService.GetSummaryFor(user);
 
         LoginErrorTextBlock.Visibility = Visibility.Collapsed;
         SignedInUserTextBlock.Text = $"{user.FullName} | {user.Role} | {user.Email}";
+        ApplyCustomerPermissions(user);
         ActiveProjectsTextBlock.Text = summary.ActiveProjects.ToString();
         OpenTasksTextBlock.Text = summary.OpenTasks.ToString();
         OverdueTasksTextBlock.Text = summary.OverdueTasks.ToString();
@@ -88,6 +95,11 @@ public partial class MainWindow : Window
 
     private void AddCustomerButton_Click(object sender, RoutedEventArgs e)
     {
+        if (!EnsurePermission(PermissionNames.CustomerCreate, "customer ekleme"))
+        {
+            return;
+        }
+
         if (!TryReadCustomerForm(out string companyName, out string contactName, out string email))
         {
             return;
@@ -98,11 +110,17 @@ public partial class MainWindow : Window
         ApplyCustomerFilter();
         CustomersDataGrid.SelectedItem = customer;
         ClearCustomerForm();
+        RecordAudit("Created", "Customer", $"{customer.CompanyName} eklendi.");
         ShowCustomerFormMessage("Customer eklendi.", isError: false);
     }
 
     private void UpdateCustomerButton_Click(object sender, RoutedEventArgs e)
     {
+        if (!EnsurePermission(PermissionNames.CustomerUpdate, "customer guncelleme"))
+        {
+            return;
+        }
+
         if (_selectedCustomer is null)
         {
             ShowCustomerFormMessage("Guncellemek icin listeden bir customer sec.", isError: true);
@@ -123,12 +141,18 @@ public partial class MainWindow : Window
             ApplyCustomerFilter();
             CustomersDataGrid.SelectedItem = updatedCustomer;
             _selectedCustomer = updatedCustomer;
+            RecordAudit("Updated", "Customer", $"{updatedCustomer.CompanyName} guncellendi.");
             ShowCustomerFormMessage("Selected customer guncellendi.", isError: false);
         }
     }
 
     private void DeleteCustomerButton_Click(object sender, RoutedEventArgs e)
     {
+        if (!EnsurePermission(PermissionNames.CustomerDelete, "customer silme"))
+        {
+            return;
+        }
+
         if (CustomersDataGrid.SelectedItem is not Customer selectedCustomer)
         {
             ShowCustomerFormMessage("Silmek icin listeden bir customer sec.", isError: true);
@@ -138,6 +162,7 @@ public partial class MainWindow : Window
         _customers.Remove(selectedCustomer);
         ApplyCustomerFilter();
         ClearCustomerForm();
+        RecordAudit("Deleted", "Customer", $"{selectedCustomer.CompanyName} silindi.");
         ShowCustomerFormMessage("Selected customer silindi.", isError: false);
     }
 
@@ -230,5 +255,34 @@ public partial class MainWindow : Window
             ? System.Windows.Media.Brushes.Firebrick
             : System.Windows.Media.Brushes.SeaGreen;
         CustomerFormMessageTextBlock.Visibility = Visibility.Visible;
+    }
+
+    private void ApplyCustomerPermissions(UserSession user)
+    {
+        AddCustomerButton.IsEnabled = user.HasPermission(PermissionNames.CustomerCreate);
+        UpdateCustomerButton.IsEnabled = user.HasPermission(PermissionNames.CustomerUpdate);
+        DeleteCustomerButton.IsEnabled = user.HasPermission(PermissionNames.CustomerDelete);
+    }
+
+    private bool EnsurePermission(string permission, string operationName)
+    {
+        if (_currentUser?.HasPermission(permission) == true)
+        {
+            return true;
+        }
+
+        ShowCustomerFormMessage($"Bu kullanicinin {operationName} yetkisi yok.", isError: true);
+        return false;
+    }
+
+    private void RecordAudit(string action, string entityName, string details)
+    {
+        if (_currentUser is null)
+        {
+            return;
+        }
+
+        AuditLogEntry entry = _auditLogService.CreateEntry(_currentUser, action, entityName, details);
+        _auditLogs.Insert(0, entry);
     }
 }

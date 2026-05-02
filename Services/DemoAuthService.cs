@@ -4,7 +4,6 @@ namespace DeskFlowAI.Services;
 
 public sealed class DemoAuthService
 {
-    private const string DemoEmail = "admin@deskflow.ai";
     private const string DemoPassword = "Admin123";
 
     public AuthResult SignIn(string email, string password)
@@ -14,15 +13,38 @@ public sealed class DemoAuthService
             return AuthResult.Failure("Email ve sifre zorunludur.");
         }
 
-        bool isDemoUser = email.Trim().Equals(DemoEmail, StringComparison.OrdinalIgnoreCase)
-            && password == DemoPassword;
+        string normalizedEmail = email.Trim().ToLowerInvariant();
+        bool isKnownUser = normalizedEmail is "admin@deskflow.ai" or "manager@deskflow.ai" or "staff@deskflow.ai";
 
-        if (!isDemoUser)
+        if (!isKnownUser || password != DemoPassword)
         {
-            return AuthResult.Failure("Email veya sifre hatali. Demo kullanici: admin@deskflow.ai / Admin123");
+            return AuthResult.Failure("Email veya sifre hatali. Demo: admin, manager veya staff @deskflow.ai / Admin123");
         }
 
-        UserSession user = new("Evin D.", DemoEmail, "Admin");
-        return AuthResult.Success(user);
+        return AuthResult.Success(CreateDemoUser(normalizedEmail));
+    }
+
+    private static UserSession CreateDemoUser(string email)
+    {
+        return email switch
+        {
+            "admin@deskflow.ai" => new UserSession(
+                "Evin D.",
+                email,
+                "Admin",
+                [PermissionNames.CustomerCreate, PermissionNames.CustomerUpdate, PermissionNames.CustomerDelete]),
+
+            "manager@deskflow.ai" => new UserSession(
+                "Merve A.",
+                email,
+                "Manager",
+                [PermissionNames.CustomerCreate, PermissionNames.CustomerUpdate]),
+
+            _ => new UserSession(
+                "Can K.",
+                email,
+                "Staff",
+                [])
+        };
     }
 }

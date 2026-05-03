@@ -12,6 +12,7 @@ public sealed class DemoTaskService
     {
         return _dbContext.Tasks
             .AsNoTracking()
+            .Include(task => task.AssignedEmployee)
             .Include(task => task.Project)
             .ThenInclude(project => project!.Customer)
             .Where(task => task.ProjectId == projectId)
@@ -23,9 +24,9 @@ public sealed class DemoTaskService
             .ToList();
     }
 
-    public WorkTask CreateTask(int projectId, string title, string status, string priority, DateTime? dueDate)
+    public WorkTask CreateTask(int projectId, string title, string status, string priority, DateTime? dueDate, int? assignedEmployeeId)
     {
-        WorkTask task = new(projectId, title, status, priority, dueDate);
+        WorkTask task = new(projectId, title, status, priority, dueDate, assignedEmployeeId);
 
         _dbContext.Tasks.Add(task);
         _dbContext.SaveChanges();
@@ -33,10 +34,10 @@ public sealed class DemoTaskService
         return task;
     }
 
-    public WorkTask UpdateTaskWorkflow(WorkTask existingTask, string status, string priority, DateTime? dueDate)
+    public WorkTask UpdateTaskWorkflow(WorkTask existingTask, string status, string priority, DateTime? dueDate, int? assignedEmployeeId)
     {
         WorkTask task = _dbContext.Tasks.Single(task => task.Id == existingTask.Id);
-        task.ChangeWorkflow(status, priority, dueDate);
+        task.ChangeWorkflow(status, priority, dueDate, assignedEmployeeId);
         _dbContext.SaveChanges();
 
         return task;

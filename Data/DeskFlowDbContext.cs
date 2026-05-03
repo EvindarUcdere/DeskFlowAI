@@ -11,6 +11,8 @@ public sealed class DeskFlowDbContext : DbContext
 
     public DbSet<WorkTask> Tasks => Set<WorkTask>();
 
+    public DbSet<Employee> Employees => Set<Employee>();
+
     public DbSet<AuditLogEntry> AuditLogs => Set<AuditLogEntry>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -49,6 +51,22 @@ public sealed class DeskFlowDbContext : DbContext
                 .WithMany(project => project.Tasks)
                 .HasForeignKey(task => task.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(task => task.AssignedEmployee)
+                .WithMany(employee => employee.AssignedTasks)
+                .HasForeignKey(task => task.AssignedEmployeeId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<Employee>(entity =>
+        {
+            entity.Property(employee => employee.FullName).HasMaxLength(140);
+            entity.Property(employee => employee.Email).HasMaxLength(180);
+            entity.Property(employee => employee.Department).HasMaxLength(80);
+            entity.Property(employee => employee.RoleTitle).HasMaxLength(100);
+            entity.Property(employee => employee.AvailabilityStatus).HasMaxLength(40);
+            entity.Property(employee => employee.Skills).HasMaxLength(400);
+            entity.Property(employee => employee.BackupEmployeeName).HasMaxLength(140);
         });
 
         modelBuilder.Entity<AuditLogEntry>(entity =>

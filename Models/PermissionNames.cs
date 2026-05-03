@@ -9,4 +9,5 @@ public static class PermissionNames
     public const string ProjectUpdate = "Project.Update";
     public const string TaskCreate = "Task.Create";
     public const string TaskUpdate = "Task.Update";
+    public const string EmployeeManage = "Employee.Manage";
 }

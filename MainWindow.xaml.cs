@@ -14,17 +14,20 @@ public partial class MainWindow : Window
     private readonly DemoCustomerService _customerService = new();
     private readonly DemoProjectService _projectService = new();
     private readonly DemoTaskService _taskService = new();
+    private readonly DemoEmployeeService _employeeService = new();
     private readonly DemoAuditLogService _auditLogService = new();
     private readonly ObservableCollection<Customer> _customers = [];
     private readonly ObservableCollection<Customer> _filteredCustomers = [];
     private readonly ObservableCollection<WorkProject> _projects = [];
     private readonly ObservableCollection<WorkTask> _tasks = [];
+    private readonly ObservableCollection<Employee> _employees = [];
     private readonly ObservableCollection<WorkProject> _allProjects = [];
     private readonly ObservableCollection<WorkProject> _dueSoonProjects = [];
     private readonly ObservableCollection<AuditLogEntry> _auditLogs = [];
     private Customer? _selectedCustomer;
     private WorkProject? _selectedProject;
     private WorkTask? _selectedTask;
+    private Employee? _selectedEmployee;
     private UserSession? _currentUser;
 
     public MainWindow()
@@ -32,9 +35,12 @@ public partial class MainWindow : Window
         InitializeComponent();
         new DatabaseInitializer().Initialize();
         LoadCustomers();
+        LoadEmployees();
         LoadAuditLogs();
         ProjectsDataGrid.ItemsSource = _projects;
         TasksDataGrid.ItemsSource = _tasks;
+        EmployeesDataGrid.ItemsSource = _employees;
+        TaskAssignedEmployeeComboBox.ItemsSource = _employees;
         AllProjectsDataGrid.ItemsSource = _allProjects;
         DueSoonProjectsDataGrid.ItemsSource = _dueSoonProjects;
         ProjectDueDatePicker.SelectedDate = DateTime.Today.AddDays(14);
@@ -92,6 +98,7 @@ public partial class MainWindow : Window
         ApplyCustomerPermissions(user);
         ApplyProjectPermissions(user);
         ApplyTaskPermissions(user);
+        ApplyEmployeePermissions(user);
         RefreshDashboardSummary();
         LoginView.Visibility = Visibility.Collapsed;
         DashboardView.Visibility = Visibility.Visible;
@@ -276,9 +283,44 @@ public partial class MainWindow : Window
         TaskTitleTextBox.Text = selectedTask.Title;
         SelectTaskStatus(selectedTask.Status);
         SelectTaskPriority(selectedTask.Priority);
+        SelectAssignedEmployee(selectedTask.AssignedEmployeeId);
         TaskDueDatePicker.SelectedDate = selectedTask.DueDate;
         TaskFormMessageTextBlock.Visibility = Visibility.Collapsed;
         UpdateTaskActionState();
+    }
+
+    private void EmployeesDataGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (EmployeesDataGrid.SelectedItem is not Employee selectedEmployee)
+        {
+            _selectedEmployee = null;
+            UpdateEmployeeActionState();
+            return;
+        }
+
+        _selectedEmployee = selectedEmployee;
+        EmployeeFullNameTextBox.Text = selectedEmployee.FullName;
+        EmployeeEmailTextBox.Text = selectedEmployee.Email;
+        EmployeeDepartmentTextBox.Text = selectedEmployee.Department;
+        EmployeeRoleTextBox.Text = selectedEmployee.RoleTitle;
+        SelectEmployeeAvailability(selectedEmployee.AvailabilityStatus);
+        EmployeeLeaveStartDatePicker.SelectedDate = selectedEmployee.LeaveStart;
+        EmployeeLeaveEndDatePicker.SelectedDate = selectedEmployee.LeaveEnd;
+        EmployeeSkillsTextBox.Text = selectedEmployee.Skills;
+        EmployeeBackupTextBox.Text = selectedEmployee.BackupEmployeeName;
+        EmployeeWorkloadSummaryTextBlock.Text = BuildEmployeeWorkloadSummary(selectedEmployee);
+        EmployeeFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        UpdateEmployeeActionState();
+    }
+
+    private void TaskFilter_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (!IsLoaded)
+        {
+            return;
+        }
+
+        LoadTasksForSelectedProject(selectFirstTask: true);
     }
 
     private void ClearCustomerFormButton_Click(object sender, RoutedEventArgs e)
@@ -303,6 +345,7 @@ public partial class MainWindow : Window
         ProjectDueDatePicker.SelectedDate = DateTime.Today.AddDays(14);
         ProjectFormMessageTextBlock.Visibility = Visibility.Collapsed;
         TaskTitleTextBox.Clear();
+        SelectAssignedEmployee(null);
         TaskDueDatePicker.SelectedDate = DateTime.Today.AddDays(7);
         TaskFormMessageTextBlock.Visibility = Visibility.Collapsed;
         _tasks.Clear();
@@ -399,6 +442,7 @@ public partial class MainWindow : Window
         string title = TaskTitleTextBox.Text.Trim();
         string status = GetSelectedTaskStatus();
         string priority = GetSelectedTaskPriority();
+        int? assignedEmployeeId = GetSelectedAssignedEmployeeId();
         DateTime? dueDate = TaskDueDatePicker.SelectedDate;
 
         if (string.IsNullOrWhiteSpace(title))
@@ -407,12 +451,17 @@ public partial class MainWindow : Window
             return;
         }
 
-        WorkTask task = _taskService.CreateTask(_selectedProject.Id, title, status, priority, dueDate);
+        Employee? assignedEmployee = FindEmployee(assignedEmployeeId);
+        WorkTask task = _taskService.CreateTask(_selectedProject.Id, title, status, priority, dueDate, assignedEmployeeId);
         LoadTasksForSelectedProject(task.Id);
         RefreshDashboardSummary();
         string dueDateText = dueDate.HasValue ? dueDate.Value.ToString("dd.MM.yyyy") : "teslim tarihi yok";
-        RecordAudit("Created", "Task", $"{task.Title} gorevi {_selectedProject.Name} projesine {priority} priority ile eklendi. Due: {dueDateText}.");
-        ShowTaskFormMessage("Task eklendi ve listede secildi.", isError: false);
+        string assignedText = assignedEmployee is null ? "atanan kisi yok" : assignedEmployee.FullName;
+        RecordAudit("Created", "Task", $"{task.Title} gorevi {_selectedProject.Name} projesine {priority} priority ile eklendi. Assigned: {assignedText}. Due: {dueDateText}.");
+        string createMessage = TaskIsVisibleInCurrentFilters(task)
+            ? "Task eklendi ve listede secildi."
+            : "Task eklendi. Aktif filtreler nedeniyle listede gorunmuyor.";
+        ShowTaskFormMessage(AppendAssignmentWarning(createMessage, assignedEmployee), isError: false);
     }
 
     private void UpdateTaskButton_Click(object sender, RoutedEventArgs e)
@@ -430,20 +479,148 @@ public partial class MainWindow : Window
 
         string newStatus = GetSelectedTaskStatus();
         string newPriority = GetSelectedTaskPriority();
+        int? newAssignedEmployeeId = GetSelectedAssignedEmployeeId();
         DateTime? newDueDate = TaskDueDatePicker.SelectedDate;
 
         string oldStatus = _selectedTask.Status;
         string oldPriority = _selectedTask.Priority;
+        string oldAssignedEmployeeName = GetEmployeeName(_selectedTask.AssignedEmployeeId);
+        Employee? newAssignedEmployee = FindEmployee(newAssignedEmployeeId);
+        string newAssignedEmployeeName = GetEmployeeName(newAssignedEmployeeId);
         DateTime? oldDueDate = _selectedTask.DueDate;
 
-        WorkTask updatedTask = _taskService.UpdateTaskWorkflow(_selectedTask, newStatus, newPriority, newDueDate);
+        WorkTask updatedTask = _taskService.UpdateTaskWorkflow(_selectedTask, newStatus, newPriority, newDueDate, newAssignedEmployeeId);
         LoadTasksForSelectedProject(updatedTask.Id);
         RefreshDashboardSummary();
 
-        string oldDueDateText = oldDueDate.HasValue ? oldDueDate.Value.ToString("dd.MM.yyyy") : "none";
-        string newDueDateText = newDueDate.HasValue ? newDueDate.Value.ToString("dd.MM.yyyy") : "none";
-        RecordAudit("Updated", "Task", $"{updatedTask.Title}: Status '{oldStatus}' -> '{newStatus}'; Priority '{oldPriority}' -> '{newPriority}'; Due '{oldDueDateText}' -> '{newDueDateText}'");
-        ShowTaskFormMessage("Task guncellendi.", isError: false);
+        string changeDetails = BuildTaskChangeDetails(oldStatus, newStatus, oldPriority, newPriority, oldAssignedEmployeeName, newAssignedEmployeeName, oldDueDate, newDueDate);
+        RecordAudit("Updated", "Task", $"{updatedTask.Title}: {changeDetails}");
+        string updateMessage = TaskIsVisibleInCurrentFilters(updatedTask)
+            ? "Task guncellendi."
+            : "Task guncellendi. Aktif filtreler nedeniyle listede gorunmuyor.";
+        ShowTaskFormMessage(AppendAssignmentWarning(updateMessage, newAssignedEmployee), isError: false);
+    }
+
+    private void MarkTaskDoneButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsurePermission(PermissionNames.TaskUpdate, "gorev tamamlama"))
+        {
+            return;
+        }
+
+        if (_selectedTask is null)
+        {
+            ShowTaskFormMessage("Tamamlamak icin listeden bir task sec.", isError: true);
+            return;
+        }
+
+        if (_selectedTask.Status == TaskStatusNames.Done)
+        {
+            ShowTaskFormMessage("Bu task zaten Done durumunda.", isError: true);
+            return;
+        }
+
+        string oldStatus = _selectedTask.Status;
+        WorkTask updatedTask = _taskService.UpdateTaskWorkflow(
+            _selectedTask,
+            TaskStatusNames.Done,
+            _selectedTask.Priority,
+            _selectedTask.DueDate,
+            _selectedTask.AssignedEmployeeId);
+
+        LoadTasksForSelectedProject(updatedTask.Id);
+        RefreshDashboardSummary();
+        RecordAudit("Updated", "Task", $"{updatedTask.Title}: Status '{oldStatus}' -> '{TaskStatusNames.Done}'");
+        ShowTaskFormMessage(TaskIsVisibleInCurrentFilters(updatedTask)
+            ? "Task Done olarak isaretlendi."
+            : "Task Done olarak isaretlendi. Aktif filtreler nedeniyle listede gorunmuyor.", isError: false);
+    }
+
+    private void AddEmployeeButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsurePermission(PermissionNames.EmployeeManage, "calisan yonetimi"))
+        {
+            return;
+        }
+
+        if (!TryReadEmployeeForm(
+            out string fullName,
+            out string email,
+            out string department,
+            out string roleTitle,
+            out string availability,
+            out DateTime? leaveStart,
+            out DateTime? leaveEnd,
+            out string skills,
+            out string backupEmployeeName))
+        {
+            return;
+        }
+
+        Employee employee = _employeeService.CreateEmployee(
+            fullName,
+            email,
+            department,
+            roleTitle,
+            availability,
+            leaveStart,
+            leaveEnd,
+            skills,
+            backupEmployeeName);
+
+        LoadEmployees(employee.Id);
+        RecordAudit("Created", "Employee", $"{employee.FullName} calisan kaydi {department} ekibine eklendi.");
+        ShowEmployeeFormMessage("Calisan eklendi ve listede secildi.", isError: false);
+    }
+
+    private void UpdateEmployeeButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsurePermission(PermissionNames.EmployeeManage, "calisan yonetimi"))
+        {
+            return;
+        }
+
+        if (_selectedEmployee is null)
+        {
+            ShowEmployeeFormMessage("Guncellemek icin listeden bir calisan sec.", isError: true);
+            return;
+        }
+
+        if (!TryReadEmployeeForm(
+            out string fullName,
+            out string email,
+            out string department,
+            out string roleTitle,
+            out string availability,
+            out DateTime? leaveStart,
+            out DateTime? leaveEnd,
+            out string skills,
+            out string backupEmployeeName))
+        {
+            return;
+        }
+
+        string changeDetails = BuildEmployeeChangeDetails(_selectedEmployee, fullName, email, department, roleTitle, availability, leaveStart, leaveEnd, skills, backupEmployeeName);
+        Employee employee = _employeeService.UpdateEmployee(
+            _selectedEmployee,
+            fullName,
+            email,
+            department,
+            roleTitle,
+            availability,
+            leaveStart,
+            leaveEnd,
+            skills,
+            backupEmployeeName);
+
+        LoadEmployees(employee.Id);
+        RecordAudit("Updated", "Employee", $"{employee.FullName}: {changeDetails}");
+        ShowEmployeeFormMessage("Calisan bilgileri guncellendi.", isError: false);
+    }
+
+    private void ClearEmployeeFormButton_Click(object sender, RoutedEventArgs e)
+    {
+        ClearEmployeeForm();
     }
 
     private bool TryReadCustomerForm(out string companyName, out string contactName, out string email)
@@ -513,6 +690,14 @@ public partial class MainWindow : Window
         UpdateTaskActionState();
     }
 
+    private void ApplyEmployeePermissions(UserSession user)
+    {
+        bool canManageEmployees = user.HasPermission(PermissionNames.EmployeeManage);
+        TeamTab.Visibility = canManageEmployees ? Visibility.Visible : Visibility.Collapsed;
+        AddEmployeeButton.IsEnabled = canManageEmployees;
+        UpdateEmployeeActionState();
+    }
+
     private bool EnsurePermission(string permission, string operationName)
     {
         if (_currentUser?.HasPermission(permission) == true)
@@ -555,6 +740,62 @@ public partial class MainWindow : Window
         }
 
         changes.Add($"{fieldName}: '{oldValue}' -> '{newValue}'");
+    }
+
+    private static string BuildTaskChangeDetails(
+        string oldStatus,
+        string newStatus,
+        string oldPriority,
+        string newPriority,
+        string oldAssignedEmployeeName,
+        string newAssignedEmployeeName,
+        DateTime? oldDueDate,
+        DateTime? newDueDate)
+    {
+        List<string> changes = [];
+
+        AddChangeIfNeeded(changes, "Status", oldStatus, newStatus);
+        AddChangeIfNeeded(changes, "Priority", oldPriority, newPriority);
+        AddChangeIfNeeded(changes, "Assigned to", oldAssignedEmployeeName, newAssignedEmployeeName);
+        AddChangeIfNeeded(changes, "Due date", FormatAuditDate(oldDueDate), FormatAuditDate(newDueDate));
+
+        return changes.Count == 0
+            ? "No workflow changes"
+            : string.Join("; ", changes);
+    }
+
+    private static string FormatAuditDate(DateTime? date)
+    {
+        return date.HasValue ? date.Value.ToString("dd.MM.yyyy") : "none";
+    }
+
+    private static string BuildEmployeeChangeDetails(
+        Employee oldEmployee,
+        string fullName,
+        string email,
+        string department,
+        string roleTitle,
+        string availability,
+        DateTime? leaveStart,
+        DateTime? leaveEnd,
+        string skills,
+        string backupEmployeeName)
+    {
+        List<string> changes = [];
+
+        AddChangeIfNeeded(changes, "Full name", oldEmployee.FullName, fullName);
+        AddChangeIfNeeded(changes, "Email", oldEmployee.Email, email);
+        AddChangeIfNeeded(changes, "Department", oldEmployee.Department, department);
+        AddChangeIfNeeded(changes, "Role", oldEmployee.RoleTitle, roleTitle);
+        AddChangeIfNeeded(changes, "Availability", oldEmployee.AvailabilityStatus, availability);
+        AddChangeIfNeeded(changes, "Leave start", FormatAuditDate(oldEmployee.LeaveStart), FormatAuditDate(leaveStart));
+        AddChangeIfNeeded(changes, "Leave end", FormatAuditDate(oldEmployee.LeaveEnd), FormatAuditDate(leaveEnd));
+        AddChangeIfNeeded(changes, "Skills", oldEmployee.Skills, skills);
+        AddChangeIfNeeded(changes, "Backup", oldEmployee.BackupEmployeeName, backupEmployeeName);
+
+        return changes.Count == 0
+            ? "No employee changes"
+            : string.Join("; ", changes);
     }
 
     private void LoadProjectsForSelectedCustomer(int? projectIdToSelect = null, bool selectFirstProject = false)
@@ -639,12 +880,13 @@ public partial class MainWindow : Window
 
         SelectedProjectForTaskTextBlock.Text = $"Selected project: {_selectedProject.Name}";
 
-        foreach (WorkTask task in _taskService.GetTasksForProject(_selectedProject.Id))
+        foreach (WorkTask task in GetFilteredTasksForSelectedProject())
         {
             _tasks.Add(task);
         }
 
         TasksEmptyTextBlock.Visibility = _tasks.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        TasksEmptyTextBlock.Text = GetTaskEmptyMessage();
 
         if (taskIdToSelect is null && selectFirstTask && _tasks.Count > 0)
         {
@@ -653,10 +895,7 @@ public partial class MainWindow : Window
 
         if (taskIdToSelect is null)
         {
-            TaskTitleTextBox.Clear();
-            SelectTaskStatus(TaskStatusNames.ToDo);
-            SelectTaskPriority(TaskPriorityNames.Normal);
-            TaskDueDatePicker.SelectedDate = DateTime.Today.AddDays(7);
+            ResetTaskForm();
             return;
         }
 
@@ -665,7 +904,10 @@ public partial class MainWindow : Window
         if (taskToSelect is not null)
         {
             SelectTask(taskToSelect);
+            return;
         }
+
+        ResetTaskForm();
     }
 
     private void SelectTask(WorkTask task)
@@ -676,8 +918,53 @@ public partial class MainWindow : Window
         TaskTitleTextBox.Text = task.Title;
         SelectTaskStatus(task.Status);
         SelectTaskPriority(task.Priority);
+        SelectAssignedEmployee(task.AssignedEmployeeId);
         TaskDueDatePicker.SelectedDate = task.DueDate;
         UpdateTaskActionState();
+    }
+
+    private void LoadEmployees(int? employeeIdToSelect = null)
+    {
+        _employees.Clear();
+        _selectedEmployee = null;
+        EmployeesDataGrid.SelectedItem = null;
+        UpdateEmployeeActionState();
+
+        foreach (Employee employee in _employeeService.GetEmployees())
+        {
+            _employees.Add(employee);
+        }
+
+        if (employeeIdToSelect is null)
+        {
+            ClearEmployeeForm();
+            return;
+        }
+
+        Employee? employeeToSelect = _employees.FirstOrDefault(employee => employee.Id == employeeIdToSelect.Value);
+
+        if (employeeToSelect is not null)
+        {
+            SelectEmployee(employeeToSelect);
+        }
+    }
+
+    private void SelectEmployee(Employee employee)
+    {
+        _selectedEmployee = employee;
+        EmployeesDataGrid.SelectedItem = employee;
+        EmployeesDataGrid.ScrollIntoView(employee);
+        EmployeeFullNameTextBox.Text = employee.FullName;
+        EmployeeEmailTextBox.Text = employee.Email;
+        EmployeeDepartmentTextBox.Text = employee.Department;
+        EmployeeRoleTextBox.Text = employee.RoleTitle;
+        SelectEmployeeAvailability(employee.AvailabilityStatus);
+        EmployeeLeaveStartDatePicker.SelectedDate = employee.LeaveStart;
+        EmployeeLeaveEndDatePicker.SelectedDate = employee.LeaveEnd;
+        EmployeeSkillsTextBox.Text = employee.Skills;
+        EmployeeBackupTextBox.Text = employee.BackupEmployeeName;
+        EmployeeWorkloadSummaryTextBlock.Text = BuildEmployeeWorkloadSummary(employee);
+        UpdateEmployeeActionState();
     }
 
     private void RefreshProjectOverview()
@@ -718,6 +1005,143 @@ public partial class MainWindow : Window
             && _selectedTask is not null;
 
         UpdateTaskButton.IsEnabled = canUpdateTask;
+        MarkTaskDoneButton.IsEnabled = canUpdateTask && _selectedTask?.Status != TaskStatusNames.Done;
+    }
+
+    private void UpdateEmployeeActionState()
+    {
+        bool canManageEmployees = _currentUser?.HasPermission(PermissionNames.EmployeeManage) == true;
+        AddEmployeeButton.IsEnabled = canManageEmployees;
+        UpdateEmployeeButton.IsEnabled = canManageEmployees && _selectedEmployee is not null;
+    }
+
+    private List<WorkTask> GetFilteredTasksForSelectedProject()
+    {
+        if (_selectedProject is null)
+        {
+            return [];
+        }
+
+        IEnumerable<WorkTask> query = _taskService.GetTasksForProject(_selectedProject.Id);
+        string statusFilter = GetSelectedComboBoxText(TaskStatusFilterComboBox);
+        string priorityFilter = GetSelectedComboBoxText(TaskPriorityFilterComboBox);
+        string dueDateFilter = GetSelectedComboBoxText(TaskDueDateFilterComboBox);
+
+        if (statusFilter != "All statuses")
+        {
+            query = query.Where(task => task.Status == statusFilter);
+        }
+
+        if (priorityFilter != "All priorities")
+        {
+            query = query.Where(task => task.Priority == priorityFilter);
+        }
+
+        query = dueDateFilter switch
+        {
+            "Overdue" => query.Where(task => task.IsOverdue),
+            "Due today" => query.Where(task => task.DueDate.HasValue
+                && task.DueDate.Value.Date == DateTime.Today),
+            "Due in 7 days" => query.Where(task => task.DueDate.HasValue
+                && task.DueDate.Value.Date >= DateTime.Today
+                && task.DueDate.Value.Date <= DateTime.Today.AddDays(7)),
+            "No due date" => query.Where(task => !task.DueDate.HasValue),
+            _ => query
+        };
+
+        return query.ToList();
+    }
+
+    private bool TaskIsVisibleInCurrentFilters(WorkTask task)
+    {
+        return GetFilteredTasksForSelectedProject().Any(filteredTask => filteredTask.Id == task.Id);
+    }
+
+    private string GetTaskEmptyMessage()
+    {
+        if (_selectedProject is null)
+        {
+            return "Once Projects sekmesinden bir project sec.";
+        }
+
+        bool hasActiveFilter = GetSelectedComboBoxText(TaskStatusFilterComboBox) != "All statuses"
+            || GetSelectedComboBoxText(TaskPriorityFilterComboBox) != "All priorities"
+            || GetSelectedComboBoxText(TaskDueDateFilterComboBox) != "All dates";
+
+        return hasActiveFilter
+            ? "Bu filtrelere uygun task bulunamadi."
+            : "Bu project icin henuz task yok.";
+    }
+
+    private void ResetTaskForm()
+    {
+        _selectedTask = null;
+        TaskTitleTextBox.Clear();
+        SelectTaskStatus(TaskStatusNames.ToDo);
+        SelectTaskPriority(TaskPriorityNames.Normal);
+        SelectAssignedEmployee(null);
+        TaskDueDatePicker.SelectedDate = DateTime.Today.AddDays(7);
+        UpdateTaskActionState();
+    }
+
+    private static string GetSelectedComboBoxText(System.Windows.Controls.ComboBox comboBox)
+    {
+        if (comboBox.SelectedItem is System.Windows.Controls.ComboBoxItem item
+            && item.Content is string text)
+        {
+            return text;
+        }
+
+        return string.Empty;
+    }
+
+    private int? GetSelectedAssignedEmployeeId()
+    {
+        if (TaskAssignedEmployeeComboBox.SelectedValue is int employeeId)
+        {
+            return employeeId;
+        }
+
+        return null;
+    }
+
+    private void SelectAssignedEmployee(int? employeeId)
+    {
+        TaskAssignedEmployeeComboBox.SelectedValue = employeeId;
+
+        if (employeeId is null)
+        {
+            TaskAssignedEmployeeComboBox.SelectedIndex = -1;
+        }
+    }
+
+    private Employee? FindEmployee(int? employeeId)
+    {
+        if (employeeId is null)
+        {
+            return null;
+        }
+
+        return _employees.FirstOrDefault(employee => employee.Id == employeeId.Value);
+    }
+
+    private string GetEmployeeName(int? employeeId)
+    {
+        return FindEmployee(employeeId)?.FullName ?? "Unassigned";
+    }
+
+    private static string AppendAssignmentWarning(string message, Employee? employee)
+    {
+        if (employee is null || employee.AvailabilityStatus == EmployeeAvailabilityNames.Available)
+        {
+            return message;
+        }
+
+        string backupText = string.IsNullOrWhiteSpace(employee.BackupEmployeeName)
+            ? "Yedek calisan tanimli degil."
+            : $"Yedek: {employee.BackupEmployeeName}.";
+
+        return $"{message} Uyari: {employee.FullName} su an {employee.AvailabilityStatus}. {backupText}";
     }
 
     private string GetSelectedProjectStatus()
@@ -815,5 +1239,110 @@ public partial class MainWindow : Window
             ? System.Windows.Media.Brushes.Firebrick
             : System.Windows.Media.Brushes.SeaGreen;
         TaskFormMessageTextBlock.Visibility = Visibility.Visible;
+    }
+
+    private bool TryReadEmployeeForm(
+        out string fullName,
+        out string email,
+        out string department,
+        out string roleTitle,
+        out string availability,
+        out DateTime? leaveStart,
+        out DateTime? leaveEnd,
+        out string skills,
+        out string backupEmployeeName)
+    {
+        fullName = EmployeeFullNameTextBox.Text.Trim();
+        email = EmployeeEmailTextBox.Text.Trim();
+        department = EmployeeDepartmentTextBox.Text.Trim();
+        roleTitle = EmployeeRoleTextBox.Text.Trim();
+        availability = GetSelectedEmployeeAvailability();
+        leaveStart = EmployeeLeaveStartDatePicker.SelectedDate;
+        leaveEnd = EmployeeLeaveEndDatePicker.SelectedDate;
+        skills = EmployeeSkillsTextBox.Text.Trim();
+        backupEmployeeName = EmployeeBackupTextBox.Text.Trim();
+
+        if (string.IsNullOrWhiteSpace(fullName)
+            || string.IsNullOrWhiteSpace(email)
+            || string.IsNullOrWhiteSpace(department)
+            || string.IsNullOrWhiteSpace(roleTitle))
+        {
+            ShowEmployeeFormMessage("Ad soyad, email, departman ve rol alanlari zorunludur.", isError: true);
+            return false;
+        }
+
+        if (leaveStart.HasValue && leaveEnd.HasValue && leaveStart.Value.Date > leaveEnd.Value.Date)
+        {
+            ShowEmployeeFormMessage("Izin baslangic tarihi bitis tarihinden sonra olamaz.", isError: true);
+            return false;
+        }
+
+        return true;
+    }
+
+    private void ClearEmployeeForm()
+    {
+        _selectedEmployee = null;
+        EmployeesDataGrid.SelectedItem = null;
+        EmployeeFullNameTextBox.Clear();
+        EmployeeEmailTextBox.Clear();
+        EmployeeDepartmentTextBox.Clear();
+        EmployeeRoleTextBox.Clear();
+        SelectEmployeeAvailability(EmployeeAvailabilityNames.Available);
+        EmployeeLeaveStartDatePicker.SelectedDate = null;
+        EmployeeLeaveEndDatePicker.SelectedDate = null;
+        EmployeeSkillsTextBox.Clear();
+        EmployeeBackupTextBox.Clear();
+        EmployeeWorkloadSummaryTextBlock.Text = "Listeden bir calisan sec.";
+        EmployeeFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        UpdateEmployeeActionState();
+    }
+
+    private string GetSelectedEmployeeAvailability()
+    {
+        if (EmployeeAvailabilityComboBox.SelectedItem is System.Windows.Controls.ComboBoxItem item
+            && item.Content is string availability)
+        {
+            return availability;
+        }
+
+        return EmployeeAvailabilityNames.Available;
+    }
+
+    private void SelectEmployeeAvailability(string availability)
+    {
+        foreach (object item in EmployeeAvailabilityComboBox.Items)
+        {
+            if (item is System.Windows.Controls.ComboBoxItem comboBoxItem
+                && comboBoxItem.Content?.ToString() == availability)
+            {
+                EmployeeAvailabilityComboBox.SelectedItem = comboBoxItem;
+                return;
+            }
+        }
+
+        EmployeeAvailabilityComboBox.SelectedIndex = 0;
+    }
+
+    private void ShowEmployeeFormMessage(string message, bool isError)
+    {
+        EmployeeFormMessageTextBlock.Text = message;
+        EmployeeFormMessageTextBlock.Foreground = isError
+            ? System.Windows.Media.Brushes.Firebrick
+            : System.Windows.Media.Brushes.SeaGreen;
+        EmployeeFormMessageTextBlock.Visibility = Visibility.Visible;
+    }
+
+    private static string BuildEmployeeWorkloadSummary(Employee employee)
+    {
+        string nextDueText = employee.NextOpenTaskDueDate.HasValue
+            ? employee.NextOpenTaskDueDate.Value.ToString("dd.MM.yyyy")
+            : "yaklasan teslim yok";
+
+        string coverageText = employee.NeedsCoverage
+            ? $" Kapsama gerekli; yedek kisi: {employee.BackupEmployeeName}."
+            : string.Empty;
+
+        return $"{employee.OpenTaskCount} acik task var. En yakin teslim: {nextDueText}.{coverageText}";
     }
 }

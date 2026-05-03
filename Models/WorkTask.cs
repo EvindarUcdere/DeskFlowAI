@@ -9,13 +9,14 @@ public sealed class WorkTask
         Priority = string.Empty;
     }
 
-    public WorkTask(int projectId, string title, string status, string priority, DateTime? dueDate)
+    public WorkTask(int projectId, string title, string status, string priority, DateTime? dueDate, int? assignedEmployeeId = null)
     {
         ProjectId = projectId;
         Title = title;
         Status = status;
         Priority = priority;
         DueDate = dueDate;
+        AssignedEmployeeId = assignedEmployeeId;
         CreatedAt = DateTime.Now;
     }
 
@@ -24,6 +25,10 @@ public sealed class WorkTask
     public int ProjectId { get; private set; }
 
     public WorkProject? Project { get; private set; }
+
+    public int? AssignedEmployeeId { get; private set; }
+
+    public Employee? AssignedEmployee { get; private set; }
 
     public string Title { get; private set; }
 
@@ -35,10 +40,15 @@ public sealed class WorkTask
 
     public DateTime CreatedAt { get; private set; }
 
-    public void ChangeWorkflow(string status, string priority, DateTime? dueDate)
+    public bool IsOverdue => DueDate.HasValue
+        && DueDate.Value.Date < DateTime.Today
+        && Status != TaskStatusNames.Done;
+
+    public void ChangeWorkflow(string status, string priority, DateTime? dueDate, int? assignedEmployeeId)
     {
         Status = status;
         Priority = priority;
         DueDate = dueDate;
+        AssignedEmployeeId = assignedEmployeeId;
     }
 }

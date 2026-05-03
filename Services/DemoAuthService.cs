@@ -39,7 +39,8 @@ public sealed class DemoAuthService
                     PermissionNames.ProjectCreate,
                     PermissionNames.ProjectUpdate,
                     PermissionNames.TaskCreate,
-                    PermissionNames.TaskUpdate
+                    PermissionNames.TaskUpdate,
+                    PermissionNames.EmployeeManage
                 ]),
 
             "manager@deskflow.ai" => new UserSession(
@@ -52,7 +53,8 @@ public sealed class DemoAuthService
                     PermissionNames.ProjectCreate,
                     PermissionNames.ProjectUpdate,
                     PermissionNames.TaskCreate,
-                    PermissionNames.TaskUpdate
+                    PermissionNames.TaskUpdate,
+                    PermissionNames.EmployeeManage
                 ]),
 
             _ => new UserSession(

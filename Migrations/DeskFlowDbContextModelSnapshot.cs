@@ -82,6 +82,61 @@ namespace DeskFlowAI.Migrations
                     b.ToTable("Customers");
                 });
 
+            modelBuilder.Entity("DeskFlowAI.Models.Employee", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AvailabilityStatus")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BackupEmployeeName")
+                        .IsRequired()
+                        .HasMaxLength(140)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Department")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(140)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LeaveEnd")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LeaveStart")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RoleTitle")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Skills")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Employees");
+                });
+
             modelBuilder.Entity("DeskFlowAI.Models.WorkProject", b =>
                 {
                     b.Property<int>("Id")
@@ -120,6 +175,9 @@ namespace DeskFlowAI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("AssignedEmployeeId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -146,6 +204,8 @@ namespace DeskFlowAI.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AssignedEmployeeId");
+
                     b.HasIndex("ProjectId");
 
                     b.ToTable("Tasks");
@@ -164,13 +224,25 @@ namespace DeskFlowAI.Migrations
 
             modelBuilder.Entity("DeskFlowAI.Models.WorkTask", b =>
                 {
+                    b.HasOne("DeskFlowAI.Models.Employee", "AssignedEmployee")
+                        .WithMany("AssignedTasks")
+                        .HasForeignKey("AssignedEmployeeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("DeskFlowAI.Models.WorkProject", "Project")
                         .WithMany("Tasks")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("AssignedEmployee");
+
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("DeskFlowAI.Models.Employee", b =>
+                {
+                    b.Navigation("AssignedTasks");
                 });
 
             modelBuilder.Entity("DeskFlowAI.Models.Customer", b =>

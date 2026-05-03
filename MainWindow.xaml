@@ -25,11 +25,11 @@
         </Style>
 
         <Style x:Key="MetricCardStyle" TargetType="Border">
-            <Setter Property="Padding" Value="16" />
+            <Setter Property="Padding" Value="14,10" />
             <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="#D8E1EC" />
+            <Setter Property="BorderBrush" Value="#BFDBFE" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="CornerRadius" Value="6" />
         </Style>
 
         <Style x:Key="PrimaryButtonStyle" TargetType="Button">
@@ -50,8 +50,35 @@
             <Setter Property="Foreground" Value="#334155" />
         </Style>
 
+        <Style x:Key="DangerButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+            <Setter Property="Background" Value="#FEF2F2" />
+            <Setter Property="BorderBrush" Value="#FECACA" />
+            <Setter Property="Foreground" Value="#991B1B" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style x:Key="OverdueTaskRowStyle" TargetType="DataGridRow">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                    <Setter Property="Background" Value="#FEF2F2" />
+                    <Setter Property="Foreground" Value="#991B1B" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="EmployeeWorkloadRowStyle" TargetType="DataGridRow">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding NeedsCoverage}" Value="True">
+                    <Setter Property="Background" Value="#FFFBEB" />
+                    <Setter Property="Foreground" Value="#92400E" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="SectionCardStyle" TargetType="Border">
-            <Setter Property="Padding" Value="16" />
+            <Setter Property="Padding" Value="14" />
             <Setter Property="Margin" Value="0,0,0,14" />
             <Setter Property="Background" Value="#FAFCFF" />
             <Setter Property="BorderBrush" Value="#D8E1EC" />
@@ -60,7 +87,7 @@
         </Style>
 
         <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontSize" Value="17" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Foreground" Value="#1F2937" />
         </Style>
@@ -210,95 +237,93 @@
 
         <Grid x:Name="DashboardView" Visibility="Collapsed">
             <Grid.RowDefinitions>
-                <RowDefinition Height="72" />
+                <RowDefinition Height="56" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
             <Border Grid.Row="0"
-                    Background="White"
-                    BorderBrush="#D8E1EC"
+                    BorderBrush="#1E40AF"
                     BorderThickness="0,0,0,1"
-                    Padding="28,0">
+                    Padding="22,0">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="#0F172A" Offset="0" />
+                        <GradientStop Color="#1D4ED8" Offset="0.62" />
+                        <GradientStop Color="#0F766E" Offset="1" />
+                    </LinearGradientBrush>
+                </Border.Background>
                 <DockPanel LastChildFill="False">
                     <StackPanel DockPanel.Dock="Left"
+                                Orientation="Horizontal"
                                 VerticalAlignment="Center">
                         <TextBlock Text="DeskFlow AI"
-                                   FontSize="22"
+                                   FontSize="20"
                                    FontWeight="SemiBold"
-                                   Foreground="#1F2937" />
+                                   Foreground="White" />
 
                         <TextBlock x:Name="SignedInUserTextBlock"
-                                   Margin="0,3,0,0"
+                                   Margin="14,3,0,0"
                                    FontSize="13"
-                                   Foreground="#64748B" />
+                                   Foreground="#DBEAFE" />
                     </StackPanel>
 
                     <Button DockPanel.Dock="Right"
                             Content="Sign out"
-                            Width="96"
-                            Height="36"
-                            Margin="0,18,0,18"
+                            Width="90"
+                            Height="32"
+                            Margin="0,12,0,12"
+                            Background="#EFF6FF"
+                            BorderBrush="#93C5FD"
+                            Foreground="#0F172A"
                             Click="SignOutButton_Click" />
                 </DockPanel>
             </Border>
 
-            <Grid Grid.Row="1" Margin="24">
+            <Grid Grid.Row="1" Margin="18">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <StackPanel>
-                    <TextBlock Text="Dashboard"
-                               FontSize="28"
-                               FontWeight="SemiBold"
-                               Foreground="#1F2937" />
-
-                    <TextBlock Text="Operasyon ozeti ve bekleyen isler."
-                               Margin="0,6,0,16"
-                               FontSize="15"
-                               Foreground="#64748B" />
-                </StackPanel>
-
-                <UniformGrid Grid.Row="1"
+                <UniformGrid Grid.Row="0"
                              Columns="4"
                              Rows="1"
-                             Margin="0,0,0,18"
+                             Margin="0,0,0,14"
                              VerticalAlignment="Top">
-                    <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,14,0">
-                        <StackPanel>
-                            <TextBlock Text="Aktif projeler" Foreground="#64748B" />
-                            <TextBlock x:Name="ActiveProjectsTextBlock" Text="0" Margin="0,8,0,0" FontSize="28" FontWeight="SemiBold" Foreground="#1F2937" />
-                        </StackPanel>
+                    <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,10,0" Background="#EFF6FF">
+                        <DockPanel>
+                            <TextBlock Text="Aktif projeler" Foreground="#1E3A8A" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <TextBlock x:Name="ActiveProjectsTextBlock" DockPanel.Dock="Right" Text="0" FontSize="24" FontWeight="SemiBold" Foreground="#1D4ED8" HorizontalAlignment="Right" />
+                        </DockPanel>
                     </Border>
 
-                    <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,14,0">
-                        <StackPanel>
-                            <TextBlock Text="Acik gorevler" Foreground="#64748B" />
-                            <TextBlock x:Name="OpenTasksTextBlock" Text="0" Margin="0,8,0,0" FontSize="28" FontWeight="SemiBold" Foreground="#1F2937" />
-                        </StackPanel>
+                    <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,10,0" Background="#F0FDF4" BorderBrush="#BBF7D0">
+                        <DockPanel>
+                            <TextBlock Text="Acik gorevler" Foreground="#166534" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <TextBlock x:Name="OpenTasksTextBlock" DockPanel.Dock="Right" Text="0" FontSize="24" FontWeight="SemiBold" Foreground="#15803D" HorizontalAlignment="Right" />
+                        </DockPanel>
                     </Border>
 
-                    <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,14,0">
-                        <StackPanel>
-                            <TextBlock Text="Geciken isler" Foreground="#64748B" />
-                            <TextBlock x:Name="OverdueTasksTextBlock" Text="0" Margin="0,8,0,0" FontSize="28" FontWeight="SemiBold" Foreground="#B91C1C" />
-                        </StackPanel>
+                    <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,10,0" Background="#FEF2F2" BorderBrush="#FECACA">
+                        <DockPanel>
+                            <TextBlock Text="Geciken isler" Foreground="#991B1B" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <TextBlock x:Name="OverdueTasksTextBlock" DockPanel.Dock="Right" Text="0" FontSize="24" FontWeight="SemiBold" Foreground="#B91C1C" HorizontalAlignment="Right" />
+                        </DockPanel>
                     </Border>
 
-                    <Border Style="{StaticResource MetricCardStyle}">
-                        <StackPanel>
-                            <TextBlock Text="AI bekleyen belgeler" Foreground="#64748B" />
-                            <TextBlock x:Name="PendingAiDocumentsTextBlock" Text="0" Margin="0,8,0,0" FontSize="28" FontWeight="SemiBold" Foreground="#1F2937" />
-                        </StackPanel>
+                    <Border Style="{StaticResource MetricCardStyle}" Background="#FFFBEB" BorderBrush="#FDE68A">
+                        <DockPanel>
+                            <TextBlock Text="AI bekleyen belgeler" Foreground="#92400E" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <TextBlock x:Name="PendingAiDocumentsTextBlock" DockPanel.Dock="Right" Text="0" FontSize="24" FontWeight="SemiBold" Foreground="#B45309" HorizontalAlignment="Right" />
+                        </DockPanel>
                     </Border>
                 </UniformGrid>
 
-                <Grid Grid.Row="2">
+                <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1.75*" />
-                        <ColumnDefinition Width="1*" />
+                        <ColumnDefinition Width="1.15*" MinWidth="360" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="1*" MinWidth="420" />
                     </Grid.ColumnDefinitions>
 
                     <Border Grid.Column="0"
@@ -307,7 +332,7 @@
                             BorderBrush="#D8E1EC"
                             BorderThickness="1"
                             CornerRadius="8"
-                            Margin="0,0,18,0">
+                            Margin="0">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -317,33 +342,49 @@
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
 
-                            <DockPanel Margin="0,0,0,14">
-                                <StackPanel DockPanel.Dock="Left">
-                                    <TextBlock Text="Customers"
-                                               FontSize="20"
-                                               FontWeight="SemiBold"
-                                               Foreground="#1F2937" />
+                            <Border Margin="0,0,0,12"
+                                    Padding="14"
+                                    Background="#F8FAFC"
+                                    BorderBrush="#E2E8F0"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
 
-                                    <TextBlock Text="Sirket musterilerini sahte veriyle listeliyoruz."
-                                               Margin="0,4,0,0"
-                                               FontSize="13"
-                                               Foreground="#64748B" />
-                                </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="Customers"
+                                                   FontSize="20"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#0F172A" />
 
-                                <Button x:Name="DeleteCustomerButton"
-                                        DockPanel.Dock="Right"
-                                        Content="Delete selected"
-                                        Style="{StaticResource SecondaryButtonStyle}"
-                                        Click="DeleteCustomerButton_Click" />
-                            </DockPanel>
+                                        <TextBlock Text="Musteri kayitlari, iletisim bilgileri ve durum takibi."
+                                                   Margin="0,4,0,0"
+                                                   FontSize="13"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="#64748B" />
+                                    </StackPanel>
 
-                            <DockPanel Grid.Row="1"
-                                       Margin="0,0,0,12">
-                                <Button DockPanel.Dock="Right"
-                                        Content="Clear search"
-                                        Margin="10,0,0,0"
-                                        Style="{StaticResource SecondaryButtonStyle}"
-                                        Click="ClearCustomerSearchButton_Click" />
+                                    <Button x:Name="DeleteCustomerButton"
+                                            Grid.Column="2"
+                                            Content="Delete selected"
+                                            Width="138"
+                                            VerticalAlignment="Center"
+                                            Style="{StaticResource DangerButtonStyle}"
+                                            Click="DeleteCustomerButton_Click" />
+                                </Grid>
+                            </Border>
+
+                            <Grid Grid.Row="1"
+                                  Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="112" />
+                                </Grid.ColumnDefinitions>
 
                                 <TextBox x:Name="CustomerSearchTextBox"
                                          Height="38"
@@ -353,7 +394,12 @@
                                          BorderBrush="#CBD5E1"
                                          BorderThickness="1"
                                          TextChanged="CustomerSearchTextBox_TextChanged" />
-                            </DockPanel>
+
+                                <Button Grid.Column="2"
+                                        Content="Clear"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        Click="ClearCustomerSearchButton_Click" />
+                            </Grid>
 
                             <DataGrid x:Name="CustomersDataGrid"
                                       Grid.Row="2"
@@ -400,8 +446,26 @@
                         </Grid>
                     </Border>
 
-                    <Border Grid.Column="1"
-                            Padding="14"
+                    <GridSplitter Grid.Column="1"
+                                  Width="10"
+                                  HorizontalAlignment="Stretch"
+                                  VerticalAlignment="Stretch"
+                                  ResizeBehavior="PreviousAndNext"
+                                  Background="Transparent"
+                                  ShowsPreview="True">
+                        <GridSplitter.Template>
+                            <ControlTemplate TargetType="GridSplitter">
+                                <Border Background="#D8E1EC"
+                                        Width="2"
+                                        CornerRadius="1"
+                                        HorizontalAlignment="Center"
+                                        Margin="0,8" />
+                            </ControlTemplate>
+                        </GridSplitter.Template>
+                    </GridSplitter>
+
+                    <Border Grid.Column="2"
+                            Padding="12"
                             Background="White"
                             BorderBrush="#D8E1EC"
                             BorderThickness="1"
@@ -625,6 +689,58 @@
                                                            FontWeight="SemiBold"
                                                            TextWrapping="Wrap"
                                                            Foreground="#334155" />
+
+                                                <Grid Margin="0,14,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="10" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="10" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock Text="Status filter" Style="{StaticResource FieldLabelStyle}" />
+                                                        <ComboBox x:Name="TaskStatusFilterComboBox"
+                                                                  Height="36"
+                                                                  SelectedIndex="0"
+                                                                  SelectionChanged="TaskFilter_Changed">
+                                                            <ComboBoxItem Content="All statuses" />
+                                                            <ComboBoxItem Content="To Do" />
+                                                            <ComboBoxItem Content="In Progress" />
+                                                            <ComboBoxItem Content="Blocked" />
+                                                            <ComboBoxItem Content="Done" />
+                                                        </ComboBox>
+                                                    </StackPanel>
+
+                                                    <StackPanel Grid.Column="2">
+                                                        <TextBlock Text="Priority filter" Style="{StaticResource FieldLabelStyle}" />
+                                                        <ComboBox x:Name="TaskPriorityFilterComboBox"
+                                                                  Height="36"
+                                                                  SelectedIndex="0"
+                                                                  SelectionChanged="TaskFilter_Changed">
+                                                            <ComboBoxItem Content="All priorities" />
+                                                            <ComboBoxItem Content="Low" />
+                                                            <ComboBoxItem Content="Normal" />
+                                                            <ComboBoxItem Content="High" />
+                                                            <ComboBoxItem Content="Critical" />
+                                                        </ComboBox>
+                                                    </StackPanel>
+
+                                                    <StackPanel Grid.Column="4">
+                                                        <TextBlock Text="Due filter" Style="{StaticResource FieldLabelStyle}" />
+                                                        <ComboBox x:Name="TaskDueDateFilterComboBox"
+                                                                  Height="36"
+                                                                  SelectedIndex="0"
+                                                                  SelectionChanged="TaskFilter_Changed">
+                                                            <ComboBoxItem Content="All dates" />
+                                                            <ComboBoxItem Content="Overdue" />
+                                                            <ComboBoxItem Content="Due today" />
+                                                            <ComboBoxItem Content="Due in 7 days" />
+                                                            <ComboBoxItem Content="No due date" />
+                                                        </ComboBox>
+                                                    </StackPanel>
+                                                </Grid>
                                             </StackPanel>
 
                                             <DataGrid x:Name="TasksDataGrid"
@@ -639,9 +755,11 @@
                                                       HeadersVisibility="Column"
                                                       GridLinesVisibility="Horizontal"
                                                       BorderBrush="#E2E8F0"
-                                                      BorderThickness="1">
+                                                      BorderThickness="1"
+                                                      RowStyle="{StaticResource OverdueTaskRowStyle}">
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn Header="Task" Binding="{Binding Title}" Width="*" />
+                                                    <DataGridTextColumn Header="Assigned To" Binding="{Binding AssignedEmployee.FullName}" Width="0.9*" />
                                                     <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="0.8*" />
                                                     <DataGridTextColumn Header="Priority" Binding="{Binding Priority}" Width="0.75*" />
                                                     <DataGridTextColumn Header="Due" Binding="{Binding DueDate, StringFormat={}{0:dd.MM.yyyy}}" Width="0.75*" />
@@ -700,6 +818,15 @@
                                                 <ComboBoxItem Content="Critical" />
                                             </ComboBox>
 
+                                            <TextBlock Text="Assigned to"
+                                                       Margin="0,12,0,6"
+                                                       Style="{StaticResource FieldLabelStyle}" />
+
+                                            <ComboBox x:Name="TaskAssignedEmployeeComboBox"
+                                                      Height="38"
+                                                      DisplayMemberPath="FullName"
+                                                      SelectedValuePath="Id" />
+
                                             <TextBlock Text="Due date"
                                                        Margin="0,12,0,6"
                                                        Style="{StaticResource FieldLabelStyle}" />
@@ -720,12 +847,195 @@
                                                     IsEnabled="False"
                                                     Click="UpdateTaskButton_Click" />
 
+                                            <Button x:Name="MarkTaskDoneButton"
+                                                    Content="Mark as done"
+                                                    Margin="0,10,0,0"
+                                                    Style="{StaticResource SecondaryButtonStyle}"
+                                                    IsEnabled="False"
+                                                    Click="MarkTaskDoneButton_Click" />
+
                                             <TextBlock x:Name="TaskFormMessageTextBlock"
                                                        Margin="0,12,0,0"
                                                        FontSize="13"
                                                        TextWrapping="Wrap"
                                                        Visibility="Collapsed" />
                                         </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </TabItem>
+
+                            <TabItem x:Name="TeamTab" Header="Team">
+                                <Grid Margin="0,12,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1.25*" MinWidth="260" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="0.9*" MinWidth="240" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+
+                                            <StackPanel>
+                                                <TextBlock Text="Team overview" Style="{StaticResource SectionTitleStyle}" />
+
+                                                <TextBlock Text="Yoneticiler ekip uygunlugunu, acik is yukunu ve acil durum yedeklerini buradan takip eder."
+                                                           Margin="0,4,0,0"
+                                                           FontSize="13"
+                                                           TextWrapping="Wrap"
+                                                           Foreground="#64748B" />
+                                            </StackPanel>
+
+                                            <DataGrid x:Name="EmployeesDataGrid"
+                                                      Grid.Row="1"
+                                                      MinHeight="320"
+                                                      Margin="0,16,0,0"
+                                                      AutoGenerateColumns="False"
+                                                      CanUserAddRows="False"
+                                                      IsReadOnly="True"
+                                                      SelectionMode="Single"
+                                                      SelectionChanged="EmployeesDataGrid_SelectionChanged"
+                                                      HeadersVisibility="Column"
+                                                      GridLinesVisibility="Horizontal"
+                                                      BorderBrush="#E2E8F0"
+                                                      BorderThickness="1"
+                                                      RowStyle="{StaticResource EmployeeWorkloadRowStyle}">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Header="Name" Binding="{Binding FullName}" Width="*" />
+                                                    <DataGridTextColumn Header="Dept" Binding="{Binding Department}" Width="0.75*" />
+                                                    <DataGridTextColumn Header="Status" Binding="{Binding AvailabilityStatus}" Width="0.85*" />
+                                                    <DataGridTextColumn Header="Open" Binding="{Binding OpenTaskCount}" Width="0.45*" />
+                                                    <DataGridTextColumn Header="Next due" Binding="{Binding NextOpenTaskDueDate, StringFormat={}{0:dd.MM.yyyy}}" Width="0.7*" />
+                                                    <DataGridTextColumn Header="Backup" Binding="{Binding BackupEmployeeName}" Width="0.9*" />
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </Grid>
+                                    </Border>
+
+                                    <GridSplitter Grid.Column="1"
+                                                  Width="10"
+                                                  HorizontalAlignment="Stretch"
+                                                  VerticalAlignment="Stretch"
+                                                  ResizeBehavior="PreviousAndNext"
+                                                  Background="Transparent"
+                                                  ShowsPreview="True">
+                                        <GridSplitter.Template>
+                                            <ControlTemplate TargetType="GridSplitter">
+                                                <Border Background="#D8E1EC"
+                                                        Width="2"
+                                                        CornerRadius="1"
+                                                        HorizontalAlignment="Center"
+                                                        Margin="0,8" />
+                                            </ControlTemplate>
+                                        </GridSplitter.Template>
+                                    </GridSplitter>
+
+                                    <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                            <StackPanel>
+                                                <TextBlock Text="Employee details" Style="{StaticResource SectionTitleStyle}" />
+
+                                                <TextBlock Text="Calisan bilgisi, izin araligi ve yerine bakabilecek kisi."
+                                                           Margin="0,4,0,16"
+                                                           FontSize="13"
+                                                           TextWrapping="Wrap"
+                                                           Foreground="#64748B" />
+
+                                                <Border Padding="12"
+                                                        Margin="0,0,0,16"
+                                                        Background="#EFF6FF"
+                                                        BorderBrush="#BFDBFE"
+                                                        BorderThickness="1"
+                                                        CornerRadius="6">
+                                                    <TextBlock x:Name="EmployeeWorkloadSummaryTextBlock"
+                                                               Text="Listeden bir calisan sec."
+                                                               FontSize="13"
+                                                               TextWrapping="Wrap"
+                                                               Foreground="#1E3A8A" />
+                                                </Border>
+
+                                                <TextBlock Text="Full name" Style="{StaticResource FieldLabelStyle}" />
+                                                <TextBox x:Name="EmployeeFullNameTextBox" Style="{StaticResource InputStyle}" />
+
+                                                <TextBlock Text="Email" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                <TextBox x:Name="EmployeeEmailTextBox" Style="{StaticResource InputStyle}" />
+
+                                                <TextBlock Text="Department" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                <TextBox x:Name="EmployeeDepartmentTextBox" Style="{StaticResource InputStyle}" />
+
+                                                <TextBlock Text="Role" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                <TextBox x:Name="EmployeeRoleTextBox" Style="{StaticResource InputStyle}" />
+
+                                                <TextBlock Text="Availability" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                <ComboBox x:Name="EmployeeAvailabilityComboBox"
+                                                          Height="38"
+                                                          SelectedIndex="0">
+                                                    <ComboBoxItem Content="Available" />
+                                                    <ComboBoxItem Content="Busy" />
+                                                    <ComboBoxItem Content="On Leave" />
+                                                    <ComboBoxItem Content="Emergency Cover" />
+                                                </ComboBox>
+
+                                                <Grid Margin="0,12,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="10" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock Text="Leave start" Style="{StaticResource FieldLabelStyle}" />
+                                                        <DatePicker x:Name="EmployeeLeaveStartDatePicker" Height="38" />
+                                                    </StackPanel>
+
+                                                    <StackPanel Grid.Column="2">
+                                                        <TextBlock Text="Leave end" Style="{StaticResource FieldLabelStyle}" />
+                                                        <DatePicker x:Name="EmployeeLeaveEndDatePicker" Height="38" />
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <TextBlock Text="Skills / notes" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                <TextBox x:Name="EmployeeSkillsTextBox"
+                                                         Height="70"
+                                                         Padding="10,8"
+                                                         TextWrapping="Wrap"
+                                                         AcceptsReturn="True"
+                                                         BorderBrush="#CBD5E1"
+                                                         BorderThickness="1" />
+
+                                                <TextBlock Text="Emergency backup" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                <TextBox x:Name="EmployeeBackupTextBox" Style="{StaticResource InputStyle}" />
+
+                                                <Button x:Name="AddEmployeeButton"
+                                                        Content="Add employee"
+                                                        Margin="0,18,0,0"
+                                                        Style="{StaticResource PrimaryButtonStyle}"
+                                                        Click="AddEmployeeButton_Click" />
+
+                                                <UniformGrid Columns="2" Margin="0,10,0,0">
+                                                    <Button x:Name="UpdateEmployeeButton"
+                                                            Content="Update"
+                                                            Margin="0,0,5,0"
+                                                            Style="{StaticResource SecondaryButtonStyle}"
+                                                            IsEnabled="False"
+                                                            Click="UpdateEmployeeButton_Click" />
+
+                                                    <Button Content="Clear"
+                                                            Margin="5,0,0,0"
+                                                            Style="{StaticResource SecondaryButtonStyle}"
+                                                            Click="ClearEmployeeFormButton_Click" />
+                                                </UniformGrid>
+
+                                                <TextBlock x:Name="EmployeeFormMessageTextBlock"
+                                                           Margin="0,12,0,0"
+                                                           FontSize="13"
+                                                           TextWrapping="Wrap"
+                                                           Visibility="Collapsed" />
+                                            </StackPanel>
+                                        </ScrollViewer>
                                     </Border>
                                 </Grid>
                             </TabItem>

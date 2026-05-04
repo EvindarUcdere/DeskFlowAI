@@ -15,12 +15,14 @@ public partial class MainWindow : Window
     private readonly DemoProjectService _projectService = new();
     private readonly DemoTaskService _taskService = new();
     private readonly DemoEmployeeService _employeeService = new();
+    private readonly DemoUserAccountService _userAccountService = new();
     private readonly DemoAuditLogService _auditLogService = new();
     private readonly ObservableCollection<Customer> _customers = [];
     private readonly ObservableCollection<Customer> _filteredCustomers = [];
     private readonly ObservableCollection<WorkProject> _projects = [];
     private readonly ObservableCollection<WorkTask> _tasks = [];
     private readonly ObservableCollection<Employee> _employees = [];
+    private readonly ObservableCollection<UserAccount> _userAccounts = [];
     private readonly ObservableCollection<WorkProject> _allProjects = [];
     private readonly ObservableCollection<WorkProject> _dueSoonProjects = [];
     private readonly ObservableCollection<AuditLogEntry> _auditLogs = [];
@@ -28,6 +30,7 @@ public partial class MainWindow : Window
     private WorkProject? _selectedProject;
     private WorkTask? _selectedTask;
     private Employee? _selectedEmployee;
+    private UserAccount? _selectedUserAccount;
     private UserSession? _currentUser;
 
     public MainWindow()
@@ -36,10 +39,13 @@ public partial class MainWindow : Window
         new DatabaseInitializer().Initialize();
         LoadCustomers();
         LoadEmployees();
+        LoadUserAccounts();
         LoadAuditLogs();
         ProjectsDataGrid.ItemsSource = _projects;
         TasksDataGrid.ItemsSource = _tasks;
         EmployeesDataGrid.ItemsSource = _employees;
+        UserAccountsDataGrid.ItemsSource = _userAccounts;
+        UserEmployeeComboBox.ItemsSource = _employees;
         TaskAssignedEmployeeComboBox.ItemsSource = _employees;
         AllProjectsDataGrid.ItemsSource = _allProjects;
         DueSoonProjectsDataGrid.ItemsSource = _dueSoonProjects;
@@ -99,6 +105,7 @@ public partial class MainWindow : Window
         ApplyProjectPermissions(user);
         ApplyTaskPermissions(user);
         ApplyEmployeePermissions(user);
+        ApplyUserManagementPermissions(user);
         RefreshDashboardSummary();
         LoginView.Visibility = Visibility.Collapsed;
         DashboardView.Visibility = Visibility.Visible;
@@ -311,6 +318,25 @@ public partial class MainWindow : Window
         EmployeeWorkloadSummaryTextBlock.Text = BuildEmployeeWorkloadSummary(selectedEmployee);
         EmployeeFormMessageTextBlock.Visibility = Visibility.Collapsed;
         UpdateEmployeeActionState();
+    }
+
+    private void UserAccountsDataGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (UserAccountsDataGrid.SelectedItem is not UserAccount selectedUser)
+        {
+            _selectedUserAccount = null;
+            UpdateUserAccountActionState();
+            return;
+        }
+
+        _selectedUserAccount = selectedUser;
+        UserEmailTextBox.Text = selectedUser.Email;
+        SelectUserRole(selectedUser.Role);
+        SelectUserEmployee(selectedUser.EmployeeId);
+        UserIsActiveCheckBox.IsChecked = selectedUser.IsActive;
+        NewUserPasswordBox.Clear();
+        UserFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        UpdateUserAccountActionState();
     }
 
     private void TaskFilter_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -623,6 +649,97 @@ public partial class MainWindow : Window
         ClearEmployeeForm();
     }
 
+    private void AddUserButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsurePermission(PermissionNames.UserManage, "kullanici yonetimi"))
+        {
+            return;
+        }
+
+        if (!TryReadUserForm(requirePassword: true, out string email, out string password, out string role, out int? employeeId, out bool isActive))
+        {
+            return;
+        }
+
+        try
+        {
+            UserAccount user = _userAccountService.CreateUser(email, password, role, employeeId, isActive);
+            LoadUserAccounts(user.Id);
+            RecordAudit("Created", "User", $"{user.Email} kullanicisi {role} rolu ile olusturuldu.");
+            ShowUserFormMessage("Kullanici olusturuldu ve listede secildi.", isError: false);
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+        {
+            ShowUserFormMessage("Bu email veya calisan baglantisi zaten baska bir kullanicida kullaniliyor.", isError: true);
+        }
+    }
+
+    private void UpdateUserButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsurePermission(PermissionNames.UserManage, "kullanici yonetimi"))
+        {
+            return;
+        }
+
+        if (_selectedUserAccount is null)
+        {
+            ShowUserFormMessage("Guncellemek icin listeden bir kullanici sec.", isError: true);
+            return;
+        }
+
+        if (!TryReadUserForm(requirePassword: false, out string email, out _, out string role, out int? employeeId, out bool isActive))
+        {
+            return;
+        }
+
+        try
+        {
+            string oldEmail = _selectedUserAccount.Email;
+            string oldRole = _selectedUserAccount.Role;
+            UserAccount user = _userAccountService.UpdateUser(_selectedUserAccount, email, role, employeeId, isActive);
+            LoadUserAccounts(user.Id);
+            RecordAudit("Updated", "User", $"{oldEmail}: Role '{oldRole}' -> '{role}', Active: {isActive}");
+            ShowUserFormMessage("Kullanici bilgileri guncellendi.", isError: false);
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+        {
+            ShowUserFormMessage("Bu email veya calisan baglantisi zaten baska bir kullanicida kullaniliyor.", isError: true);
+        }
+    }
+
+    private void ResetUserPasswordButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsurePermission(PermissionNames.UserManage, "sifre resetleme"))
+        {
+            return;
+        }
+
+        if (_selectedUserAccount is null)
+        {
+            ShowUserFormMessage("Sifre resetlemek icin listeden bir kullanici sec.", isError: true);
+            return;
+        }
+
+        string password = NewUserPasswordBox.Password.Trim();
+
+        if (password.Length < 6)
+        {
+            ShowUserFormMessage("Yeni sifre en az 6 karakter olmalidir.", isError: true);
+            return;
+        }
+
+        UserAccount user = _userAccountService.ResetPassword(_selectedUserAccount, password);
+        LoadUserAccounts(user.Id);
+        NewUserPasswordBox.Clear();
+        RecordAudit("Updated", "User", $"{user.Email} sifresi resetlendi.");
+        ShowUserFormMessage("Kullanici sifresi resetlendi.", isError: false);
+    }
+
+    private void ClearUserFormButton_Click(object sender, RoutedEventArgs e)
+    {
+        ClearUserForm();
+    }
+
     private bool TryReadCustomerForm(out string companyName, out string contactName, out string email)
     {
         companyName = CustomerCompanyTextBox.Text.Trim();
@@ -696,6 +813,14 @@ public partial class MainWindow : Window
         TeamTab.Visibility = canManageEmployees ? Visibility.Visible : Visibility.Collapsed;
         AddEmployeeButton.IsEnabled = canManageEmployees;
         UpdateEmployeeActionState();
+    }
+
+    private void ApplyUserManagementPermissions(UserSession user)
+    {
+        bool canManageUsers = user.HasPermission(PermissionNames.UserManage);
+        UsersTab.Visibility = canManageUsers ? Visibility.Visible : Visibility.Collapsed;
+        AddUserButton.IsEnabled = canManageUsers;
+        UpdateUserAccountActionState();
     }
 
     private bool EnsurePermission(string permission, string operationName)
@@ -967,6 +1092,45 @@ public partial class MainWindow : Window
         UpdateEmployeeActionState();
     }
 
+    private void LoadUserAccounts(int? userIdToSelect = null)
+    {
+        _userAccounts.Clear();
+        _selectedUserAccount = null;
+        UserAccountsDataGrid.SelectedItem = null;
+        UpdateUserAccountActionState();
+
+        foreach (UserAccount user in _userAccountService.GetUserAccounts())
+        {
+            _userAccounts.Add(user);
+        }
+
+        if (userIdToSelect is null)
+        {
+            ClearUserForm();
+            return;
+        }
+
+        UserAccount? userToSelect = _userAccounts.FirstOrDefault(user => user.Id == userIdToSelect.Value);
+
+        if (userToSelect is not null)
+        {
+            SelectUserAccount(userToSelect);
+        }
+    }
+
+    private void SelectUserAccount(UserAccount user)
+    {
+        _selectedUserAccount = user;
+        UserAccountsDataGrid.SelectedItem = user;
+        UserAccountsDataGrid.ScrollIntoView(user);
+        UserEmailTextBox.Text = user.Email;
+        SelectUserRole(user.Role);
+        SelectUserEmployee(user.EmployeeId);
+        UserIsActiveCheckBox.IsChecked = user.IsActive;
+        NewUserPasswordBox.Clear();
+        UpdateUserAccountActionState();
+    }
+
     private void RefreshProjectOverview()
     {
         _allProjects.Clear();
@@ -1013,6 +1177,14 @@ public partial class MainWindow : Window
         bool canManageEmployees = _currentUser?.HasPermission(PermissionNames.EmployeeManage) == true;
         AddEmployeeButton.IsEnabled = canManageEmployees;
         UpdateEmployeeButton.IsEnabled = canManageEmployees && _selectedEmployee is not null;
+    }
+
+    private void UpdateUserAccountActionState()
+    {
+        bool canManageUsers = _currentUser?.HasPermission(PermissionNames.UserManage) == true;
+        AddUserButton.IsEnabled = canManageUsers;
+        UpdateUserButton.IsEnabled = canManageUsers && _selectedUserAccount is not null;
+        ResetUserPasswordButton.IsEnabled = canManageUsers && _selectedUserAccount is not null;
     }
 
     private List<WorkTask> GetFilteredTasksForSelectedProject()
@@ -1344,5 +1516,108 @@ public partial class MainWindow : Window
             : string.Empty;
 
         return $"{employee.OpenTaskCount} acik task var. En yakin teslim: {nextDueText}.{coverageText}";
+    }
+
+    private bool TryReadUserForm(
+        bool requirePassword,
+        out string email,
+        out string password,
+        out string role,
+        out int? employeeId,
+        out bool isActive)
+    {
+        email = UserEmailTextBox.Text.Trim().ToLowerInvariant();
+        password = NewUserPasswordBox.Password.Trim();
+        role = GetSelectedUserRole();
+        employeeId = GetSelectedUserEmployeeId();
+        isActive = UserIsActiveCheckBox.IsChecked == true;
+
+        if (string.IsNullOrWhiteSpace(email) || !email.Contains('@', StringComparison.Ordinal))
+        {
+            ShowUserFormMessage("Gecerli bir email zorunludur.", isError: true);
+            return false;
+        }
+
+        if (requirePassword && password.Length < 6)
+        {
+            ShowUserFormMessage("Yeni kullanici sifresi en az 6 karakter olmalidir.", isError: true);
+            return false;
+        }
+
+        if (role is not RoleNames.Admin and not RoleNames.Manager and not RoleNames.Staff)
+        {
+            ShowUserFormMessage("Role secimi zorunludur.", isError: true);
+            return false;
+        }
+
+        return true;
+    }
+
+    private void ClearUserForm()
+    {
+        _selectedUserAccount = null;
+        UserAccountsDataGrid.SelectedItem = null;
+        UserEmailTextBox.Clear();
+        NewUserPasswordBox.Clear();
+        SelectUserRole(RoleNames.Staff);
+        SelectUserEmployee(null);
+        UserIsActiveCheckBox.IsChecked = true;
+        UserFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        UpdateUserAccountActionState();
+    }
+
+    private string GetSelectedUserRole()
+    {
+        if (UserRoleComboBox.SelectedItem is System.Windows.Controls.ComboBoxItem item
+            && item.Content is string role)
+        {
+            return role;
+        }
+
+        return RoleNames.Staff;
+    }
+
+    private void SelectUserRole(string role)
+    {
+        foreach (object item in UserRoleComboBox.Items)
+        {
+            if (item is System.Windows.Controls.ComboBoxItem comboBoxItem
+                && comboBoxItem.Content?.ToString() == role)
+            {
+                UserRoleComboBox.SelectedItem = comboBoxItem;
+                return;
+            }
+        }
+
+        UserRoleComboBox.SelectedIndex = 2;
+    }
+
+    private int? GetSelectedUserEmployeeId()
+    {
+        if (UserEmployeeComboBox.SelectedValue is int employeeId)
+        {
+            return employeeId;
+        }
+
+        return null;
+    }
+
+    private void SelectUserEmployee(int? employeeId)
+    {
+        UserEmployeeComboBox.SelectedValue = employeeId;
+
+        if (employeeId is null)
+        {
+            UserEmployeeComboBox.SelectedIndex = -1;
+        }
+    }
+
+    private void ShowUserFormMessage(string message, bool isError)
+    {
+        UserFormMessageTextBlock.Text = message;
+        UserFormMessageTextBlock.Foreground = isError
+            ? System.Windows.Media.Brushes.Firebrick
+            : System.Windows.Media.Brushes.SeaGreen;
+        UserFormMessageTextBlock.Visibility = Visibility.Visible;
     }
 }

@@ -34,4 +34,19 @@ public sealed class UserAccount
     public bool IsActive { get; private set; }
 
     public DateTime CreatedAt { get; private set; }
+
+    public string EmployeeName => Employee?.FullName ?? "Unlinked";
+
+    public void UpdateDetails(string email, string role, int? employeeId, bool isActive)
+    {
+        Email = email;
+        Role = role;
+        EmployeeId = employeeId;
+        IsActive = isActive;
+    }
+
+    public void ResetPassword(string passwordHash)
+    {
+        PasswordHash = passwordHash;
+    }
 }

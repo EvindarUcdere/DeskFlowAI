@@ -1040,6 +1040,155 @@
                                 </Grid>
                             </TabItem>
 
+                            <TabItem x:Name="UsersTab" Header="Users">
+                                <Grid Margin="0,12,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1.2*" MinWidth="300" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="0.9*" MinWidth="260" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+
+                                            <StackPanel>
+                                                <TextBlock Text="User accounts" Style="{StaticResource SectionTitleStyle}" />
+
+                                                <TextBlock Text="Admin kullanicilari, rollerini ve calisan baglantilarini buradan yonetir."
+                                                           Margin="0,4,0,0"
+                                                           FontSize="13"
+                                                           TextWrapping="Wrap"
+                                                           Foreground="#64748B" />
+                                            </StackPanel>
+
+                                            <DataGrid x:Name="UserAccountsDataGrid"
+                                                      Grid.Row="1"
+                                                      MinHeight="320"
+                                                      Margin="0,16,0,0"
+                                                      AutoGenerateColumns="False"
+                                                      CanUserAddRows="False"
+                                                      IsReadOnly="True"
+                                                      SelectionMode="Single"
+                                                      SelectionChanged="UserAccountsDataGrid_SelectionChanged"
+                                                      HeadersVisibility="Column"
+                                                      GridLinesVisibility="Horizontal"
+                                                      BorderBrush="#E2E8F0"
+                                                      BorderThickness="1">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="1.35*" />
+                                                    <DataGridTextColumn Header="Role" Binding="{Binding Role}" Width="0.7*" />
+                                                    <DataGridTextColumn Header="Employee" Binding="{Binding EmployeeName}" Width="1*" />
+                                                    <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive, Mode=OneWay}" Width="0.55*" />
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </Grid>
+                                    </Border>
+
+                                    <GridSplitter Grid.Column="1"
+                                                  Width="10"
+                                                  HorizontalAlignment="Stretch"
+                                                  VerticalAlignment="Stretch"
+                                                  ResizeBehavior="PreviousAndNext"
+                                                  Background="Transparent"
+                                                  ShowsPreview="True">
+                                        <GridSplitter.Template>
+                                            <ControlTemplate TargetType="GridSplitter">
+                                                <Border Background="#D8E1EC"
+                                                        Width="2"
+                                                        CornerRadius="1"
+                                                        HorizontalAlignment="Center"
+                                                        Margin="0,8" />
+                                            </ControlTemplate>
+                                        </GridSplitter.Template>
+                                    </GridSplitter>
+
+                                    <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                            <StackPanel>
+                                                <TextBlock Text="User details" Style="{StaticResource SectionTitleStyle}" />
+
+                                                <TextBlock Text="Yeni kullanici olustur, role ata, calisanla bagla veya sifre resetle."
+                                                           Margin="0,4,0,16"
+                                                           FontSize="13"
+                                                           TextWrapping="Wrap"
+                                                           Foreground="#64748B" />
+
+                                                <TextBlock Text="Email" Style="{StaticResource FieldLabelStyle}" />
+                                                <TextBox x:Name="UserEmailTextBox" Style="{StaticResource InputStyle}" />
+
+                                                <TextBlock Text="Role" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                <ComboBox x:Name="UserRoleComboBox"
+                                                          Height="38"
+                                                          SelectedIndex="2">
+                                                    <ComboBoxItem Content="Admin" />
+                                                    <ComboBoxItem Content="Manager" />
+                                                    <ComboBoxItem Content="Staff" />
+                                                </ComboBox>
+
+                                                <TextBlock Text="Employee link" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                <ComboBox x:Name="UserEmployeeComboBox"
+                                                          Height="38"
+                                                          DisplayMemberPath="FullName"
+                                                          SelectedValuePath="Id" />
+
+                                                <CheckBox x:Name="UserIsActiveCheckBox"
+                                                          Content="Active user"
+                                                          Margin="0,14,0,0"
+                                                          IsChecked="True"
+                                                          FontWeight="SemiBold"
+                                                          Foreground="#334155" />
+
+                                                <TextBlock Text="Password / reset"
+                                                           Margin="0,14,0,6"
+                                                           Style="{StaticResource FieldLabelStyle}" />
+
+                                                <PasswordBox x:Name="NewUserPasswordBox"
+                                                             Height="38"
+                                                             Padding="12,0"
+                                                             VerticalContentAlignment="Center"
+                                                             BorderBrush="#CBD5E1"
+                                                             BorderThickness="1" />
+
+                                                <Button x:Name="AddUserButton"
+                                                        Content="Add user"
+                                                        Margin="0,18,0,0"
+                                                        Style="{StaticResource PrimaryButtonStyle}"
+                                                        Click="AddUserButton_Click" />
+
+                                                <Button x:Name="UpdateUserButton"
+                                                        Content="Update user"
+                                                        Margin="0,10,0,0"
+                                                        Style="{StaticResource SecondaryButtonStyle}"
+                                                        IsEnabled="False"
+                                                        Click="UpdateUserButton_Click" />
+
+                                                <Button x:Name="ResetUserPasswordButton"
+                                                        Content="Reset password"
+                                                        Margin="0,10,0,0"
+                                                        Style="{StaticResource SecondaryButtonStyle}"
+                                                        IsEnabled="False"
+                                                        Click="ResetUserPasswordButton_Click" />
+
+                                                <Button Content="Clear"
+                                                        Margin="0,10,0,0"
+                                                        Style="{StaticResource SecondaryButtonStyle}"
+                                                        Click="ClearUserFormButton_Click" />
+
+                                                <TextBlock x:Name="UserFormMessageTextBlock"
+                                                           Margin="0,12,0,0"
+                                                           FontSize="13"
+                                                           TextWrapping="Wrap"
+                                                           Visibility="Collapsed" />
+                                            </StackPanel>
+                                        </ScrollViewer>
+                                    </Border>
+                                </Grid>
+                            </TabItem>
+
                             <TabItem Header="Overview">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                                     <StackPanel Margin="0,12,0,0">

@@ -56,7 +56,8 @@ public sealed class DemoAuthService
                     PermissionNames.ProjectUpdate,
                     PermissionNames.TaskCreate,
                     PermissionNames.TaskUpdate,
-                    PermissionNames.EmployeeManage
+                    PermissionNames.EmployeeManage,
+                    PermissionNames.UserManage
                 ],
 
             RoleNames.Manager =>

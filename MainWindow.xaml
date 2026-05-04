@@ -321,12 +321,13 @@
 
                 <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1.15*" MinWidth="360" />
-                        <ColumnDefinition Width="10" />
-                        <ColumnDefinition Width="1*" MinWidth="420" />
+                        <ColumnDefinition x:Name="LeftWorkspaceColumn" Width="1.15*" MinWidth="360" />
+                        <ColumnDefinition x:Name="MainSplitterColumn" Width="10" />
+                        <ColumnDefinition x:Name="RightWorkspaceColumn" Width="1*" MinWidth="420" />
                     </Grid.ColumnDefinitions>
 
-                    <Border Grid.Column="0"
+                    <Border x:Name="CustomerWorkspaceBorder"
+                            Grid.Column="0"
                             Padding="18"
                             Background="White"
                             BorderBrush="#D8E1EC"
@@ -446,7 +447,8 @@
                         </Grid>
                     </Border>
 
-                    <GridSplitter Grid.Column="1"
+                    <GridSplitter x:Name="MainWorkspaceGridSplitter"
+                                  Grid.Column="1"
                                   Width="10"
                                   HorizontalAlignment="Stretch"
                                   VerticalAlignment="Stretch"
@@ -470,8 +472,8 @@
                             BorderBrush="#D8E1EC"
                             BorderThickness="1"
                             CornerRadius="8">
-                        <TabControl>
-                            <TabItem Header="Customer">
+                        <TabControl x:Name="WorkspaceTabControl">
+                            <TabItem x:Name="CustomerTab" Header="Customer">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                                     <StackPanel Margin="0,12,0,0">
                                 <Border Style="{StaticResource SectionCardStyle}">
@@ -533,7 +535,7 @@
                                 </ScrollViewer>
                             </TabItem>
 
-                            <TabItem Header="Projects">
+                            <TabItem x:Name="ProjectsTab" Header="Projects">
                                 <Grid Margin="0,12,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="1.3*" />
@@ -657,7 +659,7 @@
                                 </Grid>
                             </TabItem>
 
-                            <TabItem Header="Tasks">
+                            <TabItem x:Name="TasksTab" Header="Tasks">
                                 <Grid Margin="0,12,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="1.25*" />
@@ -674,9 +676,12 @@
                                             </Grid.RowDefinitions>
 
                                             <StackPanel>
-                                                <TextBlock Text="Task list" Style="{StaticResource SectionTitleStyle}" />
+                                                <TextBlock x:Name="TaskListTitleTextBlock"
+                                                           Text="Task list"
+                                                           Style="{StaticResource SectionTitleStyle}" />
 
-                                                <TextBlock Text="Secili project icindeki gorevler teslim tarihine ve oncelige gore siralanir."
+                                                <TextBlock x:Name="TaskListDescriptionTextBlock"
+                                                           Text="Secili project icindeki gorevler teslim tarihine ve oncelige gore siralanir."
                                                            Margin="0,4,0,0"
                                                            FontSize="13"
                                                            TextWrapping="Wrap"
@@ -778,9 +783,12 @@
 
                                     <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Margin="0">
                                         <StackPanel>
-                                            <TextBlock Text="Task details" Style="{StaticResource SectionTitleStyle}" />
+                                            <TextBlock x:Name="TaskDetailsTitleTextBlock"
+                                                       Text="Task details"
+                                                       Style="{StaticResource SectionTitleStyle}" />
 
-                                            <TextBlock Text="Yeni gorev ekle veya secili gorevin is akis bilgilerini guncelle."
+                                            <TextBlock x:Name="TaskDetailsDescriptionTextBlock"
+                                                       Text="Yeni gorev ekle veya secili gorevin is akis bilgilerini guncelle."
                                                        Margin="0,4,0,16"
                                                        FontSize="13"
                                                        TextWrapping="Wrap"
@@ -1189,7 +1197,7 @@
                                 </Grid>
                             </TabItem>
 
-                            <TabItem Header="Overview">
+                            <TabItem x:Name="OverviewTab" Header="Overview">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                                     <StackPanel Margin="0,12,0,0">
                                         <Border Style="{StaticResource SectionCardStyle}">

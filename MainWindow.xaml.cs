@@ -106,6 +106,7 @@ public partial class MainWindow : Window
         ApplyTaskPermissions(user);
         ApplyEmployeePermissions(user);
         ApplyUserManagementPermissions(user);
+        ApplyWorkspaceForRole(user);
         RefreshDashboardSummary();
         LoginView.Visibility = Visibility.Collapsed;
         DashboardView.Visibility = Visibility.Visible;
@@ -346,7 +347,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        LoadTasksForSelectedProject(selectFirstTask: true);
+        LoadTasksForCurrentContext(selectFirstTask: true);
     }
 
     private void ClearCustomerFormButton_Click(object sender, RoutedEventArgs e)
@@ -516,7 +517,7 @@ public partial class MainWindow : Window
         DateTime? oldDueDate = _selectedTask.DueDate;
 
         WorkTask updatedTask = _taskService.UpdateTaskWorkflow(_selectedTask, newStatus, newPriority, newDueDate, newAssignedEmployeeId);
-        LoadTasksForSelectedProject(updatedTask.Id);
+        LoadTasksForCurrentContext(updatedTask.Id);
         RefreshDashboardSummary();
 
         string changeDetails = BuildTaskChangeDetails(oldStatus, newStatus, oldPriority, newPriority, oldAssignedEmployeeName, newAssignedEmployeeName, oldDueDate, newDueDate);
@@ -554,7 +555,7 @@ public partial class MainWindow : Window
             _selectedTask.DueDate,
             _selectedTask.AssignedEmployeeId);
 
-        LoadTasksForSelectedProject(updatedTask.Id);
+        LoadTasksForCurrentContext(updatedTask.Id);
         RefreshDashboardSummary();
         RecordAudit("Updated", "Task", $"{updatedTask.Title}: Status '{oldStatus}' -> '{TaskStatusNames.Done}'");
         ShowTaskFormMessage(TaskIsVisibleInCurrentFilters(updatedTask)
@@ -803,7 +804,8 @@ public partial class MainWindow : Window
 
     private void ApplyTaskPermissions(UserSession user)
     {
-        AddTaskButton.IsEnabled = user.HasPermission(PermissionNames.TaskCreate);
+        AddTaskButton.IsEnabled = user.HasPermission(PermissionNames.TaskCreate)
+            && user.Role != RoleNames.Staff;
         UpdateTaskActionState();
     }
 
@@ -821,6 +823,56 @@ public partial class MainWindow : Window
         UsersTab.Visibility = canManageUsers ? Visibility.Visible : Visibility.Collapsed;
         AddUserButton.IsEnabled = canManageUsers;
         UpdateUserAccountActionState();
+    }
+
+    private void ApplyWorkspaceForRole(UserSession user)
+    {
+        bool isStaff = user.Role == RoleNames.Staff;
+
+        CustomerWorkspaceBorder.Visibility = isStaff ? Visibility.Collapsed : Visibility.Visible;
+        MainWorkspaceGridSplitter.Visibility = isStaff ? Visibility.Collapsed : Visibility.Visible;
+        CustomerTab.Visibility = isStaff ? Visibility.Collapsed : Visibility.Visible;
+        ProjectsTab.Visibility = isStaff ? Visibility.Collapsed : Visibility.Visible;
+        OverviewTab.Visibility = isStaff ? Visibility.Collapsed : Visibility.Visible;
+
+        if (isStaff)
+        {
+            LeftWorkspaceColumn.MinWidth = 0;
+            LeftWorkspaceColumn.Width = new GridLength(0);
+            MainSplitterColumn.Width = new GridLength(0);
+            RightWorkspaceColumn.Width = new GridLength(1, GridUnitType.Star);
+            WorkspaceTabControl.SelectedItem = TasksTab;
+            ConfigureTaskWorkspaceForStaff(user);
+            LoadMyTasksForCurrentUser(selectFirstTask: true);
+            return;
+        }
+
+        LeftWorkspaceColumn.MinWidth = 360;
+        LeftWorkspaceColumn.Width = new GridLength(1.15, GridUnitType.Star);
+        MainSplitterColumn.Width = new GridLength(10);
+        RightWorkspaceColumn.Width = new GridLength(1, GridUnitType.Star);
+        ConfigureTaskWorkspaceForOperations();
+    }
+
+    private void ConfigureTaskWorkspaceForStaff(UserSession user)
+    {
+        string fullName = user.FullName;
+        TaskListTitleTextBlock.Text = "My tasks";
+        TaskListDescriptionTextBlock.Text = "Sana atanmis gorevler teslim tarihine ve oncelige gore siralanir.";
+        SelectedProjectForTaskTextBlock.Text = $"{fullName} icin atanmis tasklar.";
+        TaskDetailsTitleTextBlock.Text = "My task details";
+        TaskDetailsDescriptionTextBlock.Text = "Secili gorevin durumunu, onceligini ve teslim tarihini guncelle.";
+        AddTaskButton.IsEnabled = false;
+        TaskAssignedEmployeeComboBox.IsEnabled = false;
+    }
+
+    private void ConfigureTaskWorkspaceForOperations()
+    {
+        TaskListTitleTextBlock.Text = "Task list";
+        TaskListDescriptionTextBlock.Text = "Secili project icindeki gorevler teslim tarihine ve oncelige gore siralanir.";
+        TaskDetailsTitleTextBlock.Text = "Task details";
+        TaskDetailsDescriptionTextBlock.Text = "Yeni gorev ekle veya secili gorevin is akis bilgilerini guncelle.";
+        TaskAssignedEmployeeComboBox.IsEnabled = true;
     }
 
     private bool EnsurePermission(string permission, string operationName)
@@ -989,6 +1041,17 @@ public partial class MainWindow : Window
         UpdateProjectActionState();
     }
 
+    private void LoadTasksForCurrentContext(int? taskIdToSelect = null, bool selectFirstTask = false)
+    {
+        if (IsStaffUser())
+        {
+            LoadMyTasksForCurrentUser(taskIdToSelect, selectFirstTask);
+            return;
+        }
+
+        LoadTasksForSelectedProject(taskIdToSelect, selectFirstTask);
+    }
+
     private void LoadTasksForSelectedProject(int? taskIdToSelect = null, bool selectFirstTask = false)
     {
         _tasks.Clear();
@@ -1005,7 +1068,56 @@ public partial class MainWindow : Window
 
         SelectedProjectForTaskTextBlock.Text = $"Selected project: {_selectedProject.Name}";
 
-        foreach (WorkTask task in GetFilteredTasksForSelectedProject())
+        foreach (WorkTask task in GetFilteredTasksForCurrentContext())
+        {
+            _tasks.Add(task);
+        }
+
+        TasksEmptyTextBlock.Visibility = _tasks.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        TasksEmptyTextBlock.Text = GetTaskEmptyMessage();
+
+        if (taskIdToSelect is null && selectFirstTask && _tasks.Count > 0)
+        {
+            taskIdToSelect = _tasks[0].Id;
+        }
+
+        if (taskIdToSelect is null)
+        {
+            ResetTaskForm();
+            return;
+        }
+
+        WorkTask? taskToSelect = _tasks.FirstOrDefault(task => task.Id == taskIdToSelect.Value);
+
+        if (taskToSelect is not null)
+        {
+            SelectTask(taskToSelect);
+            return;
+        }
+
+        ResetTaskForm();
+    }
+
+    private void LoadMyTasksForCurrentUser(int? taskIdToSelect = null, bool selectFirstTask = false)
+    {
+        _tasks.Clear();
+        _selectedProject = null;
+        _selectedTask = null;
+        TasksDataGrid.SelectedItem = null;
+        UpdateTaskActionState();
+
+        if (_currentUser?.EmployeeId is null)
+        {
+            SelectedProjectForTaskTextBlock.Text = "Bu kullanici bir employee kaydina bagli degil.";
+            TasksEmptyTextBlock.Text = "Employee baglantisi olmadigi icin task listelenemiyor.";
+            TasksEmptyTextBlock.Visibility = Visibility.Visible;
+            ResetTaskForm();
+            return;
+        }
+
+        SelectedProjectForTaskTextBlock.Text = $"{_currentUser.FullName} icin atanmis tasklar.";
+
+        foreach (WorkTask task in GetFilteredTasksForCurrentContext())
         {
             _tasks.Add(task);
         }
@@ -1187,14 +1299,34 @@ public partial class MainWindow : Window
         ResetUserPasswordButton.IsEnabled = canManageUsers && _selectedUserAccount is not null;
     }
 
-    private List<WorkTask> GetFilteredTasksForSelectedProject()
+    private bool IsStaffUser()
     {
+        return _currentUser?.Role == RoleNames.Staff;
+    }
+
+    private List<WorkTask> GetFilteredTasksForCurrentContext()
+    {
+        if (IsStaffUser())
+        {
+            if (_currentUser?.EmployeeId is null)
+            {
+                return [];
+            }
+
+            return ApplyTaskFilters(_taskService.GetTasksForEmployee(_currentUser.EmployeeId.Value)).ToList();
+        }
+
         if (_selectedProject is null)
         {
             return [];
         }
 
-        IEnumerable<WorkTask> query = _taskService.GetTasksForProject(_selectedProject.Id);
+        return ApplyTaskFilters(_taskService.GetTasksForProject(_selectedProject.Id)).ToList();
+    }
+
+    private IEnumerable<WorkTask> ApplyTaskFilters(IEnumerable<WorkTask> tasks)
+    {
+        IEnumerable<WorkTask> query = tasks;
         string statusFilter = GetSelectedComboBoxText(TaskStatusFilterComboBox);
         string priorityFilter = GetSelectedComboBoxText(TaskPriorityFilterComboBox);
         string dueDateFilter = GetSelectedComboBoxText(TaskDueDateFilterComboBox);
@@ -1221,16 +1353,27 @@ public partial class MainWindow : Window
             _ => query
         };
 
-        return query.ToList();
+        return query;
     }
 
     private bool TaskIsVisibleInCurrentFilters(WorkTask task)
     {
-        return GetFilteredTasksForSelectedProject().Any(filteredTask => filteredTask.Id == task.Id);
+        return GetFilteredTasksForCurrentContext().Any(filteredTask => filteredTask.Id == task.Id);
     }
 
     private string GetTaskEmptyMessage()
     {
+        if (IsStaffUser())
+        {
+            bool hasActiveStaffFilter = GetSelectedComboBoxText(TaskStatusFilterComboBox) != "All statuses"
+                || GetSelectedComboBoxText(TaskPriorityFilterComboBox) != "All priorities"
+                || GetSelectedComboBoxText(TaskDueDateFilterComboBox) != "All dates";
+
+            return hasActiveStaffFilter
+                ? "Bu filtrelere uygun sana atanmis task bulunamadi."
+                : "Sana atanmis acik veya kapali task yok.";
+        }
+
         if (_selectedProject is null)
         {
             return "Once Projects sekmesinden bir project sec.";

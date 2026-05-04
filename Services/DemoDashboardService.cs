@@ -9,8 +9,19 @@ public sealed class DemoDashboardService
     {
         using DeskFlowDbContext dbContext = new();
         int activeProjects = dbContext.Projects.Count(project => project.Status == ProjectStatusNames.Active);
-        int openTasks = dbContext.Tasks.Count(task => task.Status != TaskStatusNames.Done);
-        int overdueTasks = dbContext.Tasks.Count(task =>
+        IQueryable<WorkTask> taskQuery = dbContext.Tasks;
+
+        if (user.Role == RoleNames.Staff && user.EmployeeId.HasValue)
+        {
+            taskQuery = taskQuery.Where(task => task.AssignedEmployeeId == user.EmployeeId.Value);
+            activeProjects = taskQuery
+                .Select(task => task.ProjectId)
+                .Distinct()
+                .Count();
+        }
+
+        int openTasks = taskQuery.Count(task => task.Status != TaskStatusNames.Done);
+        int overdueTasks = taskQuery.Count(task =>
             task.Status != TaskStatusNames.Done
             && task.DueDate.HasValue
             && task.DueDate.Value.Date < DateTime.Today);

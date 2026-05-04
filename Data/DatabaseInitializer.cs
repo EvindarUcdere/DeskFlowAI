@@ -1,4 +1,5 @@
 using DeskFlowAI.Models;
+using DeskFlowAI.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace DeskFlowAI.Data;
@@ -16,6 +17,7 @@ public sealed class DatabaseInitializer
     {
         SeedCustomersIfNeeded(dbContext);
         SeedEmployeesIfNeeded(dbContext);
+        SeedUserAccountsIfNeeded(dbContext);
         SeedProjectsIfNeeded(dbContext);
         SeedTasksIfNeeded(dbContext);
     }
@@ -27,6 +29,19 @@ public sealed class DatabaseInitializer
         AddCustomerIfMissing(dbContext, "atlas@deskflow.demo", "Atlas Finance", "Selin Demir", "On Hold");
         AddCustomerIfMissing(dbContext, "nova@deskflow.demo", "Nova Retail Group", "Deniz Arslan", "Active");
         AddCustomerIfMissing(dbContext, "orion@deskflow.demo", "Orion Health Systems", "Ece Kaya", "Active");
+
+        dbContext.SaveChanges();
+    }
+
+    private static void SeedUserAccountsIfNeeded(DeskFlowDbContext dbContext)
+    {
+        Employee evin = GetEmployee(dbContext, "evin@deskflow.ai");
+        Employee merve = GetEmployee(dbContext, "merve@deskflow.ai");
+        Employee can = GetEmployee(dbContext, "can@deskflow.ai");
+
+        AddUserAccountIfMissing(dbContext, "admin@deskflow.ai", "Admin123", RoleNames.Admin, evin.Id);
+        AddUserAccountIfMissing(dbContext, "manager@deskflow.ai", "Admin123", RoleNames.Manager, merve.Id);
+        AddUserAccountIfMissing(dbContext, "staff@deskflow.ai", "Admin123", RoleNames.Staff, can.Id);
 
         dbContext.SaveChanges();
     }
@@ -215,6 +230,26 @@ public sealed class DatabaseInitializer
             leaveEnd,
             skills,
             backupEmployeeName));
+    }
+
+    private static void AddUserAccountIfMissing(
+        DeskFlowDbContext dbContext,
+        string email,
+        string password,
+        string role,
+        int? employeeId)
+    {
+        if (dbContext.UserAccounts.Any(user => user.Email == email))
+        {
+            return;
+        }
+
+        dbContext.UserAccounts.Add(new UserAccount(
+            email,
+            DemoPasswordHasher.Hash(password),
+            role,
+            employeeId,
+            isActive: true));
     }
 
     private static void AddProjectIfMissing(

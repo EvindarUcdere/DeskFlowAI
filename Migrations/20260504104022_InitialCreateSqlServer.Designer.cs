@@ -4,6 +4,7 @@ using DeskFlowAI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DeskFlowAI.Migrations
 {
     [DbContext(typeof(DeskFlowDbContext))]
-    partial class DeskFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260504104022_InitialCreateSqlServer")]
+    partial class InitialCreateSqlServer
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -164,52 +167,6 @@ namespace DeskFlowAI.Migrations
                     b.ToTable("Employees");
                 });
 
-            modelBuilder.Entity("DeskFlowAI.Models.UserAccount", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(180)
-                        .HasColumnType("nvarchar(180)");
-
-                    b.Property<int?>("EmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Email")
-                        .IsUnique();
-
-                    b.HasIndex("EmployeeId")
-                        .IsUnique()
-                        .HasFilter("[EmployeeId] IS NOT NULL");
-
-                    b.HasIndex("Role");
-
-                    b.ToTable("UserAccounts");
-                });
-
             modelBuilder.Entity("DeskFlowAI.Models.WorkProject", b =>
                 {
                     b.Property<int>("Id")
@@ -296,16 +253,6 @@ namespace DeskFlowAI.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("Tasks");
-                });
-
-            modelBuilder.Entity("DeskFlowAI.Models.UserAccount", b =>
-                {
-                    b.HasOne("DeskFlowAI.Models.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("DeskFlowAI.Models.WorkProject", b =>

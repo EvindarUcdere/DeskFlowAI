@@ -2,11 +2,12 @@ namespace DeskFlowAI.Models;
 
 public sealed class UserSession
 {
-    public UserSession(string fullName, string email, string role, IReadOnlyCollection<string> permissions)
+    public UserSession(string fullName, string email, string role, int? employeeId, IReadOnlyCollection<string> permissions)
     {
         FullName = fullName;
         Email = email;
         Role = role;
+        EmployeeId = employeeId;
         Permissions = permissions;
     }
 
@@ -15,6 +16,8 @@ public sealed class UserSession
     public string Email { get; }
 
     public string Role { get; }
+
+    public int? EmployeeId { get; }
 
     public IReadOnlyCollection<string> Permissions { get; }
 

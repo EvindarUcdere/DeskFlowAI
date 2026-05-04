@@ -1,11 +1,11 @@
 using DeskFlowAI.Models;
+using DeskFlowAI.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace DeskFlowAI.Services;
 
 public sealed class DemoAuthService
 {
-    private const string DemoPassword = "Admin123";
-
     public AuthResult SignIn(string email, string password)
     {
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
@@ -14,24 +14,40 @@ public sealed class DemoAuthService
         }
 
         string normalizedEmail = email.Trim().ToLowerInvariant();
-        bool isKnownUser = normalizedEmail is "admin@deskflow.ai" or "manager@deskflow.ai" or "staff@deskflow.ai";
 
-        if (!isKnownUser || password != DemoPassword)
+        using DeskFlowDbContext dbContext = new();
+        UserAccount? user = dbContext.UserAccounts
+            .AsNoTracking()
+            .Include(user => user.Employee)
+            .SingleOrDefault(user => user.Email == normalizedEmail);
+
+        if (user is null
+            || !user.IsActive
+            || !DemoPasswordHasher.Verify(password, user.PasswordHash))
         {
             return AuthResult.Failure("Email veya sifre hatali. Demo: admin, manager veya staff @deskflow.ai / Admin123");
         }
 
-        return AuthResult.Success(CreateDemoUser(normalizedEmail));
+        return AuthResult.Success(CreateSession(user));
     }
 
-    private static UserSession CreateDemoUser(string email)
+    private static UserSession CreateSession(UserAccount user)
     {
-        return email switch
+        string fullName = user.Employee?.FullName ?? user.Email;
+
+        return new UserSession(
+            fullName,
+            user.Email,
+            user.Role,
+            user.EmployeeId,
+            GetPermissionsForRole(user.Role));
+    }
+
+    private static IReadOnlyCollection<string> GetPermissionsForRole(string role)
+    {
+        return role switch
         {
-            "admin@deskflow.ai" => new UserSession(
-                "Evin D.",
-                email,
-                "Admin",
+            RoleNames.Admin =>
                 [
                     PermissionNames.CustomerCreate,
                     PermissionNames.CustomerUpdate,
@@ -41,12 +57,9 @@ public sealed class DemoAuthService
                     PermissionNames.TaskCreate,
                     PermissionNames.TaskUpdate,
                     PermissionNames.EmployeeManage
-                ]),
+                ],
 
-            "manager@deskflow.ai" => new UserSession(
-                "Merve A.",
-                email,
-                "Manager",
+            RoleNames.Manager =>
                 [
                     PermissionNames.CustomerCreate,
                     PermissionNames.CustomerUpdate,
@@ -55,16 +68,15 @@ public sealed class DemoAuthService
                     PermissionNames.TaskCreate,
                     PermissionNames.TaskUpdate,
                     PermissionNames.EmployeeManage
-                ]),
+                ],
 
-            _ => new UserSession(
-                "Can K.",
-                email,
-                "Staff",
+            RoleNames.Staff =>
                 [
                     PermissionNames.TaskCreate,
                     PermissionNames.TaskUpdate
-                ])
+                ],
+
+            _ => []
         };
     }
 }

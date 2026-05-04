@@ -1,5 +1,6 @@
 using DeskFlowAI.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace DeskFlowAI.Data;
 
@@ -13,11 +14,21 @@ public sealed class DeskFlowDbContext : DbContext
 
     public DbSet<Employee> Employees => Set<Employee>();
 
+    public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
+
     public DbSet<AuditLogEntry> AuditLogs => Set<AuditLogEntry>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlite("Data Source=deskflow.db");
+        IConfigurationRoot configuration = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+            .Build();
+
+        string connectionString = configuration.GetConnectionString("DeskFlowDb")
+            ?? throw new InvalidOperationException("Connection string 'DeskFlowDb' was not found.");
+
+        optionsBuilder.UseSqlServer(connectionString);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -28,12 +39,18 @@ public sealed class DeskFlowDbContext : DbContext
             entity.Property(customer => customer.ContactName).HasMaxLength(120);
             entity.Property(customer => customer.Email).HasMaxLength(180);
             entity.Property(customer => customer.Status).HasMaxLength(40);
+
+            entity.HasIndex(customer => customer.Email).IsUnique();
+            entity.HasIndex(customer => customer.Status);
         });
 
         modelBuilder.Entity<WorkProject>(entity =>
         {
             entity.Property(project => project.Name).HasMaxLength(180);
             entity.Property(project => project.Status).HasMaxLength(40);
+
+            entity.HasIndex(project => project.Status);
+            entity.HasIndex(project => project.DueDate);
 
             entity.HasOne(project => project.Customer)
                 .WithMany(customer => customer.Projects)
@@ -46,6 +63,10 @@ public sealed class DeskFlowDbContext : DbContext
             entity.Property(task => task.Title).HasMaxLength(180);
             entity.Property(task => task.Status).HasMaxLength(40);
             entity.Property(task => task.Priority).HasMaxLength(40);
+
+            entity.HasIndex(task => task.Status);
+            entity.HasIndex(task => task.Priority);
+            entity.HasIndex(task => task.DueDate);
 
             entity.HasOne(task => task.Project)
                 .WithMany(project => project.Tasks)
@@ -67,6 +88,28 @@ public sealed class DeskFlowDbContext : DbContext
             entity.Property(employee => employee.AvailabilityStatus).HasMaxLength(40);
             entity.Property(employee => employee.Skills).HasMaxLength(400);
             entity.Property(employee => employee.BackupEmployeeName).HasMaxLength(140);
+
+            entity.HasIndex(employee => employee.Email).IsUnique();
+            entity.HasIndex(employee => employee.AvailabilityStatus);
+            entity.HasIndex(employee => employee.Department);
+        });
+
+        modelBuilder.Entity<UserAccount>(entity =>
+        {
+            entity.Property(user => user.Email).HasMaxLength(180);
+            entity.Property(user => user.PasswordHash).HasMaxLength(128);
+            entity.Property(user => user.Role).HasMaxLength(40);
+
+            entity.HasIndex(user => user.Email).IsUnique();
+            entity.HasIndex(user => user.Role);
+            entity.HasIndex(user => user.EmployeeId)
+                .IsUnique()
+                .HasFilter("[EmployeeId] IS NOT NULL");
+
+            entity.HasOne(user => user.Employee)
+                .WithMany()
+                .HasForeignKey(user => user.EmployeeId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<AuditLogEntry>(entity =>
@@ -75,6 +118,9 @@ public sealed class DeskFlowDbContext : DbContext
             entity.Property(auditLog => auditLog.Action).HasMaxLength(80);
             entity.Property(auditLog => auditLog.EntityName).HasMaxLength(80);
             entity.Property(auditLog => auditLog.Details).HasMaxLength(800);
+
+            entity.HasIndex(auditLog => auditLog.OccurredAt);
+            entity.HasIndex(auditLog => auditLog.EntityName);
         });
     }
 }

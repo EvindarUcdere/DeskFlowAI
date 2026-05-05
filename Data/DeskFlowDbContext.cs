@@ -88,9 +88,13 @@ public sealed class DeskFlowDbContext : DbContext
             entity.Property(document => document.Status).HasMaxLength(40);
             entity.Property(document => document.UploadedByEmail).HasMaxLength(180);
             entity.Property(document => document.Notes).HasMaxLength(800);
+            entity.Property(document => document.AIAnalysisStatus).HasMaxLength(40);
+            entity.Property(document => document.AISummary).HasMaxLength(1200);
+            entity.Property(document => document.AIRiskNotes).HasMaxLength(1200);
 
             entity.HasIndex(document => document.ProjectId);
             entity.HasIndex(document => document.Status);
+            entity.HasIndex(document => document.AIAnalysisStatus);
             entity.HasIndex(document => document.UploadedAt);
 
             entity.HasOne(document => document.Project)

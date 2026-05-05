@@ -9,6 +9,9 @@ public sealed class ProjectDocument
         Status = string.Empty;
         UploadedByEmail = string.Empty;
         Notes = string.Empty;
+        AIAnalysisStatus = string.Empty;
+        AISummary = string.Empty;
+        AIRiskNotes = string.Empty;
     }
 
     public ProjectDocument(
@@ -26,6 +29,9 @@ public sealed class ProjectDocument
         UploadedByEmail = uploadedByEmail;
         Notes = notes;
         UploadedAt = DateTime.Now;
+        AIAnalysisStatus = AIAnalysisStatusNames.NotAnalyzed;
+        AISummary = string.Empty;
+        AIRiskNotes = string.Empty;
     }
 
     public int Id { get; private set; }
@@ -46,9 +52,25 @@ public sealed class ProjectDocument
 
     public string Notes { get; private set; }
 
+    public string AIAnalysisStatus { get; private set; }
+
+    public string AISummary { get; private set; }
+
+    public string AIRiskNotes { get; private set; }
+
+    public DateTime? AnalyzedAt { get; private set; }
+
     public void UpdateStatus(string status, string notes)
     {
         Status = status;
         Notes = notes;
+    }
+
+    public void UpdateAIAnalysis(string analysisStatus, string summary, string riskNotes, DateTime? analyzedAt)
+    {
+        AIAnalysisStatus = analysisStatus;
+        AISummary = summary;
+        AIRiskNotes = riskNotes;
+        AnalyzedAt = analyzedAt;
     }
 }

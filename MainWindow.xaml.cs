@@ -317,6 +317,7 @@ public partial class MainWindow : Window
         DocumentFilePathTextBox.Text = selectedDocument.FilePath;
         SelectDocumentStatus(selectedDocument.Status);
         DocumentNotesTextBox.Text = selectedDocument.Notes;
+        PopulateDocumentAIFields(selectedDocument);
         DocumentFormMessageTextBlock.Visibility = Visibility.Collapsed;
         UpdateDocumentActionState();
     }
@@ -793,6 +794,7 @@ public partial class MainWindow : Window
         string uploadedByEmail = _currentUser?.Email ?? "unknown";
         ProjectDocument document = _documentService.CreateDocument(_selectedProject.Id, fileName, filePath, status, uploadedByEmail, notes);
         LoadDocumentsForCurrentContext(document.Id);
+        RefreshDashboardSummary();
         RecordAudit("Created", "Document", $"{fileName} belgesi {_selectedProject.Name} projesine {uploadedByEmail} tarafindan eklendi.");
         ShowDocumentFormMessage("Belge eklendi ve listede secildi.", isError: false);
     }
@@ -818,6 +820,27 @@ public partial class MainWindow : Window
         LoadDocumentsForCurrentContext(document.Id);
         RecordAudit("Updated", "Document", $"{document.FileName}: Status '{oldStatus}' -> '{newStatus}'");
         ShowDocumentFormMessage("Belge status bilgisi guncellendi.", isError: false);
+    }
+
+    private void AnalyzeDocumentButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsurePermission(PermissionNames.DocumentUpdate, "belge analizi"))
+        {
+            return;
+        }
+
+        if (_selectedDocument is null)
+        {
+            ShowDocumentFormMessage("Analiz etmek icin listeden bir belge sec.", isError: true);
+            return;
+        }
+
+        string oldAIStatus = _selectedDocument.AIAnalysisStatus;
+        ProjectDocument document = _documentService.AnalyzeDocument(_selectedDocument);
+        LoadDocumentsForCurrentContext(document.Id);
+        RefreshDashboardSummary();
+        RecordAudit("Analyzed", "Document", BuildDocumentAnalysisAuditDetails(document, oldAIStatus));
+        ShowDocumentFormMessage("Demo AI analizi olusturuldu.", isError: false);
     }
 
     private void ClearDocumentFormButton_Click(object sender, RoutedEventArgs e)
@@ -1035,6 +1058,17 @@ public partial class MainWindow : Window
     private static string FormatAuditDate(DateTime? date)
     {
         return date.HasValue ? date.Value.ToString("dd.MM.yyyy") : "none";
+    }
+
+    private static string BuildDocumentAnalysisAuditDetails(ProjectDocument document, string oldAIStatus)
+    {
+        string customerName = document.Project?.Customer?.CompanyName ?? "Unknown customer";
+        string projectName = document.Project?.Name ?? "Unknown project";
+        string analyzedAt = document.AnalyzedAt.HasValue
+            ? document.AnalyzedAt.Value.ToString("dd.MM.yyyy HH:mm")
+            : "none";
+
+        return $"{document.FileName}: AI Status '{oldAIStatus}' -> '{document.AIAnalysisStatus}'. Customer: {customerName}. Project: {projectName}. Analyzed at: {analyzedAt}. Risk note: {document.AIRiskNotes}";
     }
 
     private static string BuildEmployeeChangeDetails(
@@ -1337,6 +1371,7 @@ public partial class MainWindow : Window
         DocumentFilePathTextBox.Text = document.FilePath;
         SelectDocumentStatus(document.Status);
         DocumentNotesTextBox.Text = document.Notes;
+        PopulateDocumentAIFields(document);
         UpdateDocumentActionState();
     }
 
@@ -1472,6 +1507,7 @@ public partial class MainWindow : Window
 
         AddDocumentButton.IsEnabled = canCreateDocument && !IsStaffUser();
         UpdateDocumentStatusButton.IsEnabled = canUpdateDocument && !IsStaffUser();
+        AnalyzeDocumentButton.IsEnabled = canUpdateDocument && !IsStaffUser();
     }
 
     private void UpdateEmployeeActionState()
@@ -1978,8 +2014,22 @@ public partial class MainWindow : Window
         DocumentFilePathTextBox.Clear();
         SelectDocumentStatus(DocumentStatusNames.Uploaded);
         DocumentNotesTextBox.Clear();
+        DocumentAIStatusTextBlock.Text = AIAnalysisStatusNames.NotAnalyzed;
+        DocumentAISummaryTextBox.Clear();
+        DocumentAIRiskNotesTextBox.Clear();
         DocumentFormMessageTextBlock.Visibility = Visibility.Collapsed;
         UpdateDocumentActionState();
+    }
+
+    private void PopulateDocumentAIFields(ProjectDocument document)
+    {
+        string analyzedText = document.AnalyzedAt.HasValue
+            ? $"Analyzed at {document.AnalyzedAt.Value:dd.MM.yyyy HH:mm}"
+            : "Not analyzed yet";
+
+        DocumentAIStatusTextBlock.Text = $"{document.AIAnalysisStatus} | {analyzedText}";
+        DocumentAISummaryTextBox.Text = document.AISummary;
+        DocumentAIRiskNotesTextBox.Text = document.AIRiskNotes;
     }
 
     private string GetSelectedDocumentStatus()

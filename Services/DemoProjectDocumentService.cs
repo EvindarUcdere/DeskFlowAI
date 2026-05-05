@@ -62,4 +62,53 @@ public sealed class DemoProjectDocumentService
 
         return document;
     }
+
+    public ProjectDocument AnalyzeDocument(ProjectDocument existingDocument)
+    {
+        ProjectDocument document = _dbContext.ProjectDocuments
+            .Include(document => document.Project)
+            .ThenInclude(project => project!.Customer)
+            .Single(document => document.Id == existingDocument.Id);
+
+        string analysisStatus = document.Status == DocumentStatusNames.NeedsUpdate
+            ? AIAnalysisStatusNames.NeedsReview
+            : AIAnalysisStatusNames.Analyzed;
+
+        string projectName = document.Project?.Name ?? "Unknown project";
+        string customerName = document.Project?.Customer?.CompanyName ?? "Unknown customer";
+        string summary = $"{document.FileName} belgesi {customerName} / {projectName} projesi icin kayitli. Mevcut belge status'u '{document.Status}'. Not: {BuildSafeNote(document.Notes)}";
+        string riskNotes = BuildRiskNotes(document);
+
+        document.UpdateAIAnalysis(analysisStatus, summary, riskNotes, DateTime.Now);
+        _dbContext.SaveChanges();
+
+        return document;
+    }
+
+    private static string BuildSafeNote(string notes)
+    {
+        return string.IsNullOrWhiteSpace(notes)
+            ? "Belge notu girilmemis."
+            : notes;
+    }
+
+    private static string BuildRiskNotes(ProjectDocument document)
+    {
+        if (document.Status == DocumentStatusNames.NeedsUpdate)
+        {
+            return "Belge guncelleme istiyor. Project tesliminden once sorumlu kisinin belgeyi revize etmesi onerilir.";
+        }
+
+        if (document.Status == DocumentStatusNames.InReview)
+        {
+            return "Belge inceleme asamasinda. Onay sureci gecikirse project teslim planini etkileyebilir.";
+        }
+
+        if (document.Status == DocumentStatusNames.Approved)
+        {
+            return "Belge onaylanmis. Kritik risk gorunmuyor; arsiv ve teslim kaydi kontrol edilmeli.";
+        }
+
+        return "Belge yuklenmis ancak henuz review sureci tamamlanmamis. Ilgili manager tarafindan kontrol edilmeli.";
+    }
 }

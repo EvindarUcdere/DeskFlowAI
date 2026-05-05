@@ -923,6 +923,8 @@
                                                     <DataGridTextColumn Header="File" Binding="{Binding FileName}" Width="*" />
                                                     <DataGridTextColumn Header="Project" Binding="{Binding Project.Name}" Width="*" />
                                                     <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="0.75*" />
+                                                    <DataGridTextColumn Header="AI" Binding="{Binding AIAnalysisStatus}" Width="0.8*" />
+                                                    <DataGridTextColumn Header="Analyzed" Binding="{Binding AnalyzedAt, StringFormat={}{0:dd.MM.yyyy}}" Width="0.75*" />
                                                     <DataGridTextColumn Header="Uploaded" Binding="{Binding UploadedAt, StringFormat={}{0:dd.MM.yyyy}}" Width="0.75*" />
                                                     <DataGridTextColumn Header="By" Binding="{Binding UploadedByEmail}" Width="1*" />
                                                 </DataGrid.Columns>
@@ -992,6 +994,51 @@
                                                          BorderBrush="#CBD5E1"
                                                          BorderThickness="1" />
 
+                                                <Border Padding="12"
+                                                        Margin="0,14,0,0"
+                                                        Background="#EFF6FF"
+                                                        BorderBrush="#BFDBFE"
+                                                        BorderThickness="1"
+                                                        CornerRadius="6">
+                                                    <StackPanel>
+                                                        <TextBlock Text="AI analysis"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#1E3A8A" />
+
+                                                        <TextBlock x:Name="DocumentAIStatusTextBlock"
+                                                                   Text="Not Analyzed"
+                                                                   Margin="0,6,0,0"
+                                                                   FontSize="13"
+                                                                   Foreground="#334155" />
+
+                                                        <TextBlock Text="Summary"
+                                                                   Margin="0,10,0,4"
+                                                                   Style="{StaticResource FieldLabelStyle}" />
+
+                                                        <TextBox x:Name="DocumentAISummaryTextBox"
+                                                                 Height="76"
+                                                                 Padding="10,8"
+                                                                 TextWrapping="Wrap"
+                                                                 AcceptsReturn="True"
+                                                                 IsReadOnly="True"
+                                                                 BorderBrush="#CBD5E1"
+                                                                 BorderThickness="1" />
+
+                                                        <TextBlock Text="Risk notes"
+                                                                   Margin="0,10,0,4"
+                                                                   Style="{StaticResource FieldLabelStyle}" />
+
+                                                        <TextBox x:Name="DocumentAIRiskNotesTextBox"
+                                                                 Height="76"
+                                                                 Padding="10,8"
+                                                                 TextWrapping="Wrap"
+                                                                 AcceptsReturn="True"
+                                                                 IsReadOnly="True"
+                                                                 BorderBrush="#CBD5E1"
+                                                                 BorderThickness="1" />
+                                                    </StackPanel>
+                                                </Border>
+
                                                 <Button x:Name="AddDocumentButton"
                                                         Content="Add document"
                                                         Margin="0,18,0,0"
@@ -1004,6 +1051,13 @@
                                                         Style="{StaticResource SecondaryButtonStyle}"
                                                         IsEnabled="False"
                                                         Click="UpdateDocumentStatusButton_Click" />
+
+                                                <Button x:Name="AnalyzeDocumentButton"
+                                                        Content="Analyze document"
+                                                        Margin="0,10,0,0"
+                                                        Style="{StaticResource SecondaryButtonStyle}"
+                                                        IsEnabled="False"
+                                                        Click="AnalyzeDocumentButton_Click" />
 
                                                 <Button Content="Clear"
                                                         Margin="0,10,0,0"

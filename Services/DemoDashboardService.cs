@@ -25,11 +25,21 @@ public sealed class DemoDashboardService
             task.Status != TaskStatusNames.Done
             && task.DueDate.HasValue
             && task.DueDate.Value.Date < DateTime.Today);
+        IQueryable<ProjectDocument> documentQuery = dbContext.ProjectDocuments;
+
+        if (user.Role == RoleNames.Staff && user.EmployeeId.HasValue)
+        {
+            documentQuery = documentQuery.Where(document =>
+                document.Project!.Tasks.Any(task => task.AssignedEmployeeId == user.EmployeeId.Value));
+        }
+
+        int pendingAiDocuments = documentQuery.Count(document =>
+            document.AIAnalysisStatus != AIAnalysisStatusNames.Analyzed);
 
         return new DashboardSummary(
             activeProjects: activeProjects,
             openTasks: openTasks,
             overdueTasks: overdueTasks,
-            pendingAiDocuments: 2);
+            pendingAiDocuments: pendingAiDocuments);
     }
 }

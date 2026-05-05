@@ -317,6 +317,8 @@ public partial class MainWindow : Window
         DocumentFilePathTextBox.Text = selectedDocument.FilePath;
         SelectDocumentStatus(selectedDocument.Status);
         DocumentNotesTextBox.Text = selectedDocument.Notes;
+        PopulateDocumentFileCheckFields(selectedDocument);
+        PopulateDocumentTextExtractionFields(selectedDocument);
         PopulateDocumentAIFields(selectedDocument);
         DocumentFormMessageTextBlock.Visibility = Visibility.Collapsed;
         UpdateDocumentActionState();
@@ -843,6 +845,46 @@ public partial class MainWindow : Window
         ShowDocumentFormMessage("Demo AI analizi olusturuldu.", isError: false);
     }
 
+    private void CheckDocumentFileButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsurePermission(PermissionNames.DocumentUpdate, "belge dosya kontrolu"))
+        {
+            return;
+        }
+
+        if (_selectedDocument is null)
+        {
+            ShowDocumentFormMessage("Dosya kontrolu icin listeden bir belge sec.", isError: true);
+            return;
+        }
+
+        string oldFileCheckStatus = _selectedDocument.FileCheckStatus;
+        ProjectDocument document = _documentService.CheckDocumentFile(_selectedDocument);
+        LoadDocumentsForCurrentContext(document.Id);
+        RecordAudit("Checked", "Document", BuildDocumentFileCheckAuditDetails(document, oldFileCheckStatus));
+        ShowDocumentFormMessage("Dosya yolu kontrol edildi.", document.FileCheckStatus != DocumentFileCheckStatusNames.Ready);
+    }
+
+    private void ExtractDocumentTextButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsurePermission(PermissionNames.DocumentUpdate, "belge metni cikarma"))
+        {
+            return;
+        }
+
+        if (_selectedDocument is null)
+        {
+            ShowDocumentFormMessage("Metin cikarmak icin listeden bir belge sec.", isError: true);
+            return;
+        }
+
+        string oldTextExtractionStatus = _selectedDocument.TextExtractionStatus;
+        ProjectDocument document = _documentService.ExtractDocumentText(_selectedDocument);
+        LoadDocumentsForCurrentContext(document.Id);
+        RecordAudit("Extracted", "Document", BuildDocumentTextExtractionAuditDetails(document, oldTextExtractionStatus));
+        ShowDocumentFormMessage("Belge metin cikarma adimi calisti.", document.TextExtractionStatus != DocumentTextExtractionStatusNames.Extracted);
+    }
+
     private void ClearDocumentFormButton_Click(object sender, RoutedEventArgs e)
     {
         ClearDocumentForm();
@@ -1069,6 +1111,24 @@ public partial class MainWindow : Window
             : "none";
 
         return $"{document.FileName}: AI Status '{oldAIStatus}' -> '{document.AIAnalysisStatus}'. Customer: {customerName}. Project: {projectName}. Analyzed at: {analyzedAt}. Risk note: {document.AIRiskNotes}";
+    }
+
+    private static string BuildDocumentFileCheckAuditDetails(ProjectDocument document, string oldFileCheckStatus)
+    {
+        string checkedAt = document.FileCheckedAt.HasValue
+            ? document.FileCheckedAt.Value.ToString("dd.MM.yyyy HH:mm")
+            : "none";
+
+        return $"{document.FileName}: File Check '{oldFileCheckStatus}' -> '{document.FileCheckStatus}'. Checked at: {checkedAt}. Path: {document.FilePath}. Message: {document.FileCheckMessage}";
+    }
+
+    private static string BuildDocumentTextExtractionAuditDetails(ProjectDocument document, string oldTextExtractionStatus)
+    {
+        string extractedAt = document.TextExtractedAt.HasValue
+            ? document.TextExtractedAt.Value.ToString("dd.MM.yyyy HH:mm")
+            : "none";
+
+        return $"{document.FileName}: Text Extraction '{oldTextExtractionStatus}' -> '{document.TextExtractionStatus}'. Extracted at: {extractedAt}. Preview length: {document.ExtractedTextPreview.Length}.";
     }
 
     private static string BuildEmployeeChangeDetails(
@@ -1371,6 +1431,8 @@ public partial class MainWindow : Window
         DocumentFilePathTextBox.Text = document.FilePath;
         SelectDocumentStatus(document.Status);
         DocumentNotesTextBox.Text = document.Notes;
+        PopulateDocumentFileCheckFields(document);
+        PopulateDocumentTextExtractionFields(document);
         PopulateDocumentAIFields(document);
         UpdateDocumentActionState();
     }
@@ -1507,6 +1569,8 @@ public partial class MainWindow : Window
 
         AddDocumentButton.IsEnabled = canCreateDocument && !IsStaffUser();
         UpdateDocumentStatusButton.IsEnabled = canUpdateDocument && !IsStaffUser();
+        CheckDocumentFileButton.IsEnabled = canUpdateDocument && !IsStaffUser();
+        ExtractDocumentTextButton.IsEnabled = canUpdateDocument && !IsStaffUser();
         AnalyzeDocumentButton.IsEnabled = canUpdateDocument && !IsStaffUser();
     }
 
@@ -2014,11 +2078,35 @@ public partial class MainWindow : Window
         DocumentFilePathTextBox.Clear();
         SelectDocumentStatus(DocumentStatusNames.Uploaded);
         DocumentNotesTextBox.Clear();
+        DocumentFileCheckStatusTextBlock.Text = DocumentFileCheckStatusNames.NotChecked;
+        DocumentFileCheckMessageTextBlock.Text = string.Empty;
+        DocumentTextExtractionStatusTextBlock.Text = DocumentTextExtractionStatusNames.NotExtracted;
+        DocumentExtractedTextPreviewTextBox.Clear();
         DocumentAIStatusTextBlock.Text = AIAnalysisStatusNames.NotAnalyzed;
         DocumentAISummaryTextBox.Clear();
         DocumentAIRiskNotesTextBox.Clear();
         DocumentFormMessageTextBlock.Visibility = Visibility.Collapsed;
         UpdateDocumentActionState();
+    }
+
+    private void PopulateDocumentFileCheckFields(ProjectDocument document)
+    {
+        string checkedText = document.FileCheckedAt.HasValue
+            ? $"Checked at {document.FileCheckedAt.Value:dd.MM.yyyy HH:mm}"
+            : "Not checked yet";
+
+        DocumentFileCheckStatusTextBlock.Text = $"{document.FileCheckStatus} | {checkedText}";
+        DocumentFileCheckMessageTextBlock.Text = document.FileCheckMessage;
+    }
+
+    private void PopulateDocumentTextExtractionFields(ProjectDocument document)
+    {
+        string extractedText = document.TextExtractedAt.HasValue
+            ? $"Extracted at {document.TextExtractedAt.Value:dd.MM.yyyy HH:mm}"
+            : "Not extracted yet";
+
+        DocumentTextExtractionStatusTextBlock.Text = $"{document.TextExtractionStatus} | {extractedText}";
+        DocumentExtractedTextPreviewTextBox.Text = document.ExtractedTextPreview;
     }
 
     private void PopulateDocumentAIFields(ProjectDocument document)

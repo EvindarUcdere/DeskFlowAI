@@ -1,12 +1,23 @@
 using DeskFlowAI.Data;
 using DeskFlowAI.Models;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
 
 namespace DeskFlowAI.Services;
 
 public sealed class DemoProjectDocumentService
 {
     private readonly DeskFlowDbContext _dbContext = new();
+    private readonly DocumentTextExtractionService _textExtractionService = new();
+    private static readonly HashSet<string> SupportedExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".pdf",
+        ".doc",
+        ".docx",
+        ".xls",
+        ".xlsx",
+        ".txt"
+    };
 
     public List<ProjectDocument> GetDocumentsForProject(int projectId)
     {
@@ -49,6 +60,75 @@ public sealed class DemoProjectDocumentService
             notes);
 
         _dbContext.ProjectDocuments.Add(document);
+        _dbContext.SaveChanges();
+
+        return document;
+    }
+
+    public ProjectDocument CheckDocumentFile(ProjectDocument existingDocument)
+    {
+        ProjectDocument document = _dbContext.ProjectDocuments
+            .Include(document => document.Project)
+            .ThenInclude(project => project!.Customer)
+            .Single(document => document.Id == existingDocument.Id);
+
+        string extension = Path.GetExtension(document.FilePath);
+
+        if (string.IsNullOrWhiteSpace(document.FilePath))
+        {
+            document.UpdateFileCheck(
+                DocumentFileCheckStatusNames.FileMissing,
+                "Dosya yolu bos. Analiz icin once geceli bir file path girilmeli.",
+                DateTime.Now);
+        }
+        else if (!File.Exists(document.FilePath))
+        {
+            document.UpdateFileCheck(
+                DocumentFileCheckStatusNames.FileMissing,
+                $"Dosya bulunamadi: {document.FilePath}",
+                DateTime.Now);
+        }
+        else if (!SupportedExtensions.Contains(extension))
+        {
+            document.UpdateFileCheck(
+                DocumentFileCheckStatusNames.UnsupportedFile,
+                $"'{extension}' uzantisi henuz desteklenmiyor. Desteklenenler: {string.Join(", ", SupportedExtensions.OrderBy(value => value))}.",
+                DateTime.Now);
+        }
+        else
+        {
+            try
+            {
+                using FileStream stream = File.Open(document.FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                document.UpdateFileCheck(
+                    DocumentFileCheckStatusNames.Ready,
+                    $"Dosya bulundu ve okunabilir. Boyut: {stream.Length:N0} byte. Uzanti: {extension}.",
+                    DateTime.Now);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                document.UpdateFileCheck(
+                    DocumentFileCheckStatusNames.ReadError,
+                    $"Dosya bulundu ama okunamadi: {exception.Message}",
+                    DateTime.Now);
+            }
+        }
+
+        _dbContext.SaveChanges();
+
+        return document;
+    }
+
+    public ProjectDocument ExtractDocumentText(ProjectDocument existingDocument)
+    {
+        ProjectDocument document = _dbContext.ProjectDocuments
+            .Include(document => document.Project)
+            .ThenInclude(project => project!.Customer)
+            .Single(document => document.Id == existingDocument.Id);
+
+        DocumentTextExtractionResult result = _textExtractionService.Extract(document);
+        document.UpdateTextExtraction(result.Status, result.Preview, DateTime.Now);
+
         _dbContext.SaveChanges();
 
         return document;

@@ -14,6 +14,7 @@ public partial class MainWindow : Window
     private readonly DemoCustomerService _customerService = new();
     private readonly DemoProjectService _projectService = new();
     private readonly DemoTaskService _taskService = new();
+    private readonly DemoProjectDocumentService _documentService = new();
     private readonly DemoEmployeeService _employeeService = new();
     private readonly DemoUserAccountService _userAccountService = new();
     private readonly DemoAuditLogService _auditLogService = new();
@@ -21,6 +22,7 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<Customer> _filteredCustomers = [];
     private readonly ObservableCollection<WorkProject> _projects = [];
     private readonly ObservableCollection<WorkTask> _tasks = [];
+    private readonly ObservableCollection<ProjectDocument> _documents = [];
     private readonly ObservableCollection<Employee> _employees = [];
     private readonly ObservableCollection<UserAccount> _userAccounts = [];
     private readonly ObservableCollection<WorkProject> _allProjects = [];
@@ -29,6 +31,7 @@ public partial class MainWindow : Window
     private Customer? _selectedCustomer;
     private WorkProject? _selectedProject;
     private WorkTask? _selectedTask;
+    private ProjectDocument? _selectedDocument;
     private Employee? _selectedEmployee;
     private UserAccount? _selectedUserAccount;
     private UserSession? _currentUser;
@@ -43,6 +46,7 @@ public partial class MainWindow : Window
         LoadAuditLogs();
         ProjectsDataGrid.ItemsSource = _projects;
         TasksDataGrid.ItemsSource = _tasks;
+        DocumentsDataGrid.ItemsSource = _documents;
         EmployeesDataGrid.ItemsSource = _employees;
         UserAccountsDataGrid.ItemsSource = _userAccounts;
         UserEmployeeComboBox.ItemsSource = _employees;
@@ -104,6 +108,7 @@ public partial class MainWindow : Window
         ApplyCustomerPermissions(user);
         ApplyProjectPermissions(user);
         ApplyTaskPermissions(user);
+        ApplyDocumentPermissions(user);
         ApplyEmployeePermissions(user);
         ApplyUserManagementPermissions(user);
         ApplyWorkspaceForRole(user);
@@ -275,6 +280,7 @@ public partial class MainWindow : Window
         ProjectDueDatePicker.SelectedDate = selectedProject.DueDate;
         ProjectFormMessageTextBlock.Visibility = Visibility.Collapsed;
         LoadTasksForSelectedProject(selectFirstTask: true);
+        LoadDocumentsForCurrentContext(selectFirstDocument: true);
         UpdateProjectActionState();
     }
 
@@ -295,6 +301,24 @@ public partial class MainWindow : Window
         TaskDueDatePicker.SelectedDate = selectedTask.DueDate;
         TaskFormMessageTextBlock.Visibility = Visibility.Collapsed;
         UpdateTaskActionState();
+    }
+
+    private void DocumentsDataGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (DocumentsDataGrid.SelectedItem is not ProjectDocument selectedDocument)
+        {
+            _selectedDocument = null;
+            UpdateDocumentActionState();
+            return;
+        }
+
+        _selectedDocument = selectedDocument;
+        DocumentFileNameTextBox.Text = selectedDocument.FileName;
+        DocumentFilePathTextBox.Text = selectedDocument.FilePath;
+        SelectDocumentStatus(selectedDocument.Status);
+        DocumentNotesTextBox.Text = selectedDocument.Notes;
+        DocumentFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        UpdateDocumentActionState();
     }
 
     private void EmployeesDataGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -360,9 +384,11 @@ public partial class MainWindow : Window
         _selectedCustomer = null;
         _selectedProject = null;
         _selectedTask = null;
+        _selectedDocument = null;
         CustomersDataGrid.SelectedItem = null;
         ProjectsDataGrid.SelectedItem = null;
         TasksDataGrid.SelectedItem = null;
+        DocumentsDataGrid.SelectedItem = null;
         CustomerFormTitleTextBlock.Text = "Add customer";
         CustomerCompanyTextBox.Clear();
         CustomerContactTextBox.Clear();
@@ -375,12 +401,17 @@ public partial class MainWindow : Window
         SelectAssignedEmployee(null);
         TaskDueDatePicker.SelectedDate = DateTime.Today.AddDays(7);
         TaskFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        ClearDocumentForm();
         _tasks.Clear();
+        _documents.Clear();
         SelectedProjectForTaskTextBlock.Text = "Once Projects sekmesinden bir project sec.";
         TasksEmptyTextBlock.Visibility = Visibility.Collapsed;
+        SelectedProjectForDocumentTextBlock.Text = "Once Projects sekmesinden bir project sec.";
+        DocumentsEmptyTextBlock.Visibility = Visibility.Collapsed;
         LoadProjectsForSelectedCustomer();
         UpdateProjectActionState();
         UpdateTaskActionState();
+        UpdateDocumentActionState();
         CustomerCompanyTextBox.Focus();
     }
 
@@ -741,6 +772,59 @@ public partial class MainWindow : Window
         ClearUserForm();
     }
 
+    private void AddDocumentButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsurePermission(PermissionNames.DocumentCreate, "belge ekleme"))
+        {
+            return;
+        }
+
+        if (_selectedProject is null)
+        {
+            ShowDocumentFormMessage("Belge eklemek icin once bir project sec.", isError: true);
+            return;
+        }
+
+        if (!TryReadDocumentForm(out string fileName, out string filePath, out string status, out string notes))
+        {
+            return;
+        }
+
+        string uploadedByEmail = _currentUser?.Email ?? "unknown";
+        ProjectDocument document = _documentService.CreateDocument(_selectedProject.Id, fileName, filePath, status, uploadedByEmail, notes);
+        LoadDocumentsForCurrentContext(document.Id);
+        RecordAudit("Created", "Document", $"{fileName} belgesi {_selectedProject.Name} projesine {uploadedByEmail} tarafindan eklendi.");
+        ShowDocumentFormMessage("Belge eklendi ve listede secildi.", isError: false);
+    }
+
+    private void UpdateDocumentStatusButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsurePermission(PermissionNames.DocumentUpdate, "belge guncelleme"))
+        {
+            return;
+        }
+
+        if (_selectedDocument is null)
+        {
+            ShowDocumentFormMessage("Guncellemek icin listeden bir belge sec.", isError: true);
+            return;
+        }
+
+        string newStatus = GetSelectedDocumentStatus();
+        string notes = DocumentNotesTextBox.Text.Trim();
+        string oldStatus = _selectedDocument.Status;
+
+        ProjectDocument document = _documentService.UpdateDocumentStatus(_selectedDocument, newStatus, notes);
+        LoadDocumentsForCurrentContext(document.Id);
+        RecordAudit("Updated", "Document", $"{document.FileName}: Status '{oldStatus}' -> '{newStatus}'");
+        ShowDocumentFormMessage("Belge status bilgisi guncellendi.", isError: false);
+    }
+
+    private void ClearDocumentFormButton_Click(object sender, RoutedEventArgs e)
+    {
+        ClearDocumentForm();
+    }
+
     private bool TryReadCustomerForm(out string companyName, out string contactName, out string email)
     {
         companyName = CustomerCompanyTextBox.Text.Trim();
@@ -809,6 +893,12 @@ public partial class MainWindow : Window
         UpdateTaskActionState();
     }
 
+    private void ApplyDocumentPermissions(UserSession user)
+    {
+        AddDocumentButton.IsEnabled = user.HasPermission(PermissionNames.DocumentCreate);
+        UpdateDocumentActionState();
+    }
+
     private void ApplyEmployeePermissions(UserSession user)
     {
         bool canManageEmployees = user.HasPermission(PermissionNames.EmployeeManage);
@@ -844,6 +934,7 @@ public partial class MainWindow : Window
             WorkspaceTabControl.SelectedItem = TasksTab;
             ConfigureTaskWorkspaceForStaff(user);
             LoadMyTasksForCurrentUser(selectFirstTask: true);
+            LoadDocumentsForCurrentContext(selectFirstDocument: true);
             return;
         }
 
@@ -980,13 +1071,19 @@ public partial class MainWindow : Window
         _projects.Clear();
         _selectedProject = null;
         _selectedTask = null;
+        _selectedDocument = null;
         ProjectsDataGrid.SelectedItem = null;
         TasksDataGrid.SelectedItem = null;
+        DocumentsDataGrid.SelectedItem = null;
         _tasks.Clear();
+        _documents.Clear();
         SelectedProjectForTaskTextBlock.Text = "Once Projects sekmesinden bir project sec.";
         TasksEmptyTextBlock.Visibility = Visibility.Collapsed;
+        SelectedProjectForDocumentTextBlock.Text = "Once Projects sekmesinden bir project sec.";
+        DocumentsEmptyTextBlock.Visibility = Visibility.Collapsed;
         UpdateProjectActionState();
         UpdateTaskActionState();
+        UpdateDocumentActionState();
 
         IEnumerable<WorkProject> projects = _selectedCustomer is null
             ? _projectService.GetAllProjects()
@@ -1018,6 +1115,7 @@ public partial class MainWindow : Window
             ProjectDueDatePicker.SelectedDate = DateTime.Today.AddDays(14);
             TaskTitleTextBox.Clear();
             TaskDueDatePicker.SelectedDate = DateTime.Today.AddDays(7);
+            ClearDocumentForm();
             return;
         }
 
@@ -1038,6 +1136,7 @@ public partial class MainWindow : Window
         SelectProjectStatus(project.Status);
         ProjectDueDatePicker.SelectedDate = project.DueDate;
         LoadTasksForSelectedProject();
+        LoadDocumentsForCurrentContext();
         UpdateProjectActionState();
     }
 
@@ -1158,6 +1257,87 @@ public partial class MainWindow : Window
         SelectAssignedEmployee(task.AssignedEmployeeId);
         TaskDueDatePicker.SelectedDate = task.DueDate;
         UpdateTaskActionState();
+    }
+
+    private void LoadDocumentsForCurrentContext(int? documentIdToSelect = null, bool selectFirstDocument = false)
+    {
+        _documents.Clear();
+        _selectedDocument = null;
+        DocumentsDataGrid.SelectedItem = null;
+        UpdateDocumentActionState();
+
+        IEnumerable<ProjectDocument> documents;
+
+        if (IsStaffUser())
+        {
+            if (_currentUser?.EmployeeId is null)
+            {
+                SelectedProjectForDocumentTextBlock.Text = "Bu kullanici bir employee kaydina bagli degil.";
+                DocumentsEmptyTextBlock.Text = "Employee baglantisi olmadigi icin belge listelenemiyor.";
+                DocumentsEmptyTextBlock.Visibility = Visibility.Visible;
+                ClearDocumentForm();
+                return;
+            }
+
+            SelectedProjectForDocumentTextBlock.Text = $"{_currentUser.FullName} icin atanmis task projelerindeki belgeler.";
+            documents = _documentService.GetDocumentsForEmployeeProjects(_currentUser.EmployeeId.Value);
+        }
+        else
+        {
+            if (_selectedProject is null)
+            {
+                SelectedProjectForDocumentTextBlock.Text = "Once Projects sekmesinden bir project sec.";
+                DocumentsEmptyTextBlock.Visibility = Visibility.Collapsed;
+                ClearDocumentForm();
+                return;
+            }
+
+            SelectedProjectForDocumentTextBlock.Text = $"Selected project: {_selectedProject.Name}";
+            documents = _documentService.GetDocumentsForProject(_selectedProject.Id);
+        }
+
+        foreach (ProjectDocument document in documents)
+        {
+            _documents.Add(document);
+        }
+
+        DocumentsEmptyTextBlock.Text = IsStaffUser()
+            ? "Erisebilecegin project belgeleri yok."
+            : "Bu project icin henuz belge yok.";
+        DocumentsEmptyTextBlock.Visibility = _documents.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+
+        if (documentIdToSelect is null && selectFirstDocument && _documents.Count > 0)
+        {
+            documentIdToSelect = _documents[0].Id;
+        }
+
+        if (documentIdToSelect is null)
+        {
+            ClearDocumentForm();
+            return;
+        }
+
+        ProjectDocument? documentToSelect = _documents.FirstOrDefault(document => document.Id == documentIdToSelect.Value);
+
+        if (documentToSelect is not null)
+        {
+            SelectDocument(documentToSelect);
+            return;
+        }
+
+        ClearDocumentForm();
+    }
+
+    private void SelectDocument(ProjectDocument document)
+    {
+        _selectedDocument = document;
+        DocumentsDataGrid.SelectedItem = document;
+        DocumentsDataGrid.ScrollIntoView(document);
+        DocumentFileNameTextBox.Text = document.FileName;
+        DocumentFilePathTextBox.Text = document.FilePath;
+        SelectDocumentStatus(document.Status);
+        DocumentNotesTextBox.Text = document.Notes;
+        UpdateDocumentActionState();
     }
 
     private void LoadEmployees(int? employeeIdToSelect = null)
@@ -1282,6 +1462,16 @@ public partial class MainWindow : Window
 
         UpdateTaskButton.IsEnabled = canUpdateTask;
         MarkTaskDoneButton.IsEnabled = canUpdateTask && _selectedTask?.Status != TaskStatusNames.Done;
+    }
+
+    private void UpdateDocumentActionState()
+    {
+        bool canCreateDocument = _currentUser?.HasPermission(PermissionNames.DocumentCreate) == true;
+        bool canUpdateDocument = _currentUser?.HasPermission(PermissionNames.DocumentUpdate) == true
+            && _selectedDocument is not null;
+
+        AddDocumentButton.IsEnabled = canCreateDocument && !IsStaffUser();
+        UpdateDocumentStatusButton.IsEnabled = canUpdateDocument && !IsStaffUser();
     }
 
     private void UpdateEmployeeActionState()
@@ -1762,5 +1952,68 @@ public partial class MainWindow : Window
             ? System.Windows.Media.Brushes.Firebrick
             : System.Windows.Media.Brushes.SeaGreen;
         UserFormMessageTextBlock.Visibility = Visibility.Visible;
+    }
+
+    private bool TryReadDocumentForm(out string fileName, out string filePath, out string status, out string notes)
+    {
+        fileName = DocumentFileNameTextBox.Text.Trim();
+        filePath = DocumentFilePathTextBox.Text.Trim();
+        status = GetSelectedDocumentStatus();
+        notes = DocumentNotesTextBox.Text.Trim();
+
+        if (string.IsNullOrWhiteSpace(fileName) || string.IsNullOrWhiteSpace(filePath))
+        {
+            ShowDocumentFormMessage("Belge adi ve dosya yolu zorunludur.", isError: true);
+            return false;
+        }
+
+        return true;
+    }
+
+    private void ClearDocumentForm()
+    {
+        _selectedDocument = null;
+        DocumentsDataGrid.SelectedItem = null;
+        DocumentFileNameTextBox.Clear();
+        DocumentFilePathTextBox.Clear();
+        SelectDocumentStatus(DocumentStatusNames.Uploaded);
+        DocumentNotesTextBox.Clear();
+        DocumentFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        UpdateDocumentActionState();
+    }
+
+    private string GetSelectedDocumentStatus()
+    {
+        if (DocumentStatusComboBox.SelectedItem is System.Windows.Controls.ComboBoxItem item
+            && item.Content is string status)
+        {
+            return status;
+        }
+
+        return DocumentStatusNames.Uploaded;
+    }
+
+    private void SelectDocumentStatus(string status)
+    {
+        foreach (object item in DocumentStatusComboBox.Items)
+        {
+            if (item is System.Windows.Controls.ComboBoxItem comboBoxItem
+                && comboBoxItem.Content?.ToString() == status)
+            {
+                DocumentStatusComboBox.SelectedItem = comboBoxItem;
+                return;
+            }
+        }
+
+        DocumentStatusComboBox.SelectedIndex = 0;
+    }
+
+    private void ShowDocumentFormMessage(string message, bool isError)
+    {
+        DocumentFormMessageTextBlock.Text = message;
+        DocumentFormMessageTextBlock.Foreground = isError
+            ? System.Windows.Media.Brushes.Firebrick
+            : System.Windows.Media.Brushes.SeaGreen;
+        DocumentFormMessageTextBlock.Visibility = Visibility.Visible;
     }
 }

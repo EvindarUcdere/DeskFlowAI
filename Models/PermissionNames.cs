@@ -11,4 +11,6 @@ public static class PermissionNames
     public const string TaskUpdate = "Task.Update";
     public const string EmployeeManage = "Employee.Manage";
     public const string UserManage = "User.Manage";
+    public const string DocumentCreate = "Document.Create";
+    public const string DocumentUpdate = "Document.Update";
 }

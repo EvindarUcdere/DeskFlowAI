@@ -872,6 +872,155 @@
                                 </Grid>
                             </TabItem>
 
+                            <TabItem x:Name="DocumentsTab" Header="Documents">
+                                <Grid Margin="0,12,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1.25*" MinWidth="300" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="0.9*" MinWidth="260" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <StackPanel>
+                                                <TextBlock Text="Project documents" Style="{StaticResource SectionTitleStyle}" />
+
+                                                <TextBlock Text="Secili project belgeleri veya Staff icin erisilebilir proje belgeleri burada listelenir."
+                                                           Margin="0,4,0,0"
+                                                           FontSize="13"
+                                                           TextWrapping="Wrap"
+                                                           Foreground="#64748B" />
+
+                                                <TextBlock x:Name="SelectedProjectForDocumentTextBlock"
+                                                           Text="Once Projects sekmesinden bir project sec."
+                                                           Margin="0,10,0,0"
+                                                           FontSize="13"
+                                                           FontWeight="SemiBold"
+                                                           TextWrapping="Wrap"
+                                                           Foreground="#334155" />
+                                            </StackPanel>
+
+                                            <DataGrid x:Name="DocumentsDataGrid"
+                                                      Grid.Row="1"
+                                                      MinHeight="300"
+                                                      Margin="0,16,0,0"
+                                                      AutoGenerateColumns="False"
+                                                      CanUserAddRows="False"
+                                                      IsReadOnly="True"
+                                                      SelectionMode="Single"
+                                                      SelectionChanged="DocumentsDataGrid_SelectionChanged"
+                                                      HeadersVisibility="Column"
+                                                      GridLinesVisibility="Horizontal"
+                                                      BorderBrush="#E2E8F0"
+                                                      BorderThickness="1">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Header="File" Binding="{Binding FileName}" Width="*" />
+                                                    <DataGridTextColumn Header="Project" Binding="{Binding Project.Name}" Width="*" />
+                                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="0.75*" />
+                                                    <DataGridTextColumn Header="Uploaded" Binding="{Binding UploadedAt, StringFormat={}{0:dd.MM.yyyy}}" Width="0.75*" />
+                                                    <DataGridTextColumn Header="By" Binding="{Binding UploadedByEmail}" Width="1*" />
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+
+                                            <TextBlock x:Name="DocumentsEmptyTextBlock"
+                                                       Grid.Row="2"
+                                                       Text="Bu project icin henuz belge yok."
+                                                       Margin="0,10,0,0"
+                                                       FontSize="13"
+                                                       Foreground="#64748B"
+                                                       Visibility="Collapsed" />
+                                        </Grid>
+                                    </Border>
+
+                                    <GridSplitter Grid.Column="1"
+                                                  Width="10"
+                                                  HorizontalAlignment="Stretch"
+                                                  VerticalAlignment="Stretch"
+                                                  ResizeBehavior="PreviousAndNext"
+                                                  Background="Transparent"
+                                                  ShowsPreview="True">
+                                        <GridSplitter.Template>
+                                            <ControlTemplate TargetType="GridSplitter">
+                                                <Border Background="#D8E1EC"
+                                                        Width="2"
+                                                        CornerRadius="1"
+                                                        HorizontalAlignment="Center"
+                                                        Margin="0,8" />
+                                            </ControlTemplate>
+                                        </GridSplitter.Template>
+                                    </GridSplitter>
+
+                                    <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                            <StackPanel>
+                                                <TextBlock Text="Document details" Style="{StaticResource SectionTitleStyle}" />
+
+                                                <TextBlock Text="Belge kaydi ekle veya secili belgenin review durumunu guncelle."
+                                                           Margin="0,4,0,16"
+                                                           FontSize="13"
+                                                           TextWrapping="Wrap"
+                                                           Foreground="#64748B" />
+
+                                                <TextBlock Text="File name" Style="{StaticResource FieldLabelStyle}" />
+                                                <TextBox x:Name="DocumentFileNameTextBox" Style="{StaticResource InputStyle}" />
+
+                                                <TextBlock Text="File path" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                <TextBox x:Name="DocumentFilePathTextBox" Style="{StaticResource InputStyle}" />
+
+                                                <TextBlock Text="Status" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                <ComboBox x:Name="DocumentStatusComboBox"
+                                                          Height="38"
+                                                          SelectedIndex="0">
+                                                    <ComboBoxItem Content="Uploaded" />
+                                                    <ComboBoxItem Content="In Review" />
+                                                    <ComboBoxItem Content="Approved" />
+                                                    <ComboBoxItem Content="Needs Update" />
+                                                </ComboBox>
+
+                                                <TextBlock Text="Notes" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                <TextBox x:Name="DocumentNotesTextBox"
+                                                         Height="84"
+                                                         Padding="10,8"
+                                                         TextWrapping="Wrap"
+                                                         AcceptsReturn="True"
+                                                         BorderBrush="#CBD5E1"
+                                                         BorderThickness="1" />
+
+                                                <Button x:Name="AddDocumentButton"
+                                                        Content="Add document"
+                                                        Margin="0,18,0,0"
+                                                        Style="{StaticResource PrimaryButtonStyle}"
+                                                        Click="AddDocumentButton_Click" />
+
+                                                <Button x:Name="UpdateDocumentStatusButton"
+                                                        Content="Update status"
+                                                        Margin="0,10,0,0"
+                                                        Style="{StaticResource SecondaryButtonStyle}"
+                                                        IsEnabled="False"
+                                                        Click="UpdateDocumentStatusButton_Click" />
+
+                                                <Button Content="Clear"
+                                                        Margin="0,10,0,0"
+                                                        Style="{StaticResource SecondaryButtonStyle}"
+                                                        Click="ClearDocumentFormButton_Click" />
+
+                                                <TextBlock x:Name="DocumentFormMessageTextBlock"
+                                                           Margin="0,12,0,0"
+                                                           FontSize="13"
+                                                           TextWrapping="Wrap"
+                                                           Visibility="Collapsed" />
+                                            </StackPanel>
+                                        </ScrollViewer>
+                                    </Border>
+                                </Grid>
+                            </TabItem>
+
                             <TabItem x:Name="TeamTab" Header="Team">
                                 <Grid Margin="0,12,0,0">
                                     <Grid.ColumnDefinitions>

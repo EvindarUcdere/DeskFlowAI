@@ -57,7 +57,9 @@ public sealed class DemoAuthService
                     PermissionNames.TaskCreate,
                     PermissionNames.TaskUpdate,
                     PermissionNames.EmployeeManage,
-                    PermissionNames.UserManage
+                    PermissionNames.UserManage,
+                    PermissionNames.DocumentCreate,
+                    PermissionNames.DocumentUpdate
                 ],
 
             RoleNames.Manager =>
@@ -68,7 +70,9 @@ public sealed class DemoAuthService
                     PermissionNames.ProjectUpdate,
                     PermissionNames.TaskCreate,
                     PermissionNames.TaskUpdate,
-                    PermissionNames.EmployeeManage
+                    PermissionNames.EmployeeManage,
+                    PermissionNames.DocumentCreate,
+                    PermissionNames.DocumentUpdate
                 ],
 
             RoleNames.Staff =>

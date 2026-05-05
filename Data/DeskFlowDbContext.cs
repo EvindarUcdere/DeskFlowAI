@@ -12,6 +12,8 @@ public sealed class DeskFlowDbContext : DbContext
 
     public DbSet<WorkTask> Tasks => Set<WorkTask>();
 
+    public DbSet<ProjectDocument> ProjectDocuments => Set<ProjectDocument>();
+
     public DbSet<Employee> Employees => Set<Employee>();
 
     public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
@@ -77,6 +79,24 @@ public sealed class DeskFlowDbContext : DbContext
                 .WithMany(employee => employee.AssignedTasks)
                 .HasForeignKey(task => task.AssignedEmployeeId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<ProjectDocument>(entity =>
+        {
+            entity.Property(document => document.FileName).HasMaxLength(220);
+            entity.Property(document => document.FilePath).HasMaxLength(600);
+            entity.Property(document => document.Status).HasMaxLength(40);
+            entity.Property(document => document.UploadedByEmail).HasMaxLength(180);
+            entity.Property(document => document.Notes).HasMaxLength(800);
+
+            entity.HasIndex(document => document.ProjectId);
+            entity.HasIndex(document => document.Status);
+            entity.HasIndex(document => document.UploadedAt);
+
+            entity.HasOne(document => document.Project)
+                .WithMany(project => project.Documents)
+                .HasForeignKey(document => document.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Employee>(entity =>

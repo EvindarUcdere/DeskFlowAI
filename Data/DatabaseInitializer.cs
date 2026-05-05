@@ -20,6 +20,7 @@ public sealed class DatabaseInitializer
         SeedUserAccountsIfNeeded(dbContext);
         SeedProjectsIfNeeded(dbContext);
         SeedTasksIfNeeded(dbContext);
+        SeedProjectDocumentsIfNeeded(dbContext);
     }
 
     private static void SeedCustomersIfNeeded(DeskFlowDbContext dbContext)
@@ -188,6 +189,90 @@ public sealed class DatabaseInitializer
         AssignTaskIfUnassigned(dbContext, "KVKK onay adimini tasarla", merve.Id);
     }
 
+    private static void SeedProjectDocumentsIfNeeded(DeskFlowDbContext dbContext)
+    {
+        WorkProject customerPortal = GetProject(dbContext, "Customer Portal Renewal");
+        WorkProject warehouseApp = GetProject(dbContext, "Warehouse Mobile App");
+        WorkProject riskReporting = GetProject(dbContext, "Quarterly Risk Reporting");
+        WorkProject dataMigration = GetProject(dbContext, "Legacy Data Migration");
+        WorkProject backoffice = GetProject(dbContext, "E-Commerce Backoffice");
+        WorkProject intakeWorkflow = GetProject(dbContext, "Patient Intake Workflow");
+
+        AddDocumentIfMissing(
+            dbContext,
+            customerPortal.Id,
+            "customer-portal-client-brief.pdf",
+            @"C:\DeskFlowDemo\Documents\Northwind\customer-portal-client-brief.pdf",
+            DocumentStatusNames.InReview,
+            "manager@deskflow.ai",
+            "Musteri beklentileri ve yenilenecek portal kapsam notlari.");
+
+        AddDocumentIfMissing(
+            dbContext,
+            customerPortal.Id,
+            "portal-acceptance-checklist.xlsx",
+            @"C:\DeskFlowDemo\Documents\Northwind\portal-acceptance-checklist.xlsx",
+            DocumentStatusNames.Uploaded,
+            "admin@deskflow.ai",
+            "UAT maddeleri henuz musteri ile son kez netlestirilecek.");
+
+        AddDocumentIfMissing(
+            dbContext,
+            warehouseApp.Id,
+            "warehouse-mobile-test-report.docx",
+            @"C:\DeskFlowDemo\Documents\BluePeak\warehouse-mobile-test-report.docx",
+            DocumentStatusNames.NeedsUpdate,
+            "staff@deskflow.ai",
+            "Offline senkronizasyon bolumu yeniden test edilmeli.");
+
+        AddDocumentIfMissing(
+            dbContext,
+            riskReporting.Id,
+            "quarterly-risk-dashboard-export.xlsx",
+            @"C:\DeskFlowDemo\Documents\Atlas\quarterly-risk-dashboard-export.xlsx",
+            DocumentStatusNames.InReview,
+            "manager@deskflow.ai",
+            "Yonetim ozeti grafikleri kontrol bekliyor.");
+
+        AddDocumentIfMissing(
+            dbContext,
+            riskReporting.Id,
+            "risk-report-final-summary.pdf",
+            @"C:\DeskFlowDemo\Documents\Atlas\risk-report-final-summary.pdf",
+            DocumentStatusNames.Uploaded,
+            "admin@deskflow.ai",
+            "Final PDF onaydan once finans ekibiyle paylasilacak.");
+
+        AddDocumentIfMissing(
+            dbContext,
+            dataMigration.Id,
+            "legacy-migration-signoff.pdf",
+            @"C:\DeskFlowDemo\Documents\Atlas\legacy-migration-signoff.pdf",
+            DocumentStatusNames.Approved,
+            "manager@deskflow.ai",
+            "Tamamlanan migration icin kapanis onayi.");
+
+        AddDocumentIfMissing(
+            dbContext,
+            backoffice.Id,
+            "ecommerce-backoffice-process-map.vsdx",
+            @"C:\DeskFlowDemo\Documents\Nova\ecommerce-backoffice-process-map.vsdx",
+            DocumentStatusNames.Uploaded,
+            "admin@deskflow.ai",
+            "Stok, iade ve alarm surecleri icin surec haritasi.");
+
+        AddDocumentIfMissing(
+            dbContext,
+            intakeWorkflow.Id,
+            "patient-intake-kvkk-form.docx",
+            @"C:\DeskFlowDemo\Documents\Orion\patient-intake-kvkk-form.docx",
+            DocumentStatusNames.InReview,
+            "manager@deskflow.ai",
+            "KVKK onay metni hukuk ekibi tarafindan inceleniyor.");
+
+        dbContext.SaveChanges();
+    }
+
     private static void AddCustomerIfMissing(
         DeskFlowDbContext dbContext,
         string email,
@@ -281,6 +366,29 @@ public sealed class DatabaseInitializer
         }
 
         dbContext.Tasks.Add(new WorkTask(projectId, title, status, priority, dueDate));
+    }
+
+    private static void AddDocumentIfMissing(
+        DeskFlowDbContext dbContext,
+        int projectId,
+        string fileName,
+        string filePath,
+        string status,
+        string uploadedByEmail,
+        string notes)
+    {
+        if (dbContext.ProjectDocuments.Any(document => document.ProjectId == projectId && document.FileName == fileName))
+        {
+            return;
+        }
+
+        dbContext.ProjectDocuments.Add(new ProjectDocument(
+            projectId,
+            fileName,
+            filePath,
+            status,
+            uploadedByEmail,
+            notes));
     }
 
     private static void AssignTaskIfUnassigned(DeskFlowDbContext dbContext, string title, int employeeId)

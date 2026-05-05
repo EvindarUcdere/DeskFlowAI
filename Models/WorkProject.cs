@@ -33,6 +33,8 @@ public sealed class WorkProject
 
     public List<WorkTask> Tasks { get; private set; } = [];
 
+    public List<ProjectDocument> Documents { get; private set; } = [];
+
     public void ChangeStatus(string status)
     {
         Status = status;

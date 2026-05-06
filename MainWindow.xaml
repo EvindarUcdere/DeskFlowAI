@@ -1098,7 +1098,7 @@
                                                 <Button x:Name="AddDocumentButton"
                                                         Content="Add document"
                                                         Margin="0,18,0,0"
-                                                        Style="{StaticResource PrimaryButtonStyle}"
+                                                        Style="{StaticResource SecondaryButtonStyle}"
                                                         Click="AddDocumentButton_Click" />
 
                                                 <Button x:Name="UpdateDocumentStatusButton"
@@ -1108,26 +1108,39 @@
                                                         IsEnabled="False"
                                                         Click="UpdateDocumentStatusButton_Click" />
 
-                                                <Button x:Name="CheckDocumentFileButton"
-                                                        Content="Check file"
-                                                        Margin="0,10,0,0"
-                                                        Style="{StaticResource SecondaryButtonStyle}"
-                                                        IsEnabled="False"
-                                                        Click="CheckDocumentFileButton_Click" />
-
-                                                <Button x:Name="ExtractDocumentTextButton"
-                                                        Content="Extract text"
-                                                        Margin="0,10,0,0"
-                                                        Style="{StaticResource SecondaryButtonStyle}"
-                                                        IsEnabled="False"
-                                                        Click="ExtractDocumentTextButton_Click" />
-
                                                 <Button x:Name="AnalyzeDocumentButton"
                                                         Content="Analyze document"
-                                                        Margin="0,10,0,0"
-                                                        Style="{StaticResource SecondaryButtonStyle}"
+                                                        Margin="0,14,0,0"
+                                                        Style="{StaticResource PrimaryButtonStyle}"
                                                         IsEnabled="False"
                                                         Click="AnalyzeDocumentButton_Click" />
+
+                                                <Border Padding="12"
+                                                        Margin="0,14,0,0"
+                                                        Background="#F8FAFC"
+                                                        BorderBrush="#E2E8F0"
+                                                        BorderThickness="1"
+                                                        CornerRadius="6">
+                                                    <StackPanel>
+                                                        <TextBlock Text="Advanced tools"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#334155" />
+
+                                                        <Button x:Name="CheckDocumentFileButton"
+                                                                Content="Check file"
+                                                                Margin="0,10,0,0"
+                                                                Style="{StaticResource SecondaryButtonStyle}"
+                                                                IsEnabled="False"
+                                                                Click="CheckDocumentFileButton_Click" />
+
+                                                        <Button x:Name="ExtractDocumentTextButton"
+                                                                Content="Extract text"
+                                                                Margin="0,10,0,0"
+                                                                Style="{StaticResource SecondaryButtonStyle}"
+                                                                IsEnabled="False"
+                                                                Click="ExtractDocumentTextButton_Click" />
+                                                    </StackPanel>
+                                                </Border>
 
                                                 <Button Content="Clear"
                                                         Margin="0,10,0,0"

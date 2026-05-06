@@ -837,12 +837,32 @@ public partial class MainWindow : Window
             return;
         }
 
-        string oldAIStatus = _selectedDocument.AIAnalysisStatus;
-        ProjectDocument document = _documentService.AnalyzeDocument(_selectedDocument);
+        ProjectDocument documentToAnalyze = _selectedDocument;
+        List<string> automaticSteps = [];
+
+        if (documentToAnalyze.FileCheckStatus != DocumentFileCheckStatusNames.Ready)
+        {
+            string oldFileCheckStatus = documentToAnalyze.FileCheckStatus;
+            documentToAnalyze = _documentService.CheckDocumentFile(documentToAnalyze);
+            RecordAudit("Checked", "Document", BuildDocumentFileCheckAuditDetails(documentToAnalyze, oldFileCheckStatus));
+            automaticSteps.Add($"file check: {documentToAnalyze.FileCheckStatus}");
+        }
+
+        if (documentToAnalyze.FileCheckStatus == DocumentFileCheckStatusNames.Ready
+            && documentToAnalyze.TextExtractionStatus != DocumentTextExtractionStatusNames.Extracted)
+        {
+            string oldTextExtractionStatus = documentToAnalyze.TextExtractionStatus;
+            documentToAnalyze = _documentService.ExtractDocumentText(documentToAnalyze);
+            RecordAudit("Extracted", "Document", BuildDocumentTextExtractionAuditDetails(documentToAnalyze, oldTextExtractionStatus));
+            automaticSteps.Add($"text extraction: {documentToAnalyze.TextExtractionStatus}");
+        }
+
+        string oldAIStatus = documentToAnalyze.AIAnalysisStatus;
+        ProjectDocument document = _documentService.AnalyzeDocument(documentToAnalyze);
         LoadDocumentsForCurrentContext(document.Id);
         RefreshDashboardSummary();
         RecordAudit("Analyzed", "Document", BuildDocumentAnalysisAuditDetails(document, oldAIStatus));
-        ShowDocumentFormMessage(BuildDocumentAnalysisFormMessage(document), isError: false);
+        ShowDocumentFormMessage(BuildSmartDocumentAnalysisFormMessage(document, automaticSteps), isError: false);
     }
 
     private void CheckDocumentFileButton_Click(object sender, RoutedEventArgs e)
@@ -1116,11 +1136,15 @@ public partial class MainWindow : Window
         return $"{document.FileName}: AI Status '{oldAIStatus}' -> '{document.AIAnalysisStatus}'. Source: {source}. Customer: {customerName}. Project: {projectName}. Analyzed at: {analyzedAt}. Risk note: {document.AIRiskNotes}";
     }
 
-    private static string BuildDocumentAnalysisFormMessage(ProjectDocument document)
+    private static string BuildSmartDocumentAnalysisFormMessage(ProjectDocument document, IReadOnlyCollection<string> automaticSteps)
     {
-        return document.TextExtractionStatus == DocumentTextExtractionStatusNames.Extracted
+        string sourceMessage = document.TextExtractionStatus == DocumentTextExtractionStatusNames.Extracted
             ? "AI analizi cikartilan belge metnine gore olusturuldu."
             : "AI analizi belge kaydi bilgilerine gore olusturuldu.";
+
+        return automaticSteps.Count == 0
+            ? sourceMessage
+            : $"{sourceMessage} Otomatik adimlar: {string.Join(", ", automaticSteps)}.";
     }
 
     private static string BuildDocumentFileCheckAuditDetails(ProjectDocument document, string oldFileCheckStatus)

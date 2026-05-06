@@ -1,4 +1,6 @@
 using System.IO;
+using System.IO.Compression;
+using System.Xml.Linq;
 using DeskFlowAI.Models;
 
 namespace DeskFlowAI.Services;
@@ -16,16 +18,18 @@ public sealed class DocumentTextExtractionService
                 "Metin cikarmadan once dosya kontrolu Ready olmalidir.");
         }
 
-        if (!string.Equals(extension, ".txt", StringComparison.OrdinalIgnoreCase))
+        if (!IsExtractionSupported(extension))
         {
             return new DocumentTextExtractionResult(
                 DocumentTextExtractionStatusNames.UnsupportedFile,
-                $"'{extension}' icin metin cikarma henuz eklenmedi. Bu adimda sadece .txt dosyalari okunuyor.");
+                $"'{extension}' icin metin cikarma henuz eklenmedi. Bu adimda .txt ve .docx dosyalari okunuyor.");
         }
 
         try
         {
-            string text = File.ReadAllText(document.FilePath);
+            string text = string.Equals(extension, ".docx", StringComparison.OrdinalIgnoreCase)
+                ? ExtractDocxText(document.FilePath)
+                : File.ReadAllText(document.FilePath);
 
             return new DocumentTextExtractionResult(
                 DocumentTextExtractionStatusNames.Extracted,
@@ -37,6 +41,38 @@ public sealed class DocumentTextExtractionService
                 DocumentTextExtractionStatusNames.ExtractError,
                 $"Dosyadan metin okunamadi: {exception.Message}");
         }
+    }
+
+    private static bool IsExtractionSupported(string extension)
+    {
+        return string.Equals(extension, ".txt", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(extension, ".docx", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string ExtractDocxText(string filePath)
+    {
+        using ZipArchive archive = ZipFile.OpenRead(filePath);
+        ZipArchiveEntry? documentEntry = archive.GetEntry("word/document.xml")
+            ?? archive.GetEntry(@"word\document.xml");
+
+        if (documentEntry is null)
+        {
+            return "Word belgesi okunabildi ancak word/document.xml bulunamadi.";
+        }
+
+        using Stream stream = documentEntry.Open();
+        XDocument documentXml = XDocument.Load(stream);
+        XNamespace wordNamespace = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+
+        IEnumerable<string> paragraphs = documentXml
+            .Descendants(wordNamespace + "p")
+            .Select(paragraph => string.Concat(
+                paragraph
+                    .Descendants(wordNamespace + "t")
+                    .Select(textNode => textNode.Value)))
+            .Where(paragraphText => !string.IsNullOrWhiteSpace(paragraphText));
+
+        return string.Join(Environment.NewLine, paragraphs);
     }
 
     private static string BuildTextPreview(string text)

@@ -842,7 +842,7 @@ public partial class MainWindow : Window
         LoadDocumentsForCurrentContext(document.Id);
         RefreshDashboardSummary();
         RecordAudit("Analyzed", "Document", BuildDocumentAnalysisAuditDetails(document, oldAIStatus));
-        ShowDocumentFormMessage("Demo AI analizi olusturuldu.", isError: false);
+        ShowDocumentFormMessage(BuildDocumentAnalysisFormMessage(document), isError: false);
     }
 
     private void CheckDocumentFileButton_Click(object sender, RoutedEventArgs e)
@@ -1109,8 +1109,18 @@ public partial class MainWindow : Window
         string analyzedAt = document.AnalyzedAt.HasValue
             ? document.AnalyzedAt.Value.ToString("dd.MM.yyyy HH:mm")
             : "none";
+        string source = document.TextExtractionStatus == DocumentTextExtractionStatusNames.Extracted
+            ? "Extracted text"
+            : "Document metadata";
 
-        return $"{document.FileName}: AI Status '{oldAIStatus}' -> '{document.AIAnalysisStatus}'. Customer: {customerName}. Project: {projectName}. Analyzed at: {analyzedAt}. Risk note: {document.AIRiskNotes}";
+        return $"{document.FileName}: AI Status '{oldAIStatus}' -> '{document.AIAnalysisStatus}'. Source: {source}. Customer: {customerName}. Project: {projectName}. Analyzed at: {analyzedAt}. Risk note: {document.AIRiskNotes}";
+    }
+
+    private static string BuildDocumentAnalysisFormMessage(ProjectDocument document)
+    {
+        return document.TextExtractionStatus == DocumentTextExtractionStatusNames.Extracted
+            ? "AI analizi cikartilan belge metnine gore olusturuldu."
+            : "AI analizi belge kaydi bilgilerine gore olusturuldu.";
     }
 
     private static string BuildDocumentFileCheckAuditDetails(ProjectDocument document, string oldFileCheckStatus)

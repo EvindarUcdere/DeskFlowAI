@@ -156,8 +156,13 @@ public sealed class DemoProjectDocumentService
 
         string projectName = document.Project?.Name ?? "Unknown project";
         string customerName = document.Project?.Customer?.CompanyName ?? "Unknown customer";
-        string summary = $"{document.FileName} belgesi {customerName} / {projectName} projesi icin kayitli. Mevcut belge status'u '{document.Status}'. Not: {BuildSafeNote(document.Notes)}";
-        string riskNotes = BuildRiskNotes(document);
+        bool hasExtractedText = HasExtractedText(document);
+        string summary = hasExtractedText
+            ? BuildContentBasedSummary(document, customerName, projectName)
+            : BuildMetadataBasedSummary(document, customerName, projectName);
+        string riskNotes = hasExtractedText
+            ? BuildContentBasedRiskNotes(document)
+            : BuildMetadataBasedRiskNotes(document);
 
         document.UpdateAIAnalysis(analysisStatus, summary, riskNotes, DateTime.Now);
         _dbContext.SaveChanges();
@@ -172,7 +177,30 @@ public sealed class DemoProjectDocumentService
             : notes;
     }
 
-    private static string BuildRiskNotes(ProjectDocument document)
+    private static bool HasExtractedText(ProjectDocument document)
+    {
+        return document.TextExtractionStatus == DocumentTextExtractionStatusNames.Extracted
+            && !string.IsNullOrWhiteSpace(document.ExtractedTextPreview);
+    }
+
+    private static string BuildMetadataBasedSummary(ProjectDocument document, string customerName, string projectName)
+    {
+        return $"{document.FileName} belgesi {customerName} / {projectName} projesi icin kayitli. Analiz kaynagi: belge kaydi. Mevcut belge status'u '{document.Status}'. Not: {BuildSafeNote(document.Notes)}";
+    }
+
+    private static string BuildContentBasedSummary(ProjectDocument document, string customerName, string projectName)
+    {
+        return $"{document.FileName} belgesi {customerName} / {projectName} projesi icin cikartilmis belge metnine gore analiz edildi. Mevcut belge status'u '{document.Status}'. Metin onizleme: {BuildSummarySnippet(document.ExtractedTextPreview)}";
+    }
+
+    private static string BuildSummarySnippet(string text)
+    {
+        return text.Length <= 520
+            ? text
+            : $"{text[..520]}...";
+    }
+
+    private static string BuildMetadataBasedRiskNotes(ProjectDocument document)
     {
         if (document.Status == DocumentStatusNames.NeedsUpdate)
         {
@@ -190,5 +218,48 @@ public sealed class DemoProjectDocumentService
         }
 
         return "Belge yuklenmis ancak henuz review sureci tamamlanmamis. Ilgili manager tarafindan kontrol edilmeli.";
+    }
+
+    private static string BuildContentBasedRiskNotes(ProjectDocument document)
+    {
+        List<string> risks = [];
+        string text = document.ExtractedTextPreview.ToLowerInvariant();
+
+        if (document.Status == DocumentStatusNames.NeedsUpdate)
+        {
+            risks.Add("Belge status'u Needs Update oldugu icin revizyon aksiyonu gerekiyor.");
+        }
+
+        if (ContainsAny(text, "risk", "delay", "gecik", "blocked", "blok", "overdue"))
+        {
+            risks.Add("Metinde risk, gecikme veya blokaj sinyali var; project planina etkisi kontrol edilmeli.");
+        }
+
+        if (ContainsAny(text, "approve", "approval", "onay", "signoff", "imza"))
+        {
+            risks.Add("Metin onay veya imza surecine isaret ediyor; sorumlu kisi ve son tarih netlestirilmeli.");
+        }
+
+        if (ContainsAny(text, "kvkk", "gdpr", "personal data", "kisisel veri", "compliance", "uyum"))
+        {
+            risks.Add("Metinde uyumluluk veya kisisel veri konusu geciyor; hukuki/operasyonel kontrol gerekebilir.");
+        }
+
+        if (ContainsAny(text, "stock", "stok", "return", "iade", "alarm", "incident", "olay"))
+        {
+            risks.Add("Metin operasyonel takip gerektiren stok, iade, alarm veya olay bilgileri iceriyor.");
+        }
+
+        if (risks.Count == 0)
+        {
+            risks.Add("Cikartilan metinde belirgin kritik risk sinyali bulunmadi; yine de manager review sureci tamamlanmali.");
+        }
+
+        return string.Join(" ", risks);
+    }
+
+    private static bool ContainsAny(string text, params string[] keywords)
+    {
+        return keywords.Any(text.Contains);
     }
 }

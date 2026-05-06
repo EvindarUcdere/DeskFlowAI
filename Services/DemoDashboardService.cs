@@ -35,11 +35,23 @@ public sealed class DemoDashboardService
 
         int pendingAiDocuments = documentQuery.Count(document =>
             document.AIAnalysisStatus != AIAnalysisStatusNames.Analyzed);
+        int internalOnlyDocuments = documentQuery.Count(document =>
+            document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.InternalOnly);
+        int externalAIAllowedDocuments = documentQuery.Count(document =>
+            document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.ExternalAIAllowed);
+        int needsApprovalDocuments = documentQuery.Count(document =>
+            document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.NeedsApproval);
+        int blockedDocuments = documentQuery.Count(document =>
+            document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.Blocked);
 
         return new DashboardSummary(
             activeProjects: activeProjects,
             openTasks: openTasks,
             overdueTasks: overdueTasks,
-            pendingAiDocuments: pendingAiDocuments);
+            pendingAiDocuments: pendingAiDocuments,
+            internalOnlyDocuments: internalOnlyDocuments,
+            externalAIAllowedDocuments: externalAIAllowedDocuments,
+            needsApprovalDocuments: needsApprovalDocuments,
+            blockedDocuments: blockedDocuments);
     }
 }

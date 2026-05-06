@@ -281,7 +281,7 @@
 
             <Grid Grid.Row="1" Margin="18">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="132" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
@@ -318,6 +318,47 @@
                         </DockPanel>
                     </Border>
                 </UniformGrid>
+
+                <Border Grid.Row="0"
+                        Margin="0,76,0,14"
+                        Padding="12"
+                        Background="White"
+                        BorderBrush="#D8E1EC"
+                        BorderThickness="1"
+                        CornerRadius="8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="AI policy"
+                                   VerticalAlignment="Center"
+                                   FontWeight="SemiBold"
+                                   Foreground="#334155" />
+
+                        <UniformGrid Grid.Column="1"
+                                     Columns="4"
+                                     Margin="18,0,0,0">
+                            <TextBlock x:Name="InternalOnlyDocumentsTextBlock"
+                                       Text="Internal Only: 0"
+                                       Foreground="#334155"
+                                       FontWeight="SemiBold" />
+                            <TextBlock x:Name="ExternalAIAllowedDocumentsTextBlock"
+                                       Text="External AI Allowed: 0"
+                                       Foreground="#166534"
+                                       FontWeight="SemiBold" />
+                            <TextBlock x:Name="NeedsApprovalDocumentsTextBlock"
+                                       Text="Needs Approval: 0"
+                                       Foreground="#92400E"
+                                       FontWeight="SemiBold" />
+                            <TextBlock x:Name="BlockedDocumentsTextBlock"
+                                       Text="Blocked: 0"
+                                       Foreground="#991B1B"
+                                       FontWeight="SemiBold" />
+                        </UniformGrid>
+                    </Grid>
+                </Border>
 
                 <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
@@ -923,6 +964,7 @@
                                                     <DataGridTextColumn Header="File" Binding="{Binding FileName}" Width="*" />
                                                     <DataGridTextColumn Header="Project" Binding="{Binding Project.Name}" Width="*" />
                                                     <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="0.75*" />
+                                                    <DataGridTextColumn Header="AI policy" Binding="{Binding AIProcessingPolicy}" Width="1*" />
                                                     <DataGridTextColumn Header="File check" Binding="{Binding FileCheckStatus}" Width="0.9*" />
                                                     <DataGridTextColumn Header="Text" Binding="{Binding TextExtractionStatus}" Width="0.9*" />
                                                     <DataGridTextColumn Header="AI" Binding="{Binding AIAnalysisStatus}" Width="0.8*" />
@@ -986,6 +1028,24 @@
                                                     <ComboBoxItem Content="Approved" />
                                                     <ComboBoxItem Content="Needs Update" />
                                                 </ComboBox>
+
+                                                <TextBlock Text="AI processing policy" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                <ComboBox x:Name="DocumentAIProcessingPolicyComboBox"
+                                                          Height="38"
+                                                          SelectedIndex="0"
+                                                          SelectionChanged="DocumentAIProcessingPolicyComboBox_SelectionChanged">
+                                                    <ComboBoxItem Content="Internal Only" />
+                                                    <ComboBoxItem Content="External AI Allowed" />
+                                                    <ComboBoxItem Content="Needs Approval" />
+                                                    <ComboBoxItem Content="Blocked" />
+                                                </ComboBox>
+
+                                                <TextBlock x:Name="DocumentAIProcessingPolicyDescriptionTextBlock"
+                                                           Margin="0,6,0,0"
+                                                           FontSize="12"
+                                                           TextWrapping="Wrap"
+                                                           Foreground="#64748B"
+                                                           Text="Belge sadece internal analizde tutulur; dis AI servisine gonderilmez." />
 
                                                 <TextBlock Text="Notes" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
                                                 <TextBox x:Name="DocumentNotesTextBox"
@@ -1114,6 +1174,13 @@
                                                         Style="{StaticResource PrimaryButtonStyle}"
                                                         IsEnabled="False"
                                                         Click="AnalyzeDocumentButton_Click" />
+
+                                                <Button x:Name="ApproveExternalAIButton"
+                                                        Content="Grant external AI approval"
+                                                        Margin="0,10,0,0"
+                                                        Style="{StaticResource SecondaryButtonStyle}"
+                                                        IsEnabled="False"
+                                                        Click="ApproveExternalAIButton_Click" />
 
                                                 <Border Padding="12"
                                                         Margin="0,14,0,0"

@@ -7,6 +7,7 @@ public sealed class RuleBasedDocumentAIAnalysisProvider : IDocumentAIAnalysisPro
     public DocumentAIAnalysisResult Analyze(ProjectDocument document)
     {
         string analysisStatus = document.Status == DocumentStatusNames.NeedsUpdate
+            || document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.NeedsApproval
             ? AIAnalysisStatusNames.NeedsReview
             : AIAnalysisStatusNames.Analyzed;
 
@@ -42,12 +43,12 @@ public sealed class RuleBasedDocumentAIAnalysisProvider : IDocumentAIAnalysisPro
 
     private static string BuildMetadataBasedSummary(ProjectDocument document, string customerName, string projectName)
     {
-        return $"{document.FileName} belgesi {customerName} / {projectName} projesi icin kayitli. Analiz kaynagi: belge kaydi. Mevcut belge status'u '{document.Status}'. Not: {BuildSafeNote(document.Notes)}";
+        return $"{document.FileName} belgesi {customerName} / {projectName} projesi icin kayitli. Analiz kaynagi: belge kaydi. AI policy: {document.AIProcessingPolicy}. Mevcut belge status'u '{document.Status}'. Not: {BuildSafeNote(document.Notes)}";
     }
 
     private static string BuildContentBasedSummary(ProjectDocument document, string customerName, string projectName)
     {
-        return $"{document.FileName} belgesi {customerName} / {projectName} projesi icin cikartilmis belge metnine gore analiz edildi. Mevcut belge status'u '{document.Status}'. Metin onizleme: {BuildSummarySnippet(document.ExtractedTextPreview)}";
+        return $"{document.FileName} belgesi {customerName} / {projectName} projesi icin cikartilmis belge metnine gore analiz edildi. AI policy: {document.AIProcessingPolicy}. Mevcut belge status'u '{document.Status}'. Metin onizleme: {BuildSummarySnippet(document.ExtractedTextPreview)}";
     }
 
     private static string BuildSummarySnippet(string text)
@@ -62,6 +63,11 @@ public sealed class RuleBasedDocumentAIAnalysisProvider : IDocumentAIAnalysisPro
         if (document.Status == DocumentStatusNames.NeedsUpdate)
         {
             return "Belge guncelleme istiyor. Project tesliminden once sorumlu kisinin belgeyi revize etmesi onerilir.";
+        }
+
+        if (document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.NeedsApproval)
+        {
+            return "Belge dis AI kullanimi icin onay gerektiriyor. Bu asamada yalnizca internal rule-based analiz uygulanmalidir.";
         }
 
         if (document.Status == DocumentStatusNames.InReview)
@@ -85,6 +91,11 @@ public sealed class RuleBasedDocumentAIAnalysisProvider : IDocumentAIAnalysisPro
         if (document.Status == DocumentStatusNames.NeedsUpdate)
         {
             risks.Add("Belge status'u Needs Update oldugu icin revizyon aksiyonu gerekiyor.");
+        }
+
+        if (document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.NeedsApproval)
+        {
+            risks.Add("Belge dis AI kullanimi icin onay gerektiriyor; harici provider'a gonderilmemeli.");
         }
 
         if (ContainsAny(text, "risk", "delay", "gecik", "blocked", "blok", "overdue"))

@@ -49,6 +49,7 @@ public sealed class DemoProjectDocumentService
         string fileName,
         string filePath,
         string status,
+        string aiProcessingPolicy,
         string uploadedByEmail,
         string notes)
     {
@@ -59,6 +60,7 @@ public sealed class DemoProjectDocumentService
             status,
             uploadedByEmail,
             notes);
+        document.UpdateAIProcessingPolicy(aiProcessingPolicy);
 
         _dbContext.ProjectDocuments.Add(document);
         _dbContext.SaveChanges();
@@ -135,10 +137,20 @@ public sealed class DemoProjectDocumentService
         return document;
     }
 
-    public ProjectDocument UpdateDocumentStatus(ProjectDocument existingDocument, string status, string notes)
+    public ProjectDocument UpdateDocumentStatus(ProjectDocument existingDocument, string status, string aiProcessingPolicy, string notes)
     {
         ProjectDocument document = _dbContext.ProjectDocuments.Single(document => document.Id == existingDocument.Id);
         document.UpdateStatus(status, notes);
+        document.UpdateAIProcessingPolicy(aiProcessingPolicy);
+        _dbContext.SaveChanges();
+
+        return document;
+    }
+
+    public ProjectDocument ApproveExternalAIProcessing(ProjectDocument existingDocument)
+    {
+        ProjectDocument document = _dbContext.ProjectDocuments.Single(document => document.Id == existingDocument.Id);
+        document.ApproveExternalAIProcessing();
         _dbContext.SaveChanges();
 
         return document;
@@ -150,6 +162,18 @@ public sealed class DemoProjectDocumentService
             .Include(document => document.Project)
             .ThenInclude(project => project!.Customer)
             .Single(document => document.Id == existingDocument.Id);
+
+        if (document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.Blocked)
+        {
+            document.UpdateAIAnalysis(
+                AIAnalysisStatusNames.Blocked,
+                "AI analizi bu belge icin policy tarafindan engellendi.",
+                "Belge AI Processing Policy = Blocked durumunda. Analiz yapmak icin yetkili bir yonetici policy bilgisini guncellemelidir.",
+                DateTime.Now);
+            _dbContext.SaveChanges();
+
+            return document;
+        }
 
         DocumentAIAnalysisResult result = _aiAnalysisService.Analyze(document);
         document.UpdateAIAnalysis(result.Status, result.Summary, result.RiskNotes, DateTime.Now);

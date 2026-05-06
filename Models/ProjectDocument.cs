@@ -12,6 +12,7 @@ public sealed class ProjectDocument
         AIAnalysisStatus = string.Empty;
         AISummary = string.Empty;
         AIRiskNotes = string.Empty;
+        AIProcessingPolicy = string.Empty;
         FileCheckStatus = string.Empty;
         FileCheckMessage = string.Empty;
         TextExtractionStatus = string.Empty;
@@ -36,6 +37,7 @@ public sealed class ProjectDocument
         AIAnalysisStatus = AIAnalysisStatusNames.NotAnalyzed;
         AISummary = string.Empty;
         AIRiskNotes = string.Empty;
+        AIProcessingPolicy = DocumentAIProcessingPolicyNames.InternalOnly;
         FileCheckStatus = DocumentFileCheckStatusNames.NotChecked;
         FileCheckMessage = string.Empty;
         TextExtractionStatus = DocumentTextExtractionStatusNames.NotExtracted;
@@ -68,6 +70,8 @@ public sealed class ProjectDocument
 
     public DateTime? AnalyzedAt { get; private set; }
 
+    public string AIProcessingPolicy { get; private set; }
+
     public string FileCheckStatus { get; private set; }
 
     public string FileCheckMessage { get; private set; }
@@ -84,6 +88,16 @@ public sealed class ProjectDocument
     {
         Status = status;
         Notes = notes;
+    }
+
+    public void UpdateAIProcessingPolicy(string aiProcessingPolicy)
+    {
+        AIProcessingPolicy = aiProcessingPolicy;
+    }
+
+    public void ApproveExternalAIProcessing()
+    {
+        AIProcessingPolicy = DocumentAIProcessingPolicyNames.ExternalAIAllowed;
     }
 
     public void UpdateAIAnalysis(string analysisStatus, string summary, string riskNotes, DateTime? analyzedAt)

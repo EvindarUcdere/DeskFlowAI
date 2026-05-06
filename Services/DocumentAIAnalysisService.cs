@@ -5,15 +5,25 @@ namespace DeskFlowAI.Services;
 
 public sealed class DocumentAIAnalysisService
 {
-    private readonly IDocumentAIAnalysisProvider _provider;
+    private readonly IDocumentAIAnalysisProvider _configuredProvider;
+    private readonly IDocumentAIAnalysisProvider _ruleBasedProvider = new RuleBasedDocumentAIAnalysisProvider();
 
     public DocumentAIAnalysisService()
     {
         string providerName = LoadProviderName();
-        _provider = CreateProvider(providerName);
+        _configuredProvider = CreateProvider(providerName);
     }
 
-    public DocumentAIAnalysisResult Analyze(ProjectDocument document) => _provider.Analyze(document);
+    public DocumentAIAnalysisResult Analyze(ProjectDocument document)
+    {
+        if (document.AIProcessingPolicy is DocumentAIProcessingPolicyNames.InternalOnly
+            or DocumentAIProcessingPolicyNames.NeedsApproval)
+        {
+            return _ruleBasedProvider.Analyze(document);
+        }
+
+        return _configuredProvider.Analyze(document);
+    }
 
     private static string LoadProviderName()
     {

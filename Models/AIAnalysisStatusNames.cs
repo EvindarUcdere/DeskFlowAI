@@ -7,4 +7,5 @@ public static class AIAnalysisStatusNames
     public const string Analyzed = "Analyzed";
     public const string NeedsReview = "Needs Review";
     public const string Failed = "Failed";
+    public const string Blocked = "Blocked";
 }

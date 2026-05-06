@@ -129,6 +129,10 @@ public partial class MainWindow : Window
         OpenTasksTextBlock.Text = summary.OpenTasks.ToString();
         OverdueTasksTextBlock.Text = summary.OverdueTasks.ToString();
         PendingAiDocumentsTextBlock.Text = summary.PendingAiDocuments.ToString();
+        InternalOnlyDocumentsTextBlock.Text = $"Internal Only: {summary.InternalOnlyDocuments}";
+        ExternalAIAllowedDocumentsTextBlock.Text = $"External AI Allowed: {summary.ExternalAIAllowedDocuments}";
+        NeedsApprovalDocumentsTextBlock.Text = $"Needs Approval: {summary.NeedsApprovalDocuments}";
+        BlockedDocumentsTextBlock.Text = $"Blocked: {summary.BlockedDocuments}";
     }
 
     private void LoadCustomers()
@@ -316,6 +320,7 @@ public partial class MainWindow : Window
         DocumentFileNameTextBox.Text = selectedDocument.FileName;
         DocumentFilePathTextBox.Text = selectedDocument.FilePath;
         SelectDocumentStatus(selectedDocument.Status);
+        SelectDocumentAIProcessingPolicy(selectedDocument.AIProcessingPolicy);
         DocumentNotesTextBox.Text = selectedDocument.Notes;
         PopulateDocumentFileCheckFields(selectedDocument);
         PopulateDocumentTextExtractionFields(selectedDocument);
@@ -365,6 +370,16 @@ public partial class MainWindow : Window
         NewUserPasswordBox.Clear();
         UserFormMessageTextBlock.Visibility = Visibility.Collapsed;
         UpdateUserAccountActionState();
+    }
+
+    private void DocumentAIProcessingPolicyComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (!IsLoaded)
+        {
+            return;
+        }
+
+        UpdateDocumentAIProcessingPolicyDescription();
     }
 
     private void TaskFilter_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -788,13 +803,13 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (!TryReadDocumentForm(out string fileName, out string filePath, out string status, out string notes))
+        if (!TryReadDocumentForm(out string fileName, out string filePath, out string status, out string aiProcessingPolicy, out string notes))
         {
             return;
         }
 
         string uploadedByEmail = _currentUser?.Email ?? "unknown";
-        ProjectDocument document = _documentService.CreateDocument(_selectedProject.Id, fileName, filePath, status, uploadedByEmail, notes);
+        ProjectDocument document = _documentService.CreateDocument(_selectedProject.Id, fileName, filePath, status, aiProcessingPolicy, uploadedByEmail, notes);
         LoadDocumentsForCurrentContext(document.Id);
         RefreshDashboardSummary();
         RecordAudit("Created", "Document", $"{fileName} belgesi {_selectedProject.Name} projesine {uploadedByEmail} tarafindan eklendi.");
@@ -815,12 +830,14 @@ public partial class MainWindow : Window
         }
 
         string newStatus = GetSelectedDocumentStatus();
+        string newAIProcessingPolicy = GetSelectedDocumentAIProcessingPolicy();
         string notes = DocumentNotesTextBox.Text.Trim();
         string oldStatus = _selectedDocument.Status;
+        string oldAIProcessingPolicy = _selectedDocument.AIProcessingPolicy;
 
-        ProjectDocument document = _documentService.UpdateDocumentStatus(_selectedDocument, newStatus, notes);
+        ProjectDocument document = _documentService.UpdateDocumentStatus(_selectedDocument, newStatus, newAIProcessingPolicy, notes);
         LoadDocumentsForCurrentContext(document.Id);
-        RecordAudit("Updated", "Document", $"{document.FileName}: Status '{oldStatus}' -> '{newStatus}'");
+        RecordAudit("Updated", "Document", $"{document.FileName}: Status '{oldStatus}' -> '{newStatus}', AI Policy '{oldAIProcessingPolicy}' -> '{newAIProcessingPolicy}'");
         ShowDocumentFormMessage("Belge status bilgisi guncellendi.", isError: false);
     }
 
@@ -839,8 +856,10 @@ public partial class MainWindow : Window
 
         ProjectDocument documentToAnalyze = _selectedDocument;
         List<string> automaticSteps = [];
+        bool canPrepareDocumentForAnalysis = documentToAnalyze.AIProcessingPolicy != DocumentAIProcessingPolicyNames.Blocked;
 
-        if (documentToAnalyze.FileCheckStatus != DocumentFileCheckStatusNames.Ready)
+        if (canPrepareDocumentForAnalysis
+            && documentToAnalyze.FileCheckStatus != DocumentFileCheckStatusNames.Ready)
         {
             string oldFileCheckStatus = documentToAnalyze.FileCheckStatus;
             documentToAnalyze = _documentService.CheckDocumentFile(documentToAnalyze);
@@ -848,7 +867,8 @@ public partial class MainWindow : Window
             automaticSteps.Add($"file check: {documentToAnalyze.FileCheckStatus}");
         }
 
-        if (documentToAnalyze.FileCheckStatus == DocumentFileCheckStatusNames.Ready
+        if (canPrepareDocumentForAnalysis
+            && documentToAnalyze.FileCheckStatus == DocumentFileCheckStatusNames.Ready
             && documentToAnalyze.TextExtractionStatus != DocumentTextExtractionStatusNames.Extracted)
         {
             string oldTextExtractionStatus = documentToAnalyze.TextExtractionStatus;
@@ -863,6 +883,32 @@ public partial class MainWindow : Window
         RefreshDashboardSummary();
         RecordAudit("Analyzed", "Document", BuildDocumentAnalysisAuditDetails(document, oldAIStatus));
         ShowDocumentFormMessage(BuildSmartDocumentAnalysisFormMessage(document, automaticSteps), isError: false);
+    }
+
+    private void ApproveExternalAIButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsurePermission(PermissionNames.DocumentUpdate, "dis AI onayi"))
+        {
+            return;
+        }
+
+        if (_selectedDocument is null)
+        {
+            ShowDocumentFormMessage("Onay vermek icin listeden bir belge sec.", isError: true);
+            return;
+        }
+
+        if (_selectedDocument.AIProcessingPolicy != DocumentAIProcessingPolicyNames.NeedsApproval)
+        {
+            ShowDocumentFormMessage("Bu belge dis AI onayi beklemiyor.", isError: true);
+            return;
+        }
+
+        ProjectDocument document = _documentService.ApproveExternalAIProcessing(_selectedDocument);
+        LoadDocumentsForCurrentContext(document.Id);
+        RefreshDashboardSummary();
+        RecordAudit("Approved", "Document", $"{document.FileName}: External AI processing approved.");
+        ShowDocumentFormMessage("Dis AI kullanimi icin onay verildi.", isError: false);
     }
 
     private void CheckDocumentFileButton_Click(object sender, RoutedEventArgs e)
@@ -1133,7 +1179,7 @@ public partial class MainWindow : Window
             ? "Extracted text"
             : "Document metadata";
 
-        return $"{document.FileName}: AI Status '{oldAIStatus}' -> '{document.AIAnalysisStatus}'. Source: {source}. Customer: {customerName}. Project: {projectName}. Analyzed at: {analyzedAt}. Risk note: {document.AIRiskNotes}";
+        return $"{document.FileName}: AI Status '{oldAIStatus}' -> '{document.AIAnalysisStatus}'. Source: {source}. AI Policy: {document.AIProcessingPolicy}. Customer: {customerName}. Project: {projectName}. Analyzed at: {analyzedAt}. Risk note: {document.AIRiskNotes}";
     }
 
     private static string BuildSmartDocumentAnalysisFormMessage(ProjectDocument document, IReadOnlyCollection<string> automaticSteps)
@@ -1141,6 +1187,15 @@ public partial class MainWindow : Window
         string sourceMessage = document.TextExtractionStatus == DocumentTextExtractionStatusNames.Extracted
             ? "AI analizi cikartilan belge metnine gore olusturuldu."
             : "AI analizi belge kaydi bilgilerine gore olusturuldu.";
+
+        if (document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.Blocked)
+        {
+            sourceMessage = "AI analizi belge policy nedeniyle engellendi. Dosya kontrolu ve metin cikarma otomatik calistirilmadi.";
+        }
+        else if (document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.NeedsApproval)
+        {
+            sourceMessage = $"{sourceMessage} Dis AI kullanimi icin onay gerekiyor.";
+        }
 
         return automaticSteps.Count == 0
             ? sourceMessage
@@ -1464,6 +1519,7 @@ public partial class MainWindow : Window
         DocumentFileNameTextBox.Text = document.FileName;
         DocumentFilePathTextBox.Text = document.FilePath;
         SelectDocumentStatus(document.Status);
+        SelectDocumentAIProcessingPolicy(document.AIProcessingPolicy);
         DocumentNotesTextBox.Text = document.Notes;
         PopulateDocumentFileCheckFields(document);
         PopulateDocumentTextExtractionFields(document);
@@ -1600,11 +1656,16 @@ public partial class MainWindow : Window
         bool canCreateDocument = _currentUser?.HasPermission(PermissionNames.DocumentCreate) == true;
         bool canUpdateDocument = _currentUser?.HasPermission(PermissionNames.DocumentUpdate) == true
             && _selectedDocument is not null;
+        bool canPrepareDocumentForAnalysis = canUpdateDocument
+            && _selectedDocument?.AIProcessingPolicy != DocumentAIProcessingPolicyNames.Blocked;
 
         AddDocumentButton.IsEnabled = canCreateDocument && !IsStaffUser();
         UpdateDocumentStatusButton.IsEnabled = canUpdateDocument && !IsStaffUser();
-        CheckDocumentFileButton.IsEnabled = canUpdateDocument && !IsStaffUser();
-        ExtractDocumentTextButton.IsEnabled = canUpdateDocument && !IsStaffUser();
+        ApproveExternalAIButton.IsEnabled = canUpdateDocument
+            && !IsStaffUser()
+            && _selectedDocument?.AIProcessingPolicy == DocumentAIProcessingPolicyNames.NeedsApproval;
+        CheckDocumentFileButton.IsEnabled = canPrepareDocumentForAnalysis && !IsStaffUser();
+        ExtractDocumentTextButton.IsEnabled = canPrepareDocumentForAnalysis && !IsStaffUser();
         AnalyzeDocumentButton.IsEnabled = canUpdateDocument && !IsStaffUser();
     }
 
@@ -2088,11 +2149,12 @@ public partial class MainWindow : Window
         UserFormMessageTextBlock.Visibility = Visibility.Visible;
     }
 
-    private bool TryReadDocumentForm(out string fileName, out string filePath, out string status, out string notes)
+    private bool TryReadDocumentForm(out string fileName, out string filePath, out string status, out string aiProcessingPolicy, out string notes)
     {
         fileName = DocumentFileNameTextBox.Text.Trim();
         filePath = DocumentFilePathTextBox.Text.Trim();
         status = GetSelectedDocumentStatus();
+        aiProcessingPolicy = GetSelectedDocumentAIProcessingPolicy();
         notes = DocumentNotesTextBox.Text.Trim();
 
         if (string.IsNullOrWhiteSpace(fileName) || string.IsNullOrWhiteSpace(filePath))
@@ -2111,6 +2173,7 @@ public partial class MainWindow : Window
         DocumentFileNameTextBox.Clear();
         DocumentFilePathTextBox.Clear();
         SelectDocumentStatus(DocumentStatusNames.Uploaded);
+        SelectDocumentAIProcessingPolicy(DocumentAIProcessingPolicyNames.InternalOnly);
         DocumentNotesTextBox.Clear();
         DocumentFileCheckStatusTextBlock.Text = DocumentFileCheckStatusNames.NotChecked;
         DocumentFileCheckMessageTextBlock.Text = string.Empty;
@@ -2165,6 +2228,17 @@ public partial class MainWindow : Window
         return DocumentStatusNames.Uploaded;
     }
 
+    private string GetSelectedDocumentAIProcessingPolicy()
+    {
+        if (DocumentAIProcessingPolicyComboBox.SelectedItem is System.Windows.Controls.ComboBoxItem item
+            && item.Content is string policy)
+        {
+            return policy;
+        }
+
+        return DocumentAIProcessingPolicyNames.InternalOnly;
+    }
+
     private void SelectDocumentStatus(string status)
     {
         foreach (object item in DocumentStatusComboBox.Items)
@@ -2178,6 +2252,39 @@ public partial class MainWindow : Window
         }
 
         DocumentStatusComboBox.SelectedIndex = 0;
+    }
+
+    private void SelectDocumentAIProcessingPolicy(string policy)
+    {
+        foreach (object item in DocumentAIProcessingPolicyComboBox.Items)
+        {
+            if (item is System.Windows.Controls.ComboBoxItem comboBoxItem
+                && comboBoxItem.Content?.ToString() == policy)
+            {
+                DocumentAIProcessingPolicyComboBox.SelectedItem = comboBoxItem;
+                UpdateDocumentAIProcessingPolicyDescription();
+                return;
+            }
+        }
+
+        DocumentAIProcessingPolicyComboBox.SelectedIndex = 0;
+        UpdateDocumentAIProcessingPolicyDescription();
+    }
+
+    private void UpdateDocumentAIProcessingPolicyDescription()
+    {
+        DocumentAIProcessingPolicyDescriptionTextBlock.Text = GetDocumentAIProcessingPolicyDescription(GetSelectedDocumentAIProcessingPolicy());
+    }
+
+    private static string GetDocumentAIProcessingPolicyDescription(string policy)
+    {
+        return policy switch
+        {
+            DocumentAIProcessingPolicyNames.ExternalAIAllowed => "Belge dis AI provider ile analiz edilebilir; hassas veri kontrolu yapildigindan emin olun.",
+            DocumentAIProcessingPolicyNames.NeedsApproval => "Belge dis AI kullanimi icin yonetici onayi gerektirir; onay verilirse policy External AI Allowed olur.",
+            DocumentAIProcessingPolicyNames.Blocked => "Belge AI islem hattina sokulmaz; dosya kontrolu, metin cikarma ve dis AI adimlari engellenir.",
+            _ => "Belge sadece internal analizde tutulur; dis AI servisine gonderilmez."
+        };
     }
 
     private void ShowDocumentFormMessage(string message, bool isError)

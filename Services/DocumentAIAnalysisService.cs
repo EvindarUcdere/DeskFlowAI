@@ -10,8 +10,8 @@ public sealed class DocumentAIAnalysisService
 
     public DocumentAIAnalysisService()
     {
-        string providerName = LoadProviderName();
-        _configuredProvider = CreateProvider(providerName);
+        DocumentAIOptions options = LoadOptions();
+        _configuredProvider = CreateProvider(options, _ruleBasedProvider);
     }
 
     public DocumentAIAnalysisResult Analyze(ProjectDocument document)
@@ -25,23 +25,30 @@ public sealed class DocumentAIAnalysisService
         return _configuredProvider.Analyze(document);
     }
 
-    private static string LoadProviderName()
+    private static DocumentAIOptions LoadOptions()
     {
         IConfigurationRoot configuration = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
             .Build();
 
-        return configuration["DocumentAI:Provider"] ?? DocumentAIProviderNames.RuleBased;
+        IConfigurationSection section = configuration.GetSection("DocumentAI");
+
+        return new DocumentAIOptions
+        {
+            Provider = section["Provider"] ?? DocumentAIProviderNames.RuleBased,
+            OpenAIModel = section["OpenAIModel"] ?? string.Empty,
+            OpenAIApiKeyEnvironmentVariable = section["OpenAIApiKeyEnvironmentVariable"] ?? "OPENAI_API_KEY"
+        };
     }
 
-    private static IDocumentAIAnalysisProvider CreateProvider(string providerName)
+    private static IDocumentAIAnalysisProvider CreateProvider(DocumentAIOptions options, IDocumentAIAnalysisProvider fallbackProvider)
     {
-        if (string.Equals(providerName, DocumentAIProviderNames.RuleBased, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(options.Provider, DocumentAIProviderNames.OpenAI, StringComparison.OrdinalIgnoreCase))
         {
-            return new RuleBasedDocumentAIAnalysisProvider();
+            return new OpenAIDocumentAIAnalysisProvider(options, fallbackProvider);
         }
 
-        return new RuleBasedDocumentAIAnalysisProvider();
+        return fallbackProvider;
     }
 }

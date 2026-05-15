@@ -38,8 +38,18 @@ public sealed class DocumentAIAnalysisService
         {
             Provider = section["Provider"] ?? DocumentAIProviderNames.RuleBased,
             OpenAIModel = section["OpenAIModel"] ?? string.Empty,
-            OpenAIApiKeyEnvironmentVariable = section["OpenAIApiKeyEnvironmentVariable"] ?? "OPENAI_API_KEY"
+            OpenAIApiKeyEnvironmentVariable = section["OpenAIApiKeyEnvironmentVariable"] ?? "OPENAI_API_KEY",
+            OpenAIBaseUrl = section["OpenAIBaseUrl"] ?? "https://api.openai.com/v1",
+            OpenAITimeoutSeconds = ReadPositiveInt(section, "OpenAITimeoutSeconds", 30),
+            OpenAIMaxOutputTokens = ReadPositiveInt(section, "OpenAIMaxOutputTokens", 700)
         };
+    }
+
+    private static int ReadPositiveInt(IConfigurationSection section, string key, int fallback)
+    {
+        return int.TryParse(section[key], out int value) && value > 0
+            ? value
+            : fallback;
     }
 
     private static IDocumentAIAnalysisProvider CreateProvider(DocumentAIOptions options, IDocumentAIAnalysisProvider fallbackProvider)

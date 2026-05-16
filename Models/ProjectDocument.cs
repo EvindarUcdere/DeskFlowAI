@@ -12,6 +12,10 @@ public sealed class ProjectDocument
         AIAnalysisStatus = string.Empty;
         AISummary = string.Empty;
         AIRiskNotes = string.Empty;
+        AIProviderName = string.Empty;
+        AIRiskLevel = string.Empty;
+        AIRecommendations = string.Empty;
+        AIDetectedIssues = string.Empty;
         AIProcessingPolicy = string.Empty;
         FileCheckStatus = string.Empty;
         FileCheckMessage = string.Empty;
@@ -37,6 +41,12 @@ public sealed class ProjectDocument
         AIAnalysisStatus = AIAnalysisStatusNames.NotAnalyzed;
         AISummary = string.Empty;
         AIRiskNotes = string.Empty;
+        AIProviderName = string.Empty;
+        AIUsedFallback = false;
+        AIRiskLevel = string.Empty;
+        AIRecommendations = string.Empty;
+        AIConfidenceScore = null;
+        AIDetectedIssues = string.Empty;
         AIProcessingPolicy = DocumentAIProcessingPolicyNames.InternalOnly;
         FileCheckStatus = DocumentFileCheckStatusNames.NotChecked;
         FileCheckMessage = string.Empty;
@@ -67,6 +77,18 @@ public sealed class ProjectDocument
     public string AISummary { get; private set; }
 
     public string AIRiskNotes { get; private set; }
+
+    public string AIProviderName { get; private set; }
+
+    public bool AIUsedFallback { get; private set; }
+
+    public string AIRiskLevel { get; private set; }
+
+    public string AIRecommendations { get; private set; }
+
+    public double? AIConfidenceScore { get; private set; }
+
+    public string AIDetectedIssues { get; private set; }
 
     public DateTime? AnalyzedAt { get; private set; }
 
@@ -100,12 +122,28 @@ public sealed class ProjectDocument
         AIProcessingPolicy = DocumentAIProcessingPolicyNames.ExternalAIAllowed;
     }
 
-    public void UpdateAIAnalysis(string analysisStatus, string summary, string riskNotes, DateTime? analyzedAt)
+    public void UpdateAIAnalysis(
+        string analysisStatus,
+        string summary,
+        string riskNotes,
+        DateTime? analyzedAt,
+        string providerName = "",
+        bool usedFallback = false,
+        string riskLevel = "",
+        string recommendations = "",
+        double? confidenceScore = null,
+        string detectedIssues = "")
     {
         AIAnalysisStatus = analysisStatus;
         AISummary = summary;
         AIRiskNotes = riskNotes;
         AnalyzedAt = analyzedAt;
+        AIProviderName = providerName;
+        AIUsedFallback = usedFallback;
+        AIRiskLevel = riskLevel;
+        AIRecommendations = recommendations;
+        AIConfidenceScore = confidenceScore;
+        AIDetectedIssues = detectedIssues;
     }
 
     public void UpdateFileCheck(string fileCheckStatus, string fileCheckMessage, DateTime? fileCheckedAt)

@@ -27,33 +27,48 @@ public sealed class DocumentAIAnalysisService
 
     private static DocumentAIOptions LoadOptions()
     {
+        string environmentName = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
+            ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+            ?? "Production";
+
         IConfigurationRoot configuration = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+            .AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: false)
             .Build();
 
-        IConfigurationSection section = configuration.GetSection("DocumentAI");
+        IConfigurationSection aiSection = configuration.GetSection("AI");
+        IConfigurationSection documentAISection = configuration.GetSection("DocumentAI");
+        IConfigurationSection section = aiSection.Exists() ? aiSection : documentAISection;
 
         return new DocumentAIOptions
         {
-            Provider = section["Provider"] ?? DocumentAIProviderNames.RuleBased,
-            OpenAIModel = section["OpenAIModel"] ?? string.Empty,
-            OpenAIApiKeyEnvironmentVariable = section["OpenAIApiKeyEnvironmentVariable"] ?? "OPENAI_API_KEY",
-            OpenAIBaseUrl = section["OpenAIBaseUrl"] ?? "https://api.openai.com/v1",
-            OpenAITimeoutSeconds = ReadPositiveInt(section, "OpenAITimeoutSeconds", 30),
-            OpenAIMaxOutputTokens = ReadPositiveInt(section, "OpenAIMaxOutputTokens", 700)
+            Provider = section["Provider"] ?? documentAISection["Provider"] ?? DocumentAIProviderNames.RuleBased,
+            OpenAIModel = section["OpenAIModel"] ?? documentAISection["OpenAIModel"] ?? string.Empty,
+            OpenAIApiKeyEnvironmentVariable = section["OpenAIApiKeyEnvironmentVariable"] ?? documentAISection["OpenAIApiKeyEnvironmentVariable"] ?? "OPENAI_API_KEY",
+            OpenAIBaseUrl = section["OpenAIBaseUrl"] ?? documentAISection["OpenAIBaseUrl"] ?? "https://api.openai.com/v1",
+            OpenAITimeoutSeconds = ReadPositiveInt(section, documentAISection, "OpenAITimeoutSeconds", 30),
+            OpenAIMaxOutputTokens = ReadPositiveInt(section, documentAISection, "OpenAIMaxOutputTokens", 700)
         };
     }
 
-    private static int ReadPositiveInt(IConfigurationSection section, string key, int fallback)
+    private static int ReadPositiveInt(IConfigurationSection primarySection, IConfigurationSection fallbackSection, string key, int fallback)
     {
-        return int.TryParse(section[key], out int value) && value > 0
+        string? configuredValue = primarySection[key] ?? fallbackSection[key];
+
+        return int.TryParse(configuredValue, out int value) && value > 0
             ? value
             : fallback;
     }
 
     private static IDocumentAIAnalysisProvider CreateProvider(DocumentAIOptions options, IDocumentAIAnalysisProvider fallbackProvider)
     {
+        if (string.Equals(options.Provider, "Mock", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(options.Provider, DocumentAIProviderNames.MockAI, StringComparison.OrdinalIgnoreCase))
+        {
+            return new MockDocumentAIAnalysisProvider();
+        }
+
         if (string.Equals(options.Provider, DocumentAIProviderNames.OpenAI, StringComparison.OrdinalIgnoreCase))
         {
             return new OpenAIDocumentAIAnalysisProvider(options, fallbackProvider);

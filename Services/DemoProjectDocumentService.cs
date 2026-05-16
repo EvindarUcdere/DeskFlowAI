@@ -169,14 +169,30 @@ public sealed class DemoProjectDocumentService
                 AIAnalysisStatusNames.Blocked,
                 "AI analizi bu belge icin policy tarafindan engellendi.",
                 "Belge AI Processing Policy = Blocked durumunda. Analiz yapmak icin yetkili bir yonetici policy bilgisini guncellemelidir.",
-                DateTime.Now);
+                DateTime.Now,
+                DocumentAIProviderNames.RuleBased,
+                usedFallback: false,
+                riskLevel: "Blocked",
+                recommendations: "Yetkili bir yonetici belge AI policy bilgisini guncellemeden analiz calistirilamaz.",
+                confidenceScore: 1,
+                detectedIssues: "AI policy is Blocked");
             _dbContext.SaveChanges();
 
             return document;
         }
 
         DocumentAIAnalysisResult result = _aiAnalysisService.Analyze(document);
-        document.UpdateAIAnalysis(result.Status, result.Summary, result.RiskNotes, DateTime.Now);
+        document.UpdateAIAnalysis(
+            result.Status,
+            result.Summary,
+            result.RiskNotes,
+            DateTime.Now,
+            result.ProviderName,
+            result.UsedFallback,
+            result.RiskLevel,
+            result.Recommendations,
+            result.ConfidenceScore,
+            result.DetectedIssues);
         _dbContext.SaveChanges();
 
         return document;

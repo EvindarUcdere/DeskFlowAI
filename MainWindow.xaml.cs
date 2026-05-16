@@ -1179,7 +1179,7 @@ public partial class MainWindow : Window
             ? "Extracted text"
             : "Document metadata";
 
-        return $"{document.FileName}: AI Status '{oldAIStatus}' -> '{document.AIAnalysisStatus}'. Source: {source}. AI Policy: {document.AIProcessingPolicy}. Customer: {customerName}. Project: {projectName}. Analyzed at: {analyzedAt}. Risk note: {document.AIRiskNotes}";
+        return $"{document.FileName}: AI Status '{oldAIStatus}' -> '{document.AIAnalysisStatus}'. Provider: {document.AIProviderName}. Used fallback: {document.AIUsedFallback}. Risk: {document.AIRiskLevel}. Source: {source}. AI Policy: {document.AIProcessingPolicy}. Customer: {customerName}. Project: {projectName}. Analyzed at: {analyzedAt}. Risk note: {document.AIRiskNotes}";
     }
 
     private static string BuildSmartDocumentAnalysisFormMessage(ProjectDocument document, IReadOnlyCollection<string> automaticSteps)
@@ -1195,6 +1195,12 @@ public partial class MainWindow : Window
         else if (document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.NeedsApproval)
         {
             sourceMessage = $"{sourceMessage} Dis AI kullanimi icin onay gerekiyor.";
+        }
+
+        if (!string.IsNullOrWhiteSpace(document.AIProviderName))
+        {
+            string fallbackText = document.AIUsedFallback ? " fallback olarak" : string.Empty;
+            sourceMessage = $"{sourceMessage} Provider: {document.AIProviderName}{fallbackText}.";
         }
 
         return automaticSteps.Count == 0
@@ -2180,8 +2186,12 @@ public partial class MainWindow : Window
         DocumentTextExtractionStatusTextBlock.Text = DocumentTextExtractionStatusNames.NotExtracted;
         DocumentExtractedTextPreviewTextBox.Clear();
         DocumentAIStatusTextBlock.Text = AIAnalysisStatusNames.NotAnalyzed;
+        DocumentAIProviderTextBlock.Text = "Provider: none";
+        DocumentAIRiskLevelTextBlock.Text = "Risk: none";
         DocumentAISummaryTextBox.Clear();
         DocumentAIRiskNotesTextBox.Clear();
+        DocumentAIRecommendationsTextBox.Clear();
+        DocumentAIDetectedIssuesTextBox.Clear();
         DocumentFormMessageTextBlock.Visibility = Visibility.Collapsed;
         UpdateDocumentActionState();
     }
@@ -2213,8 +2223,16 @@ public partial class MainWindow : Window
             : "Not analyzed yet";
 
         DocumentAIStatusTextBlock.Text = $"{document.AIAnalysisStatus} | {analyzedText}";
+        string providerText = string.IsNullOrWhiteSpace(document.AIProviderName) ? "none" : document.AIProviderName;
+        string fallbackText = document.AIUsedFallback ? " | fallback" : string.Empty;
+        string confidenceText = document.AIConfidenceScore.HasValue ? $" | confidence {document.AIConfidenceScore.Value:P0}" : string.Empty;
+        string riskLevelText = string.IsNullOrWhiteSpace(document.AIRiskLevel) ? "none" : document.AIRiskLevel;
+        DocumentAIProviderTextBlock.Text = $"Provider: {providerText}{fallbackText}{confidenceText}";
+        DocumentAIRiskLevelTextBlock.Text = $"Risk: {riskLevelText}";
         DocumentAISummaryTextBox.Text = document.AISummary;
         DocumentAIRiskNotesTextBox.Text = document.AIRiskNotes;
+        DocumentAIRecommendationsTextBox.Text = document.AIRecommendations;
+        DocumentAIDetectedIssuesTextBox.Text = document.AIDetectedIssues;
     }
 
     private string GetSelectedDocumentStatus()

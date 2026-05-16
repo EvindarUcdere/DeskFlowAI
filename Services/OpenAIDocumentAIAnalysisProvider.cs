@@ -87,7 +87,12 @@ public sealed class OpenAIDocumentAIAnalysisProvider : IDocumentAIAnalysisProvid
             NormalizeStatus(payload.Status),
             Truncate(payload.Summary, 1200),
             Truncate(payload.RiskNotes, 1200),
-            DocumentAIProviderNames.OpenAI);
+            DocumentAIProviderNames.OpenAI,
+            usedFallback: false,
+            riskLevel: NormalizeRiskLevel(payload.RiskLevel),
+            recommendations: Truncate(payload.Recommendations, 1200),
+            confidenceScore: NormalizeConfidenceScore(payload.ConfidenceScore),
+            detectedIssues: Truncate(payload.DetectedIssues, 1200));
     }
 
     private object BuildRequest(ProjectDocument document)
@@ -125,9 +130,30 @@ public sealed class OpenAIDocumentAIAnalysisProvider : IDocumentAIAnalysisProvid
                             {
                                 type = "string",
                                 description = "Concise Turkish risk notes and recommended follow-up actions."
+                            },
+                            risk_level = new
+                            {
+                                type = "string",
+                                @enum = new[] { "Low", "Medium", "High" }
+                            },
+                            recommendations = new
+                            {
+                                type = "string",
+                                description = "Concise Turkish recommended next steps."
+                            },
+                            confidence_score = new
+                            {
+                                type = "number",
+                                minimum = 0,
+                                maximum = 1
+                            },
+                            detected_issues = new
+                            {
+                                type = "string",
+                                description = "Short Turkish list of detected issues or 'Belirgin sorun yok'."
                             }
                         },
-                        required = new[] { "status", "summary", "risk_notes" }
+                        required = new[] { "status", "summary", "risk_notes", "risk_level", "recommendations", "confidence_score", "detected_issues" }
                     }
                 }
             }
@@ -234,6 +260,27 @@ public sealed class OpenAIDocumentAIAnalysisProvider : IDocumentAIAnalysisProvid
         };
     }
 
+    private static string NormalizeRiskLevel(string riskLevel)
+    {
+        return riskLevel.Trim() switch
+        {
+            "High" => "High",
+            "Medium" => "Medium",
+            "Low" => "Low",
+            _ => "Medium"
+        };
+    }
+
+    private static double NormalizeConfidenceScore(double confidenceScore)
+    {
+        if (confidenceScore < 0)
+        {
+            return 0;
+        }
+
+        return confidenceScore > 1 ? 1 : confidenceScore;
+    }
+
     private static string BuildBaseUrl(string baseUrl)
     {
         string value = string.IsNullOrWhiteSpace(baseUrl)
@@ -280,7 +327,12 @@ public sealed class OpenAIDocumentAIAnalysisProvider : IDocumentAIAnalysisProvid
             fallbackResult.Status,
             $"{fallbackResult.Summary} OpenAI fallback: {reason}",
             fallbackResult.RiskNotes,
-            $"{DocumentAIProviderNames.OpenAI} -> {fallbackResult.ProviderName}");
+            DocumentAIProviderNames.RuleBasedFallback,
+            usedFallback: true,
+            riskLevel: fallbackResult.RiskLevel,
+            recommendations: fallbackResult.Recommendations,
+            confidenceScore: fallbackResult.ConfidenceScore,
+            detectedIssues: fallbackResult.DetectedIssues);
     }
 
     private sealed class OpenAIAnalysisPayload
@@ -291,5 +343,16 @@ public sealed class OpenAIDocumentAIAnalysisProvider : IDocumentAIAnalysisProvid
 
         [JsonPropertyName("risk_notes")]
         public string RiskNotes { get; init; } = string.Empty;
+
+        [JsonPropertyName("risk_level")]
+        public string RiskLevel { get; init; } = string.Empty;
+
+        public string Recommendations { get; init; } = string.Empty;
+
+        [JsonPropertyName("confidence_score")]
+        public double ConfidenceScore { get; init; }
+
+        [JsonPropertyName("detected_issues")]
+        public string DetectedIssues { get; init; } = string.Empty;
     }
 }

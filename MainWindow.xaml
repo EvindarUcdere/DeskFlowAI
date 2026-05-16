@@ -968,6 +968,8 @@
                                                     <DataGridTextColumn Header="File check" Binding="{Binding FileCheckStatus}" Width="0.9*" />
                                                     <DataGridTextColumn Header="Text" Binding="{Binding TextExtractionStatus}" Width="0.9*" />
                                                     <DataGridTextColumn Header="AI" Binding="{Binding AIAnalysisStatus}" Width="0.8*" />
+                                                    <DataGridTextColumn Header="Provider" Binding="{Binding AIProviderName}" Width="0.85*" />
+                                                    <DataGridTextColumn Header="Risk" Binding="{Binding AIRiskLevel}" Width="0.65*" />
                                                     <DataGridTextColumn Header="Analyzed" Binding="{Binding AnalyzedAt, StringFormat={}{0:dd.MM.yyyy}}" Width="0.75*" />
                                                     <DataGridTextColumn Header="Uploaded" Binding="{Binding UploadedAt, StringFormat={}{0:dd.MM.yyyy}}" Width="0.75*" />
                                                     <DataGridTextColumn Header="By" Binding="{Binding UploadedByEmail}" Width="1*" />
@@ -1098,6 +1100,18 @@
                                                                    FontSize="13"
                                                                    Foreground="#334155" />
 
+                                                        <TextBlock x:Name="DocumentAIProviderTextBlock"
+                                                                   Text="Provider: none"
+                                                                   Margin="0,6,0,0"
+                                                                   FontSize="13"
+                                                                   Foreground="#334155" />
+
+                                                        <TextBlock x:Name="DocumentAIRiskLevelTextBlock"
+                                                                   Text="Risk: none"
+                                                                   Margin="0,4,0,0"
+                                                                   FontSize="13"
+                                                                   Foreground="#334155" />
+
                                                         <TextBlock Text="Summary"
                                                                    Margin="0,10,0,4"
                                                                    Style="{StaticResource FieldLabelStyle}" />
@@ -1117,6 +1131,32 @@
 
                                                         <TextBox x:Name="DocumentAIRiskNotesTextBox"
                                                                  Height="76"
+                                                                 Padding="10,8"
+                                                                 TextWrapping="Wrap"
+                                                                 AcceptsReturn="True"
+                                                                 IsReadOnly="True"
+                                                                 BorderBrush="#CBD5E1"
+                                                                 BorderThickness="1" />
+
+                                                        <TextBlock Text="Recommendations"
+                                                                   Margin="0,10,0,4"
+                                                                   Style="{StaticResource FieldLabelStyle}" />
+
+                                                        <TextBox x:Name="DocumentAIRecommendationsTextBox"
+                                                                 Height="64"
+                                                                 Padding="10,8"
+                                                                 TextWrapping="Wrap"
+                                                                 AcceptsReturn="True"
+                                                                 IsReadOnly="True"
+                                                                 BorderBrush="#CBD5E1"
+                                                                 BorderThickness="1" />
+
+                                                        <TextBlock Text="Detected issues"
+                                                                   Margin="0,10,0,4"
+                                                                   Style="{StaticResource FieldLabelStyle}" />
+
+                                                        <TextBox x:Name="DocumentAIDetectedIssuesTextBox"
+                                                                 Height="64"
                                                                  Padding="10,8"
                                                                  TextWrapping="Wrap"
                                                                  AcceptsReturn="True"

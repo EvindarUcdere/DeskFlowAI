@@ -25,7 +25,14 @@ public sealed class RuleBasedDocumentAIAnalysisProvider : IDocumentAIAnalysisPro
             analysisStatus,
             summary,
             riskNotes,
-            DocumentAIProviderNames.RuleBased);
+            DocumentAIProviderNames.RuleBased,
+            usedFallback: false,
+            riskLevel: analysisStatus == AIAnalysisStatusNames.NeedsReview ? "Medium" : "Low",
+            recommendations: analysisStatus == AIAnalysisStatusNames.NeedsReview
+                ? "Manager review surecini tamamla ve belge status'unu teslim planina gore guncelle."
+                : "Rutin belge review surecini tamamla.",
+            confidenceScore: hasExtractedText ? 0.68 : 0.55,
+            detectedIssues: riskNotes);
     }
 
     private static string BuildSafeNote(string notes)

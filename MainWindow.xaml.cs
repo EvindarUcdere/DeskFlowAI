@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using DeskFlowAI.Data;
 using DeskFlowAI.Models;
 using DeskFlowAI.Services;
@@ -28,6 +30,11 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<WorkProject> _allProjects = [];
     private readonly ObservableCollection<WorkProject> _dueSoonProjects = [];
     private readonly ObservableCollection<AuditLogEntry> _auditLogs = [];
+    private readonly ObservableCollection<WorkTask> _kanbanToDoTasks = [];
+    private readonly ObservableCollection<WorkTask> _kanbanInProgressTasks = [];
+    private readonly ObservableCollection<WorkTask> _kanbanReviewTasks = [];
+    private readonly ObservableCollection<WorkTask> _kanbanBlockedTasks = [];
+    private readonly ObservableCollection<WorkTask> _kanbanDoneTasks = [];
     private Customer? _selectedCustomer;
     private WorkProject? _selectedProject;
     private WorkTask? _selectedTask;
@@ -46,6 +53,11 @@ public partial class MainWindow : Window
         LoadAuditLogs();
         ProjectsDataGrid.ItemsSource = _projects;
         TasksDataGrid.ItemsSource = _tasks;
+        KanbanToDoListBox.ItemsSource = _kanbanToDoTasks;
+        KanbanInProgressListBox.ItemsSource = _kanbanInProgressTasks;
+        KanbanReviewListBox.ItemsSource = _kanbanReviewTasks;
+        KanbanBlockedListBox.ItemsSource = _kanbanBlockedTasks;
+        KanbanDoneListBox.ItemsSource = _kanbanDoneTasks;
         DocumentsDataGrid.ItemsSource = _documents;
         EmployeesDataGrid.ItemsSource = _employees;
         UserAccountsDataGrid.ItemsSource = _userAccounts;
@@ -266,6 +278,7 @@ public partial class MainWindow : Window
         CustomerContactTextBox.Text = selectedCustomer.ContactName;
         CustomerEmailTextBox.Text = selectedCustomer.Email;
         CustomerFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        UseFocusedWorkspaceLayout();
         LoadProjectsForSelectedCustomer(selectFirstProject: true);
     }
 
@@ -393,6 +406,66 @@ public partial class MainWindow : Window
         LoadTasksForCurrentContext(selectFirstTask: true);
     }
 
+    private void KanbanTask_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed)
+        {
+            return;
+        }
+
+        if (FindAncestor<ListBoxItem>(e.OriginalSource as DependencyObject) is not ListBoxItem taskItem
+            || taskItem.DataContext is not WorkTask task)
+        {
+            return;
+        }
+
+        DragDrop.DoDragDrop(taskItem, task, DragDropEffects.Move);
+    }
+
+    private void KanbanColumn_DragOver(object sender, DragEventArgs e)
+    {
+        e.Effects = e.Data.GetDataPresent(typeof(WorkTask))
+            ? DragDropEffects.Move
+            : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void KanbanColumn_Drop(object sender, DragEventArgs e)
+    {
+        if (!e.Data.GetDataPresent(typeof(WorkTask))
+            || e.Data.GetData(typeof(WorkTask)) is not WorkTask task
+            || sender is not FrameworkElement dropTarget
+            || dropTarget.Tag is not string newStatus)
+        {
+            return;
+        }
+
+        if (_currentUser?.HasPermission(PermissionNames.TaskUpdate) != true)
+        {
+            ShowTaskFormMessage("Bu kullanicinin board uzerinden task guncelleme yetkisi yok.", isError: true);
+            return;
+        }
+
+        if (task.Status == newStatus)
+        {
+            return;
+        }
+
+        string oldStatus = task.Status;
+        WorkTask updatedTask = _taskService.UpdateTaskWorkflow(
+            task,
+            newStatus,
+            task.Priority,
+            task.DueDate,
+            task.AssignedEmployeeId,
+            task.BlockedBy);
+
+        LoadTasksForCurrentContext(updatedTask.Id);
+        RefreshDashboardSummary();
+        RecordAudit("Updated", "Task", $"{updatedTask.Title}: Kanban status '{oldStatus}' -> '{newStatus}'");
+        ShowTaskFormMessage($"Task board uzerinde {newStatus} kolonuna tasindi.", isError: false);
+    }
+
     private void ClearCustomerFormButton_Click(object sender, RoutedEventArgs e)
     {
         ClearCustomerForm();
@@ -428,6 +501,7 @@ public partial class MainWindow : Window
         TasksEmptyTextBlock.Visibility = Visibility.Collapsed;
         SelectedProjectForDocumentTextBlock.Text = "Once Projects sekmesinden bir project sec.";
         DocumentsEmptyTextBlock.Visibility = Visibility.Collapsed;
+        UseDefaultWorkspaceLayout();
         LoadProjectsForSelectedCustomer();
         UpdateProjectActionState();
         UpdateTaskActionState();
@@ -1076,11 +1150,24 @@ public partial class MainWindow : Window
             return;
         }
 
+        UseDefaultWorkspaceLayout();
+        ConfigureTaskWorkspaceForOperations();
+    }
+
+    private void UseDefaultWorkspaceLayout()
+    {
         LeftWorkspaceColumn.MinWidth = 360;
         LeftWorkspaceColumn.Width = new GridLength(1.15, GridUnitType.Star);
         MainSplitterColumn.Width = new GridLength(10);
         RightWorkspaceColumn.Width = new GridLength(1, GridUnitType.Star);
-        ConfigureTaskWorkspaceForOperations();
+    }
+
+    private void UseFocusedWorkspaceLayout()
+    {
+        LeftWorkspaceColumn.MinWidth = 300;
+        LeftWorkspaceColumn.Width = new GridLength(0.7, GridUnitType.Star);
+        MainSplitterColumn.Width = new GridLength(10);
+        RightWorkspaceColumn.Width = new GridLength(1.45, GridUnitType.Star);
     }
 
     private void ConfigureTaskWorkspaceForStaff(UserSession user)
@@ -1280,9 +1367,12 @@ public partial class MainWindow : Window
         TasksDataGrid.SelectedItem = null;
         DocumentsDataGrid.SelectedItem = null;
         _tasks.Clear();
+        RefreshKanbanBoard([]);
         _documents.Clear();
         SelectedProjectForTaskTextBlock.Text = "Once Projects sekmesinden bir project sec.";
+        SelectedProjectForBoardTextBlock.Text = "Once Projects sekmesinden bir project sec.";
         TasksEmptyTextBlock.Visibility = Visibility.Collapsed;
+        KanbanEmptyTextBlock.Visibility = Visibility.Collapsed;
         SelectedProjectForDocumentTextBlock.Text = "Once Projects sekmesinden bir project sec.";
         DocumentsEmptyTextBlock.Visibility = Visibility.Collapsed;
         UpdateProjectActionState();
@@ -1365,17 +1455,21 @@ public partial class MainWindow : Window
         if (_selectedProject is null)
         {
             SelectedProjectForTaskTextBlock.Text = "Once Projects sekmesinden bir project sec.";
+            SelectedProjectForBoardTextBlock.Text = "Once Projects sekmesinden bir project sec.";
+            RefreshKanbanBoard([]);
             TasksEmptyTextBlock.Visibility = Visibility.Collapsed;
             return;
         }
 
         SelectedProjectForTaskTextBlock.Text = $"Selected project: {_selectedProject.Name}";
+        SelectedProjectForBoardTextBlock.Text = $"Selected project: {_selectedProject.Name}";
 
         foreach (WorkTask task in GetFilteredTasksForCurrentContext())
         {
             _tasks.Add(task);
         }
 
+        RefreshKanbanBoard(GetBoardTasksForCurrentContext());
         TasksEmptyTextBlock.Visibility = _tasks.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         TasksEmptyTextBlock.Text = GetTaskEmptyMessage();
 
@@ -1412,6 +1506,8 @@ public partial class MainWindow : Window
         if (_currentUser?.EmployeeId is null)
         {
             SelectedProjectForTaskTextBlock.Text = "Bu kullanici bir employee kaydina bagli degil.";
+            SelectedProjectForBoardTextBlock.Text = "Bu kullanici bir employee kaydina bagli degil.";
+            RefreshKanbanBoard([]);
             TasksEmptyTextBlock.Text = "Employee baglantisi olmadigi icin task listelenemiyor.";
             TasksEmptyTextBlock.Visibility = Visibility.Visible;
             ResetTaskForm();
@@ -1419,12 +1515,14 @@ public partial class MainWindow : Window
         }
 
         SelectedProjectForTaskTextBlock.Text = $"{_currentUser.FullName} icin atanmis tasklar.";
+        SelectedProjectForBoardTextBlock.Text = $"{_currentUser.FullName} icin atanmis tasklar.";
 
         foreach (WorkTask task in GetFilteredTasksForCurrentContext())
         {
             _tasks.Add(task);
         }
 
+        RefreshKanbanBoard(GetBoardTasksForCurrentContext());
         TasksEmptyTextBlock.Visibility = _tasks.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         TasksEmptyTextBlock.Text = GetTaskEmptyMessage();
 
@@ -1448,6 +1546,55 @@ public partial class MainWindow : Window
         }
 
         ResetTaskForm();
+    }
+
+    private void RefreshKanbanBoard(IEnumerable<WorkTask> tasks)
+    {
+        _kanbanToDoTasks.Clear();
+        _kanbanInProgressTasks.Clear();
+        _kanbanReviewTasks.Clear();
+        _kanbanBlockedTasks.Clear();
+        _kanbanDoneTasks.Clear();
+
+        foreach (WorkTask task in tasks)
+        {
+            GetKanbanColumn(task.Status).Add(task);
+        }
+
+        int boardTaskCount = _kanbanToDoTasks.Count
+            + _kanbanInProgressTasks.Count
+            + _kanbanReviewTasks.Count
+            + _kanbanBlockedTasks.Count
+            + _kanbanDoneTasks.Count;
+        KanbanEmptyTextBlock.Visibility = boardTaskCount == 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private ObservableCollection<WorkTask> GetKanbanColumn(string status)
+    {
+        return status switch
+        {
+            TaskStatusNames.InProgress => _kanbanInProgressTasks,
+            TaskStatusNames.Review => _kanbanReviewTasks,
+            TaskStatusNames.Blocked => _kanbanBlockedTasks,
+            TaskStatusNames.Done => _kanbanDoneTasks,
+            _ => _kanbanToDoTasks
+        };
+    }
+
+    private static T? FindAncestor<T>(DependencyObject? current)
+        where T : DependencyObject
+    {
+        while (current is not null)
+        {
+            if (current is T match)
+            {
+                return match;
+            }
+
+            current = VisualTreeHelper.GetParent(current);
+        }
+
+        return null;
     }
 
     private void SelectTask(WorkTask task)
@@ -1729,6 +1876,20 @@ public partial class MainWindow : Window
         }
 
         return ApplyTaskFilters(_taskService.GetTasksForProject(_selectedProject.Id)).ToList();
+    }
+
+    private List<WorkTask> GetBoardTasksForCurrentContext()
+    {
+        if (IsStaffUser())
+        {
+            return _currentUser?.EmployeeId is null
+                ? []
+                : _taskService.GetTasksForEmployee(_currentUser.EmployeeId.Value);
+        }
+
+        return _selectedProject is null
+            ? []
+            : _taskService.GetTasksForProject(_selectedProject.Id);
     }
 
     private IEnumerable<WorkTask> ApplyTaskFilters(IEnumerable<WorkTask> tasks)

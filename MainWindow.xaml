@@ -1098,6 +1098,7 @@
                                                             <ComboBoxItem Content="All statuses" />
                                                             <ComboBoxItem Content="To Do" />
                                                             <ComboBoxItem Content="In Progress" />
+                                                            <ComboBoxItem Content="Review" />
                                                             <ComboBoxItem Content="Blocked" />
                                                             <ComboBoxItem Content="Done" />
                                                         </ComboBox>
@@ -1239,6 +1240,7 @@
                                                               SelectedIndex="0">
                                                         <ComboBoxItem Content="To Do" />
                                                         <ComboBoxItem Content="In Progress" />
+                                                        <ComboBoxItem Content="Review" />
                                                         <ComboBoxItem Content="Blocked" />
                                                         <ComboBoxItem Content="Done" />
                                                     </ComboBox>
@@ -1331,6 +1333,250 @@
                                         </StackPanel>
                                     </Border>
                                 </Grid>
+                            </TabItem>
+
+                            <TabItem x:Name="BoardTab" Header="Board">
+                                <Border Style="{StaticResource SectionCardStyle}" Margin="0,12,0,0">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <StackPanel>
+                                            <TextBlock Text="Kanban board"
+                                                       Style="{StaticResource SectionTitleStyle}" />
+
+                                            <TextBlock x:Name="SelectedProjectForBoardTextBlock"
+                                                       Text="Once Projects sekmesinden bir project sec."
+                                                       Margin="0,4,0,0"
+                                                       FontSize="13"
+                                                       FontWeight="SemiBold"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="#475569" />
+                                        </StackPanel>
+
+                                        <ScrollViewer Grid.Row="1"
+                                                      Margin="0,16,0,0"
+                                                      HorizontalScrollBarVisibility="Auto"
+                                                      VerticalScrollBarVisibility="Disabled">
+                                            <Grid MinWidth="1160">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="12" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="12" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="12" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="12" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <Border Grid.Column="0"
+                                                        Tag="To Do"
+                                                        AllowDrop="True"
+                                                        Drop="KanbanColumn_Drop"
+                                                        DragOver="KanbanColumn_DragOver"
+                                                        Background="#F8FAFC"
+                                                        BorderBrush="#E2E8F0"
+                                                        BorderThickness="1"
+                                                        CornerRadius="10"
+                                                        Padding="10">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="*" />
+                                                        </Grid.RowDefinitions>
+                                                        <TextBlock Text="To Do"
+                                                                   FontSize="14"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#1D4ED8" />
+                                                        <ListBox x:Name="KanbanToDoListBox"
+                                                                 Grid.Row="1"
+                                                                 Margin="0,10,0,0"
+                                                                 MinHeight="320"
+                                                                 BorderThickness="0"
+                                                                 Background="Transparent"
+                                                                 PreviewMouseMove="KanbanTask_PreviewMouseMove">
+                                                            <ListBox.ItemContainerStyle>
+                                                                <Style TargetType="ListBoxItem">
+                                                                    <Setter Property="Padding" Value="0" />
+                                                                    <Setter Property="Margin" Value="0,0,0,10" />
+                                                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                                                    <Setter Property="Cursor" Value="Hand" />
+                                                                </Style>
+                                                            </ListBox.ItemContainerStyle>
+                                                            <ListBox.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Border Background="White"
+                                                                            BorderBrush="#E2E8F0"
+                                                                            BorderThickness="1"
+                                                                            CornerRadius="8"
+                                                                            Padding="10">
+                                                                        <StackPanel>
+                                                                            <TextBlock Text="{Binding Title}"
+                                                                                       FontWeight="SemiBold"
+                                                                                       TextWrapping="Wrap"
+                                                                                       Foreground="#0F172A" />
+                                                                            <TextBlock Text="{Binding AssignedEmployee.FullName, TargetNullValue=Unassigned}"
+                                                                                       Margin="0,6,0,0"
+                                                                                       FontSize="12"
+                                                                                       Foreground="#64748B" />
+                                                                            <Border Style="{StaticResource BadgeBorderStyle}"
+                                                                                    Margin="0,8,0,0"
+                                                                                    HorizontalAlignment="Left"
+                                                                                    Background="{Binding Priority, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Background}"
+                                                                                    BorderBrush="{Binding Priority, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Border}">
+                                                                                <TextBlock Text="{Binding Priority, Converter={StaticResource StatusBadgeConverter}}"
+                                                                                           Foreground="{Binding Priority, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Foreground}"
+                                                                                           FontSize="12"
+                                                                                           FontWeight="SemiBold" />
+                                                                            </Border>
+                                                                        </StackPanel>
+                                                                    </Border>
+                                                                </DataTemplate>
+                                                            </ListBox.ItemTemplate>
+                                                        </ListBox>
+                                                    </Grid>
+                                                </Border>
+
+                                                <Border Grid.Column="2"
+                                                        Tag="In Progress"
+                                                        AllowDrop="True"
+                                                        Drop="KanbanColumn_Drop"
+                                                        DragOver="KanbanColumn_DragOver"
+                                                        Background="#F8FAFC"
+                                                        BorderBrush="#E2E8F0"
+                                                        BorderThickness="1"
+                                                        CornerRadius="10"
+                                                        Padding="10">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="*" />
+                                                        </Grid.RowDefinitions>
+                                                        <TextBlock Text="In Progress"
+                                                                   FontSize="14"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#9A3412" />
+                                                        <ListBox x:Name="KanbanInProgressListBox"
+                                                                 Grid.Row="1"
+                                                                 Margin="0,10,0,0"
+                                                                 MinHeight="320"
+                                                                 BorderThickness="0"
+                                                                 Background="Transparent"
+                                                                 PreviewMouseMove="KanbanTask_PreviewMouseMove"
+                                                                 ItemContainerStyle="{Binding ElementName=KanbanToDoListBox, Path=ItemContainerStyle}"
+                                                                 ItemTemplate="{Binding ElementName=KanbanToDoListBox, Path=ItemTemplate}" />
+                                                    </Grid>
+                                                </Border>
+
+                                                <Border Grid.Column="4"
+                                                        Tag="Review"
+                                                        AllowDrop="True"
+                                                        Drop="KanbanColumn_Drop"
+                                                        DragOver="KanbanColumn_DragOver"
+                                                        Background="#F8FAFC"
+                                                        BorderBrush="#E2E8F0"
+                                                        BorderThickness="1"
+                                                        CornerRadius="10"
+                                                        Padding="10">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="*" />
+                                                        </Grid.RowDefinitions>
+                                                        <TextBlock Text="Review"
+                                                                   FontSize="14"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#6D28D9" />
+                                                        <ListBox x:Name="KanbanReviewListBox"
+                                                                 Grid.Row="1"
+                                                                 Margin="0,10,0,0"
+                                                                 MinHeight="320"
+                                                                 BorderThickness="0"
+                                                                 Background="Transparent"
+                                                                 PreviewMouseMove="KanbanTask_PreviewMouseMove"
+                                                                 ItemContainerStyle="{Binding ElementName=KanbanToDoListBox, Path=ItemContainerStyle}"
+                                                                 ItemTemplate="{Binding ElementName=KanbanToDoListBox, Path=ItemTemplate}" />
+                                                    </Grid>
+                                                </Border>
+
+                                                <Border Grid.Column="6"
+                                                        Tag="Blocked"
+                                                        AllowDrop="True"
+                                                        Drop="KanbanColumn_Drop"
+                                                        DragOver="KanbanColumn_DragOver"
+                                                        Background="#F8FAFC"
+                                                        BorderBrush="#E2E8F0"
+                                                        BorderThickness="1"
+                                                        CornerRadius="10"
+                                                        Padding="10">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="*" />
+                                                        </Grid.RowDefinitions>
+                                                        <TextBlock Text="Blocked"
+                                                                   FontSize="14"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#991B1B" />
+                                                        <ListBox x:Name="KanbanBlockedListBox"
+                                                                 Grid.Row="1"
+                                                                 Margin="0,10,0,0"
+                                                                 MinHeight="320"
+                                                                 BorderThickness="0"
+                                                                 Background="Transparent"
+                                                                 PreviewMouseMove="KanbanTask_PreviewMouseMove"
+                                                                 ItemContainerStyle="{Binding ElementName=KanbanToDoListBox, Path=ItemContainerStyle}"
+                                                                 ItemTemplate="{Binding ElementName=KanbanToDoListBox, Path=ItemTemplate}" />
+                                                    </Grid>
+                                                </Border>
+
+                                                <Border Grid.Column="8"
+                                                        Tag="Done"
+                                                        AllowDrop="True"
+                                                        Drop="KanbanColumn_Drop"
+                                                        DragOver="KanbanColumn_DragOver"
+                                                        Background="#F8FAFC"
+                                                        BorderBrush="#E2E8F0"
+                                                        BorderThickness="1"
+                                                        CornerRadius="10"
+                                                        Padding="10">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="*" />
+                                                        </Grid.RowDefinitions>
+                                                        <TextBlock Text="Done"
+                                                                   FontSize="14"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#166534" />
+                                                        <ListBox x:Name="KanbanDoneListBox"
+                                                                 Grid.Row="1"
+                                                                 Margin="0,10,0,0"
+                                                                 MinHeight="320"
+                                                                 BorderThickness="0"
+                                                                 Background="Transparent"
+                                                                 PreviewMouseMove="KanbanTask_PreviewMouseMove"
+                                                                 ItemContainerStyle="{Binding ElementName=KanbanToDoListBox, Path=ItemContainerStyle}"
+                                                                 ItemTemplate="{Binding ElementName=KanbanToDoListBox, Path=ItemTemplate}" />
+                                                    </Grid>
+                                                </Border>
+                                            </Grid>
+                                        </ScrollViewer>
+
+                                        <TextBlock x:Name="KanbanEmptyTextBlock"
+                                                   Grid.Row="2"
+                                                   Text="Board icin task bulunamadi."
+                                                   Margin="0,10,0,0"
+                                                   FontSize="13"
+                                                   Foreground="#64748B"
+                                                   Visibility="Collapsed" />
+                                    </Grid>
+                                </Border>
                             </TabItem>
 
                             <TabItem x:Name="DocumentsTab" Header="Documents">

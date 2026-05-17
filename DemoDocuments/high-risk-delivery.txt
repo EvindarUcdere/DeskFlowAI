@@ -1,0 +1,3 @@
+The warehouse mobile app delivery has a delay risk.
+Customer approval is missing and the offline sync test failed.
+The contract includes a penalty clause if the milestone becomes overdue.

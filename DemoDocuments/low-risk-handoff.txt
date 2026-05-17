@@ -1,0 +1,4 @@
+Customer portal handoff checklist is complete.
+Deployment notes are ready.
+Training date is confirmed.
+The customer success team has the final checklist and no configured mock risk keywords are present.

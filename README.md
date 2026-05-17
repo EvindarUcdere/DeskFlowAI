@@ -17,6 +17,7 @@ The project includes a document AI analysis pipeline with three modes:
 - User management with roles and permission-based UI access.
 - Document management with file checks, text extraction, AI processing policy, and AI analysis.
 - Document AI metadata: provider, fallback flag, risk level, confidence score, detected issues, recommendations, summary, and risk notes.
+- Seeded demo text documents for Low, Medium, and High risk Mock AI analysis.
 
 ## Tech Stack
 
@@ -137,6 +138,14 @@ The analysis result shows:
 - Risk notes
 - Recommendations
 - Detected issues
+
+The seed data includes demo `.txt` documents that can be analyzed immediately after startup:
+
+| Demo File | Expected Mock Risk |
+| --- | --- |
+| `low-risk-handoff.txt` | Low |
+| `medium-risk-approval.txt` | Medium |
+| `high-risk-delivery.txt` | High |
 
 ## Mock AI Risk Rules
 

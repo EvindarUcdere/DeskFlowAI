@@ -1,6 +1,7 @@
 using DeskFlowAI.Models;
 using DeskFlowAI.Services;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
 
 namespace DeskFlowAI.Data;
 
@@ -270,7 +271,39 @@ public sealed class DatabaseInitializer
             "manager@deskflow.ai",
             "KVKK onay metni hukuk ekibi tarafindan inceleniyor.");
 
+        AddDocumentIfMissing(
+            dbContext,
+            customerPortal.Id,
+            "low-risk-handoff.txt",
+            GetDemoDocumentPath("low-risk-handoff.txt"),
+            DocumentStatusNames.Uploaded,
+            "admin@deskflow.ai",
+            "Development Mock AI low-risk demo belgesi.");
+
+        AddDocumentIfMissing(
+            dbContext,
+            customerPortal.Id,
+            "medium-risk-approval.txt",
+            GetDemoDocumentPath("medium-risk-approval.txt"),
+            DocumentStatusNames.InReview,
+            "manager@deskflow.ai",
+            "Development Mock AI medium-risk demo belgesi.");
+
+        AddDocumentIfMissing(
+            dbContext,
+            warehouseApp.Id,
+            "high-risk-delivery.txt",
+            GetDemoDocumentPath("high-risk-delivery.txt"),
+            DocumentStatusNames.NeedsUpdate,
+            "manager@deskflow.ai",
+            "Development Mock AI high-risk demo belgesi.");
+
         dbContext.SaveChanges();
+    }
+
+    private static string GetDemoDocumentPath(string fileName)
+    {
+        return Path.Combine(AppContext.BaseDirectory, "DemoDocuments", fileName);
     }
 
     private static void AddCustomerIfMissing(

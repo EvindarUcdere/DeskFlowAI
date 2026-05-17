@@ -7,9 +7,10 @@ public sealed class WorkTask
         Title = string.Empty;
         Status = string.Empty;
         Priority = string.Empty;
+        BlockedBy = string.Empty;
     }
 
-    public WorkTask(int projectId, string title, string status, string priority, DateTime? dueDate, int? assignedEmployeeId = null)
+    public WorkTask(int projectId, string title, string status, string priority, DateTime? dueDate, int? assignedEmployeeId = null, string blockedBy = "")
     {
         ProjectId = projectId;
         Title = title;
@@ -17,6 +18,7 @@ public sealed class WorkTask
         Priority = priority;
         DueDate = dueDate;
         AssignedEmployeeId = assignedEmployeeId;
+        BlockedBy = blockedBy;
         CreatedAt = DateTime.Now;
     }
 
@@ -38,17 +40,20 @@ public sealed class WorkTask
 
     public DateTime? DueDate { get; private set; }
 
+    public string BlockedBy { get; private set; }
+
     public DateTime CreatedAt { get; private set; }
 
     public bool IsOverdue => DueDate.HasValue
         && DueDate.Value.Date < DateTime.Today
         && Status != TaskStatusNames.Done;
 
-    public void ChangeWorkflow(string status, string priority, DateTime? dueDate, int? assignedEmployeeId)
+    public void ChangeWorkflow(string status, string priority, DateTime? dueDate, int? assignedEmployeeId, string blockedBy = "")
     {
         Status = status;
         Priority = priority;
         DueDate = dueDate;
         AssignedEmployeeId = assignedEmployeeId;
+        BlockedBy = blockedBy;
     }
 }

@@ -303,6 +303,7 @@ public partial class MainWindow : Window
         SelectTaskPriority(selectedTask.Priority);
         SelectAssignedEmployee(selectedTask.AssignedEmployeeId);
         TaskDueDatePicker.SelectedDate = selectedTask.DueDate;
+        TaskBlockedByTextBox.Text = selectedTask.BlockedBy;
         TaskFormMessageTextBlock.Visibility = Visibility.Collapsed;
         UpdateTaskActionState();
     }
@@ -418,6 +419,7 @@ public partial class MainWindow : Window
         TaskTitleTextBox.Clear();
         SelectAssignedEmployee(null);
         TaskDueDatePicker.SelectedDate = DateTime.Today.AddDays(7);
+        TaskBlockedByTextBox.Clear();
         TaskFormMessageTextBlock.Visibility = Visibility.Collapsed;
         ClearDocumentForm();
         _tasks.Clear();
@@ -520,6 +522,7 @@ public partial class MainWindow : Window
         string priority = GetSelectedTaskPriority();
         int? assignedEmployeeId = GetSelectedAssignedEmployeeId();
         DateTime? dueDate = TaskDueDatePicker.SelectedDate;
+        string blockedBy = TaskBlockedByTextBox.Text.Trim();
 
         if (string.IsNullOrWhiteSpace(title))
         {
@@ -528,12 +531,13 @@ public partial class MainWindow : Window
         }
 
         Employee? assignedEmployee = FindEmployee(assignedEmployeeId);
-        WorkTask task = _taskService.CreateTask(_selectedProject.Id, title, status, priority, dueDate, assignedEmployeeId);
+        WorkTask task = _taskService.CreateTask(_selectedProject.Id, title, status, priority, dueDate, assignedEmployeeId, blockedBy);
         LoadTasksForSelectedProject(task.Id);
         RefreshDashboardSummary();
         string dueDateText = dueDate.HasValue ? dueDate.Value.ToString("dd.MM.yyyy") : "teslim tarihi yok";
         string assignedText = assignedEmployee is null ? "atanan kisi yok" : assignedEmployee.FullName;
-        RecordAudit("Created", "Task", $"{task.Title} gorevi {_selectedProject.Name} projesine {priority} priority ile eklendi. Assigned: {assignedText}. Due: {dueDateText}.");
+        string dependencyText = string.IsNullOrWhiteSpace(blockedBy) ? "dependency yok" : blockedBy;
+        RecordAudit("Created", "Task", $"{task.Title} gorevi {_selectedProject.Name} projesine {priority} priority ile eklendi. Assigned: {assignedText}. Due: {dueDateText}. Dependency: {dependencyText}.");
         string createMessage = TaskIsVisibleInCurrentFilters(task)
             ? "Task eklendi ve listede secildi."
             : "Task eklendi. Aktif filtreler nedeniyle listede gorunmuyor.";
@@ -557,6 +561,7 @@ public partial class MainWindow : Window
         string newPriority = GetSelectedTaskPriority();
         int? newAssignedEmployeeId = GetSelectedAssignedEmployeeId();
         DateTime? newDueDate = TaskDueDatePicker.SelectedDate;
+        string newBlockedBy = TaskBlockedByTextBox.Text.Trim();
 
         string oldStatus = _selectedTask.Status;
         string oldPriority = _selectedTask.Priority;
@@ -564,12 +569,13 @@ public partial class MainWindow : Window
         Employee? newAssignedEmployee = FindEmployee(newAssignedEmployeeId);
         string newAssignedEmployeeName = GetEmployeeName(newAssignedEmployeeId);
         DateTime? oldDueDate = _selectedTask.DueDate;
+        string oldBlockedBy = _selectedTask.BlockedBy;
 
-        WorkTask updatedTask = _taskService.UpdateTaskWorkflow(_selectedTask, newStatus, newPriority, newDueDate, newAssignedEmployeeId);
+        WorkTask updatedTask = _taskService.UpdateTaskWorkflow(_selectedTask, newStatus, newPriority, newDueDate, newAssignedEmployeeId, newBlockedBy);
         LoadTasksForCurrentContext(updatedTask.Id);
         RefreshDashboardSummary();
 
-        string changeDetails = BuildTaskChangeDetails(oldStatus, newStatus, oldPriority, newPriority, oldAssignedEmployeeName, newAssignedEmployeeName, oldDueDate, newDueDate);
+        string changeDetails = BuildTaskChangeDetails(oldStatus, newStatus, oldPriority, newPriority, oldAssignedEmployeeName, newAssignedEmployeeName, oldDueDate, newDueDate, oldBlockedBy, newBlockedBy);
         RecordAudit("Updated", "Task", $"{updatedTask.Title}: {changeDetails}");
         string updateMessage = TaskIsVisibleInCurrentFilters(updatedTask)
             ? "Task guncellendi."
@@ -602,7 +608,8 @@ public partial class MainWindow : Window
             TaskStatusNames.Done,
             _selectedTask.Priority,
             _selectedTask.DueDate,
-            _selectedTask.AssignedEmployeeId);
+            _selectedTask.AssignedEmployeeId,
+            _selectedTask.BlockedBy);
 
         LoadTasksForCurrentContext(updatedTask.Id);
         RefreshDashboardSummary();
@@ -1149,7 +1156,9 @@ public partial class MainWindow : Window
         string oldAssignedEmployeeName,
         string newAssignedEmployeeName,
         DateTime? oldDueDate,
-        DateTime? newDueDate)
+        DateTime? newDueDate,
+        string oldBlockedBy,
+        string newBlockedBy)
     {
         List<string> changes = [];
 
@@ -1157,6 +1166,7 @@ public partial class MainWindow : Window
         AddChangeIfNeeded(changes, "Priority", oldPriority, newPriority);
         AddChangeIfNeeded(changes, "Assigned to", oldAssignedEmployeeName, newAssignedEmployeeName);
         AddChangeIfNeeded(changes, "Due date", FormatAuditDate(oldDueDate), FormatAuditDate(newDueDate));
+        AddChangeIfNeeded(changes, "Blocked by", FormatAuditText(oldBlockedBy), FormatAuditText(newBlockedBy));
 
         return changes.Count == 0
             ? "No workflow changes"
@@ -1166,6 +1176,11 @@ public partial class MainWindow : Window
     private static string FormatAuditDate(DateTime? date)
     {
         return date.HasValue ? date.Value.ToString("dd.MM.yyyy") : "none";
+    }
+
+    private static string FormatAuditText(string text)
+    {
+        return string.IsNullOrWhiteSpace(text) ? "none" : text;
     }
 
     private static string BuildDocumentAnalysisAuditDetails(ProjectDocument document, string oldAIStatus)
@@ -1445,6 +1460,7 @@ public partial class MainWindow : Window
         SelectTaskPriority(task.Priority);
         SelectAssignedEmployee(task.AssignedEmployeeId);
         TaskDueDatePicker.SelectedDate = task.DueDate;
+        TaskBlockedByTextBox.Text = task.BlockedBy;
         UpdateTaskActionState();
     }
 
@@ -1787,6 +1803,7 @@ public partial class MainWindow : Window
         SelectTaskPriority(TaskPriorityNames.Normal);
         SelectAssignedEmployee(null);
         TaskDueDatePicker.SelectedDate = DateTime.Today.AddDays(7);
+        TaskBlockedByTextBox.Clear();
         UpdateTaskActionState();
     }
 

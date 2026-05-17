@@ -44,9 +44,9 @@ public sealed class DemoTaskService
         return OrderTasks(IncludeTaskDetails(query)).ToList();
     }
 
-    public WorkTask CreateTask(int projectId, string title, string status, string priority, DateTime? dueDate, int? assignedEmployeeId)
+    public WorkTask CreateTask(int projectId, string title, string status, string priority, DateTime? dueDate, int? assignedEmployeeId, string blockedBy = "")
     {
-        WorkTask task = new(projectId, title, status, priority, dueDate, assignedEmployeeId);
+        WorkTask task = new(projectId, title, status, priority, dueDate, assignedEmployeeId, blockedBy);
 
         _dbContext.Tasks.Add(task);
         _dbContext.SaveChanges();
@@ -54,10 +54,10 @@ public sealed class DemoTaskService
         return task;
     }
 
-    public WorkTask UpdateTaskWorkflow(WorkTask existingTask, string status, string priority, DateTime? dueDate, int? assignedEmployeeId)
+    public WorkTask UpdateTaskWorkflow(WorkTask existingTask, string status, string priority, DateTime? dueDate, int? assignedEmployeeId, string blockedBy = "")
     {
         WorkTask task = _dbContext.Tasks.Single(task => task.Id == existingTask.Id);
-        task.ChangeWorkflow(status, priority, dueDate, assignedEmployeeId);
+        task.ChangeWorkflow(status, priority, dueDate, assignedEmployeeId, blockedBy);
         _dbContext.SaveChanges();
 
         return task;

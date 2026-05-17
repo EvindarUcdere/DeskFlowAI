@@ -65,9 +65,11 @@ public sealed class DeskFlowDbContext : DbContext
             entity.Property(task => task.Title).HasMaxLength(180);
             entity.Property(task => task.Status).HasMaxLength(40);
             entity.Property(task => task.Priority).HasMaxLength(40);
+            entity.Property(task => task.BlockedBy).HasMaxLength(220);
 
             entity.HasIndex(task => task.Status);
             entity.HasIndex(task => task.Priority);
+            entity.HasIndex(task => task.BlockedBy);
             entity.HasIndex(task => task.DueDate);
 
             entity.HasOne(task => task.Project)

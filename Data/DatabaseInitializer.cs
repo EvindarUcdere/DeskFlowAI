@@ -146,12 +146,12 @@ public sealed class DatabaseInitializer
 
         AddTaskIfMissing(dbContext, customerPortal.Id, "Login ekranini musteri markasina gore duzenle", TaskStatusNames.InProgress, TaskPriorityNames.High, DateTime.Today.AddDays(1));
         AddTaskIfMissing(dbContext, customerPortal.Id, "Kullanici kabul test listesini hazirla", TaskStatusNames.ToDo, TaskPriorityNames.Critical, DateTime.Today.AddDays(2));
-        AddTaskIfMissing(dbContext, customerPortal.Id, "Eski portal linklerini yonlendir", TaskStatusNames.Blocked, TaskPriorityNames.Normal, DateTime.Today.AddDays(-1));
+        AddTaskIfMissing(dbContext, customerPortal.Id, "Eski portal linklerini yonlendir", TaskStatusNames.Blocked, TaskPriorityNames.Normal, DateTime.Today.AddDays(-1), "Customer DNS approval");
         AddTaskIfMissing(dbContext, contractAutomation.Id, "Sozlesme sablon alanlarini belirle", TaskStatusNames.ToDo, TaskPriorityNames.Normal, DateTime.Today.AddDays(10));
         AddTaskIfMissing(dbContext, contractAutomation.Id, "Onay akis rollerini netlestir", TaskStatusNames.ToDo, TaskPriorityNames.High, DateTime.Today.AddDays(14));
         AddTaskIfMissing(dbContext, warehouseApp.Id, "Barkod tarama ekranini test et", TaskStatusNames.InProgress, TaskPriorityNames.Critical, DateTime.Today);
         AddTaskIfMissing(dbContext, warehouseApp.Id, "Offline senkronizasyon hatalarini incele", TaskStatusNames.ToDo, TaskPriorityNames.High, DateTime.Today.AddDays(5));
-        AddTaskIfMissing(dbContext, routeDashboard.Id, "Harita servis maliyetlerini karsilastir", TaskStatusNames.Blocked, TaskPriorityNames.Normal, null);
+        AddTaskIfMissing(dbContext, routeDashboard.Id, "Harita servis maliyetlerini karsilastir", TaskStatusNames.Blocked, TaskPriorityNames.Normal, null, "Vendor pricing response");
         AddTaskIfMissing(dbContext, riskReporting.Id, "Yonetim ozeti grafiklerini tamamla", TaskStatusNames.InProgress, TaskPriorityNames.Critical, DateTime.Today.AddDays(1));
         AddTaskIfMissing(dbContext, riskReporting.Id, "Excel export formatini dogrula", TaskStatusNames.ToDo, TaskPriorityNames.High, DateTime.Today.AddDays(3));
         AddTaskIfMissing(dbContext, dataMigration.Id, "Final veri kontrol raporunu arsivle", TaskStatusNames.Done, TaskPriorityNames.Low, DateTime.Today.AddDays(-6));
@@ -391,14 +391,15 @@ public sealed class DatabaseInitializer
         string title,
         string status,
         string priority,
-        DateTime? dueDate)
+        DateTime? dueDate,
+        string blockedBy = "")
     {
         if (dbContext.Tasks.Any(task => task.ProjectId == projectId && task.Title == title))
         {
             return;
         }
 
-        dbContext.Tasks.Add(new WorkTask(projectId, title, status, priority, dueDate));
+        dbContext.Tasks.Add(new WorkTask(projectId, title, status, priority, dueDate, blockedBy: blockedBy));
     }
 
     private static void AddDocumentIfMissing(

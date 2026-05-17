@@ -1,6 +1,7 @@
 <Window x:Class="DeskFlowAI.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:converters="clr-namespace:DeskFlowAI.Converters"
         Title="DeskFlow AI"
         Width="1160"
         Height="720"
@@ -8,46 +9,124 @@
         MinHeight="640"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
+        <converters:StatusBadgeConverter x:Key="StatusBadgeConverter" />
+
+        <SolidColorBrush x:Key="AppBackgroundBrush" Color="#F7F9FC" />
+        <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="CardBorderBrush" Color="#E5EAF2" />
+        <SolidColorBrush x:Key="PrimaryBrush" Color="#2563EB" />
+        <SolidColorBrush x:Key="PrimaryHoverBrush" Color="#1D4ED8" />
+        <SolidColorBrush x:Key="SuccessBrush" Color="#16A34A" />
+        <SolidColorBrush x:Key="WarningBrush" Color="#D97706" />
+        <SolidColorBrush x:Key="DangerBrush" Color="#DC2626" />
+        <SolidColorBrush x:Key="TextPrimaryBrush" Color="#111827" />
+        <SolidColorBrush x:Key="TextSecondaryBrush" Color="#64748B" />
+        <SolidColorBrush x:Key="InputBorderBrush" Color="#D7DEE8" />
+
         <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
             <Setter Property="Margin" Value="0,0,0,6" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="#334155" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
         </Style>
 
         <Style x:Key="InputStyle" TargetType="TextBox">
-            <Setter Property="Height" Value="42" />
-            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="Padding" Value="13,0" />
             <Setter Property="FontSize" Value="14" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="BorderBrush" Value="#CBD5E1" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="{StaticResource InputBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="InputBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="InputBorder" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="MetricCardStyle" TargetType="Border">
-            <Setter Property="Padding" Value="14,10" />
-            <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="#BFDBFE" />
+            <Setter Property="Padding" Value="18,14" />
+            <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="CornerRadius" Value="10" />
         </Style>
 
         <Style x:Key="PrimaryButtonStyle" TargetType="Button">
-            <Setter Property="Height" Value="40" />
-            <Setter Property="Padding" Value="14,0" />
-            <Setter Property="Background" Value="#2563EB" />
+            <Setter Property="Height" Value="42" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="Background" Value="{StaticResource PrimaryBrush}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Foreground" Value="White" />
             <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{StaticResource PrimaryHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.55" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="SecondaryButtonStyle" TargetType="Button">
-            <Setter Property="Height" Value="38" />
-            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Padding" Value="16,0" />
             <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="#CBD5E1" />
+            <Setter Property="BorderBrush" Value="{StaticResource InputBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Foreground" Value="#334155" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#F8FAFC" />
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#B8C4D4" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.55" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="DangerButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
@@ -57,7 +136,24 @@
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
 
-        <Style x:Key="OverdueTaskRowStyle" TargetType="DataGridRow">
+        <Style TargetType="DataGridRow">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Style.Triggers>
+                <Trigger Property="AlternationIndex" Value="1">
+                    <Setter Property="Background" Value="#F8FAFC" />
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#EEF6FF" />
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#DBEAFE" />
+                    <Setter Property="Foreground" Value="#0F172A" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="OverdueTaskRowStyle" TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsOverdue}" Value="True">
                     <Setter Property="Background" Value="#FEF2F2" />
@@ -67,7 +163,7 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="EmployeeWorkloadRowStyle" TargetType="DataGridRow">
+        <Style x:Key="EmployeeWorkloadRowStyle" TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding NeedsCoverage}" Value="True">
                     <Setter Property="Background" Value="#FFFBEB" />
@@ -78,18 +174,101 @@
         </Style>
 
         <Style x:Key="SectionCardStyle" TargetType="Border">
-            <Setter Property="Padding" Value="14" />
-            <Setter Property="Margin" Value="0,0,0,14" />
-            <Setter Property="Background" Value="#FAFCFF" />
-            <Setter Property="BorderBrush" Value="#D8E1EC" />
+            <Setter Property="Padding" Value="18" />
+            <Setter Property="Margin" Value="0,0,0,16" />
+            <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="CornerRadius" Value="10" />
         </Style>
 
         <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="17" />
+            <Setter Property="FontSize" Value="18" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="#1F2937" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style x:Key="HelperTextStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,6,0,0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="LineHeight" Value="18" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+        </Style>
+
+        <Style x:Key="FormGroupStyle" TargetType="Border">
+            <Setter Property="Padding" Value="14" />
+            <Setter Property="Margin" Value="0,14,0,0" />
+            <Setter Property="Background" Value="#F8FAFC" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+        </Style>
+
+        <Style x:Key="FormGroupTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="RowHeight" Value="38" />
+            <Setter Property="ColumnHeaderHeight" Value="40" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="GridLinesVisibility" Value="None" />
+            <Setter Property="AlternationCount" Value="2" />
+            <Setter Property="AlternatingRowBackground" Value="#F8FAFC" />
+            <Setter Property="HorizontalGridLinesBrush" Value="#EEF2F7" />
+            <Setter Property="VerticalGridLinesBrush" Value="Transparent" />
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#F8FAFC" />
+            <Setter Property="Foreground" Value="#475569" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="BorderBrush" Value="#E5EAF2" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+        </Style>
+
+        <Style TargetType="DataGridCell">
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="BadgeBorderStyle" TargetType="Border">
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Padding" Value="9,0" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <Style x:Key="WorkflowStepStyle" TargetType="Border">
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="9" />
+        </Style>
+
+        <Style x:Key="WorkflowArrowStyle" TargetType="TextBlock">
+            <Setter Property="Text" Value=">" />
+            <Setter Property="Margin" Value="6,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="#94A3B8" />
+        </Style>
+
+        <Style x:Key="WorkflowStepTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
         </Style>
 
         <Style TargetType="TabControl">
@@ -109,9 +288,9 @@
                         <Border x:Name="TabBorder"
                                 Padding="{TemplateBinding Padding}"
                                 Background="#EEF3F8"
-                                BorderBrush="#D8E1EC"
+                                BorderBrush="{StaticResource CardBorderBrush}"
                                 BorderThickness="1"
-                                CornerRadius="8,8,0,0">
+                                CornerRadius="9,9,0,0">
                             <ContentPresenter ContentSource="Header"
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Center" />
@@ -129,7 +308,7 @@
         </Style>
     </Window.Resources>
 
-    <Grid Background="#EEF3F8">
+    <Grid Background="{StaticResource AppBackgroundBrush}">
         <Grid x:Name="LoginView">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1.05*" />
@@ -177,10 +356,10 @@
                 <Border MaxWidth="420"
                         Margin="56"
                         Padding="34"
-                        Background="White"
-                        BorderBrush="#D8E1EC"
+                        Background="{StaticResource CardBackgroundBrush}"
+                        BorderBrush="{StaticResource CardBorderBrush}"
                         BorderThickness="1"
-                        CornerRadius="8"
+                        CornerRadius="12"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center">
                     <StackPanel>
@@ -279,48 +458,115 @@
                 </DockPanel>
             </Border>
 
-            <Grid Grid.Row="1" Margin="18">
+            <Grid Grid.Row="1" Margin="22">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="132" />
+                    <RowDefinition Height="150" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <UniformGrid Grid.Row="0"
-                             Columns="4"
-                             Rows="1"
-                             Margin="0,0,0,14"
-                             VerticalAlignment="Top">
-                    <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,10,0" Background="#EFF6FF">
-                        <DockPanel>
-                            <TextBlock Text="Aktif projeler" Foreground="#1E3A8A" FontWeight="SemiBold" VerticalAlignment="Center" />
-                            <TextBlock x:Name="ActiveProjectsTextBlock" DockPanel.Dock="Right" Text="0" FontSize="24" FontWeight="SemiBold" Foreground="#1D4ED8" HorizontalAlignment="Right" />
-                        </DockPanel>
+                <Grid Grid.Row="0"
+                      Margin="0,0,0,14"
+                      VerticalAlignment="Top">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.45*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource MetricCardStyle}" Background="#ECFDF5" BorderBrush="#BBF7D0">
+                        <StackPanel>
+                            <DockPanel>
+                                <TextBlock Text="Acik gorevler"
+                                           Foreground="#166534"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center" />
+                                <TextBlock x:Name="OpenTasksTextBlock"
+                                           DockPanel.Dock="Right"
+                                           Text="0"
+                                           FontSize="36"
+                                           FontWeight="SemiBold"
+                                           Foreground="#15803D"
+                                           HorizontalAlignment="Right" />
+                            </DockPanel>
+
+                            <TextBlock Text="Work currently waiting on the team"
+                                       Margin="0,4,0,10"
+                                       FontSize="12"
+                                       Foreground="#64748B" />
+
+                            <Border Height="6" Background="#DCFCE7" CornerRadius="3">
+                                <Border Width="180"
+                                        HorizontalAlignment="Left"
+                                        Background="#22C55E"
+                                        CornerRadius="3" />
+                            </Border>
+                        </StackPanel>
                     </Border>
 
-                    <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,10,0" Background="#F0FDF4" BorderBrush="#BBF7D0">
-                        <DockPanel>
-                            <TextBlock Text="Acik gorevler" Foreground="#166534" FontWeight="SemiBold" VerticalAlignment="Center" />
-                            <TextBlock x:Name="OpenTasksTextBlock" DockPanel.Dock="Right" Text="0" FontSize="24" FontWeight="SemiBold" Foreground="#15803D" HorizontalAlignment="Right" />
-                        </DockPanel>
+                    <Border Grid.Column="2" Style="{StaticResource MetricCardStyle}" Background="#EFF6FF">
+                        <StackPanel>
+                            <DockPanel>
+                                <TextBlock Text="Aktif projeler" Foreground="#1E3A8A" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <TextBlock x:Name="ActiveProjectsTextBlock" DockPanel.Dock="Right" Text="0" FontSize="26" FontWeight="SemiBold" Foreground="#1D4ED8" HorizontalAlignment="Right" />
+                            </DockPanel>
+
+                            <TextBlock Text="In delivery or planning"
+                                       Margin="0,7,0,0"
+                                       FontSize="12"
+                                       Foreground="#64748B" />
+                        </StackPanel>
                     </Border>
 
-                    <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,10,0" Background="#FEF2F2" BorderBrush="#FECACA">
-                        <DockPanel>
-                            <TextBlock Text="Geciken isler" Foreground="#991B1B" FontWeight="SemiBold" VerticalAlignment="Center" />
-                            <TextBlock x:Name="OverdueTasksTextBlock" DockPanel.Dock="Right" Text="0" FontSize="24" FontWeight="SemiBold" Foreground="#B91C1C" HorizontalAlignment="Right" />
-                        </DockPanel>
+                    <Border Grid.Column="4" Style="{StaticResource MetricCardStyle}" Background="#FEF2F2" BorderBrush="#FECACA">
+                        <StackPanel>
+                            <DockPanel>
+                                <TextBlock Text="Geciken isler" Foreground="#991B1B" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <TextBlock x:Name="OverdueTasksTextBlock" DockPanel.Dock="Right" Text="0" FontSize="26" FontWeight="SemiBold" Foreground="#B91C1C" HorizontalAlignment="Right" />
+                            </DockPanel>
+
+                            <TextBlock Text="Needs attention"
+                                       Margin="0,7,0,8"
+                                       FontSize="12"
+                                       Foreground="#64748B" />
+
+                            <Border Height="5" Background="#FEE2E2" CornerRadius="3">
+                                <Border Width="90"
+                                        HorizontalAlignment="Left"
+                                        Background="#EF4444"
+                                        CornerRadius="3" />
+                            </Border>
+                        </StackPanel>
                     </Border>
 
-                    <Border Style="{StaticResource MetricCardStyle}" Background="#FFFBEB" BorderBrush="#FDE68A">
-                        <DockPanel>
-                            <TextBlock Text="AI bekleyen belgeler" Foreground="#92400E" FontWeight="SemiBold" VerticalAlignment="Center" />
-                            <TextBlock x:Name="PendingAiDocumentsTextBlock" DockPanel.Dock="Right" Text="0" FontSize="24" FontWeight="SemiBold" Foreground="#B45309" HorizontalAlignment="Right" />
-                        </DockPanel>
+                    <Border Grid.Column="6" Style="{StaticResource MetricCardStyle}" Background="#FFFBEB" BorderBrush="#FDE68A">
+                        <StackPanel>
+                            <DockPanel>
+                                <TextBlock Text="AI bekleyen belgeler" Foreground="#92400E" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <TextBlock x:Name="PendingAiDocumentsTextBlock" DockPanel.Dock="Right" Text="0" FontSize="26" FontWeight="SemiBold" Foreground="#B45309" HorizontalAlignment="Right" />
+                            </DockPanel>
+
+                            <TextBlock Text="Review queue"
+                                       Margin="0,7,0,8"
+                                       FontSize="12"
+                                       Foreground="#64748B" />
+
+                            <Border Height="5" Background="#FEF3C7" CornerRadius="3">
+                                <Border Width="110"
+                                        HorizontalAlignment="Left"
+                                        Background="#F59E0B"
+                                        CornerRadius="3" />
+                            </Border>
+                        </StackPanel>
                     </Border>
-                </UniformGrid>
+                </Grid>
 
                 <Border Grid.Row="0"
-                        Margin="0,76,0,14"
+                        Margin="0,94,0,14"
                         Padding="12"
                         Background="White"
                         BorderBrush="#D8E1EC"
@@ -369,11 +615,11 @@
 
                     <Border x:Name="CustomerWorkspaceBorder"
                             Grid.Column="0"
-                            Padding="18"
-                            Background="White"
-                            BorderBrush="#D8E1EC"
+                            Padding="20"
+                            Background="{StaticResource CardBackgroundBrush}"
+                            BorderBrush="{StaticResource CardBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="8"
+                            CornerRadius="12"
                             Margin="0">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -458,7 +704,21 @@
                                     <DataGridTextColumn Header="Company" Binding="{Binding CompanyName}" Width="*" />
                                     <DataGridTextColumn Header="Contact" Binding="{Binding ContactName}" Width="*" />
                                     <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="1.3*" />
-                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="0.7*" />
+                                    <DataGridTemplateColumn Header="Status" Width="0.7*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource BadgeBorderStyle}"
+                                                        Background="{Binding Status, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Background}"
+                                                        BorderBrush="{Binding Status, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Border}">
+                                                    <TextBlock Text="{Binding Status, Converter={StaticResource StatusBadgeConverter}}"
+                                                               Foreground="{Binding Status, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Foreground}"
+                                                               FontSize="12"
+                                                               FontWeight="SemiBold"
+                                                               VerticalAlignment="Center" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
 
@@ -508,13 +768,13 @@
                     </GridSplitter>
 
                     <Border Grid.Column="2"
-                            Padding="12"
-                            Background="White"
-                            BorderBrush="#D8E1EC"
+                            Padding="16"
+                            Background="{StaticResource CardBackgroundBrush}"
+                            BorderBrush="{StaticResource CardBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="8">
+                            CornerRadius="12">
                         <TabControl x:Name="WorkspaceTabControl">
-                            <TabItem x:Name="CustomerTab" Header="Customer">
+                            <TabItem x:Name="CustomerTab" Header="Customers">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                                     <StackPanel Margin="0,12,0,0">
                                 <Border Style="{StaticResource SectionCardStyle}">
@@ -523,26 +783,52 @@
                                                    Text="Add customer"
                                                    Style="{StaticResource SectionTitleStyle}" />
 
-                                        <TextBlock Text="Company"
-                                                   Margin="0,16,0,6"
-                                                   Style="{StaticResource FieldLabelStyle}" />
+                                        <TextBlock Text="Create a customer record or update the selected customer."
+                                                   Style="{StaticResource HelperTextStyle}" />
 
-                                        <TextBox x:Name="CustomerCompanyTextBox"
-                                                 Style="{StaticResource InputStyle}" />
+                                        <Border Style="{StaticResource FormGroupStyle}">
+                                            <StackPanel>
+                                                <TextBlock Text="Company profile"
+                                                           Style="{StaticResource FormGroupTitleStyle}" />
 
-                                        <TextBlock Text="Contact"
-                                                   Margin="0,12,0,6"
-                                                   Style="{StaticResource FieldLabelStyle}" />
+                                                <TextBlock Text="Company"
+                                                           Margin="0,14,0,6"
+                                                           Style="{StaticResource FieldLabelStyle}" />
 
-                                        <TextBox x:Name="CustomerContactTextBox"
-                                                 Style="{StaticResource InputStyle}" />
+                                                <TextBox x:Name="CustomerCompanyTextBox"
+                                                         Style="{StaticResource InputStyle}" />
 
-                                        <TextBlock Text="Email"
-                                                   Margin="0,12,0,6"
-                                                   Style="{StaticResource FieldLabelStyle}" />
+                                                <TextBlock Text="Use the legal or customer-facing company name."
+                                                           Style="{StaticResource HelperTextStyle}" />
 
-                                        <TextBox x:Name="CustomerEmailTextBox"
-                                                 Style="{StaticResource InputStyle}" />
+                                                <TextBlock Text="Contact"
+                                                           Margin="0,14,0,6"
+                                                           Style="{StaticResource FieldLabelStyle}" />
+
+                                                <TextBox x:Name="CustomerContactTextBox"
+                                                         Style="{StaticResource InputStyle}" />
+
+                                                <TextBlock Text="Primary person for project updates."
+                                                           Style="{StaticResource HelperTextStyle}" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Style="{StaticResource FormGroupStyle}">
+                                            <StackPanel>
+                                                <TextBlock Text="Communication"
+                                                           Style="{StaticResource FormGroupTitleStyle}" />
+
+                                                <TextBlock Text="Email"
+                                                           Margin="0,14,0,6"
+                                                           Style="{StaticResource FieldLabelStyle}" />
+
+                                                <TextBox x:Name="CustomerEmailTextBox"
+                                                         Style="{StaticResource InputStyle}" />
+
+                                                <TextBlock Text="Must be unique; this is used to identify the customer."
+                                                           Style="{StaticResource HelperTextStyle}" />
+                                            </StackPanel>
+                                        </Border>
 
                                         <TextBlock x:Name="CustomerFormMessageTextBlock"
                                                    Margin="0,12,0,0"
@@ -626,7 +912,21 @@
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn Header="Project" Binding="{Binding Name}" Width="*" />
                                                     <DataGridTextColumn Header="Customer" Binding="{Binding Customer.CompanyName}" Width="*" />
-                                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="0.8*" />
+                                                    <DataGridTemplateColumn Header="Status" Width="0.8*">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <Border Style="{StaticResource BadgeBorderStyle}"
+                                                                        Background="{Binding Status, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Background}"
+                                                                        BorderBrush="{Binding Status, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Border}">
+                                                                    <TextBlock Text="{Binding Status, Converter={StaticResource StatusBadgeConverter}}"
+                                                                               Foreground="{Binding Status, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Foreground}"
+                                                                               FontSize="12"
+                                                                               FontWeight="SemiBold"
+                                                                               VerticalAlignment="Center" />
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
                                                     <DataGridTextColumn Header="Due" Binding="{Binding DueDate, StringFormat={}{0:dd.MM.yyyy}}" Width="0.75*" />
                                                 </DataGrid.Columns>
                                             </DataGrid>
@@ -642,6 +942,7 @@
                                     </Border>
 
                                     <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto">
                                         <StackPanel>
                                             <TextBlock Text="Project details" Style="{StaticResource SectionTitleStyle}" />
 
@@ -651,31 +952,73 @@
                                                        TextWrapping="Wrap"
                                                        Foreground="#64748B" />
 
-                                            <TextBlock Text="Project name"
-                                                       Style="{StaticResource FieldLabelStyle}" />
+                                            <Border Style="{StaticResource FormGroupStyle}" Margin="0,0,0,0">
+                                                <StackPanel>
+                                                    <TextBlock Text="Project identity"
+                                                               Style="{StaticResource FormGroupTitleStyle}" />
 
-                                            <TextBox x:Name="ProjectNameTextBox"
-                                                     Style="{StaticResource InputStyle}" />
+                                                    <TextBlock Text="Project name"
+                                                               Margin="0,14,0,6"
+                                                               Style="{StaticResource FieldLabelStyle}" />
 
-                                            <TextBlock Text="Status"
-                                                       Margin="0,12,0,6"
-                                                       Style="{StaticResource FieldLabelStyle}" />
+                                                    <TextBox x:Name="ProjectNameTextBox"
+                                                             Style="{StaticResource InputStyle}" />
 
-                                            <ComboBox x:Name="ProjectStatusComboBox"
-                                                      Height="38"
-                                                      SelectedIndex="0">
-                                                <ComboBoxItem Content="Planning" />
-                                                <ComboBoxItem Content="Active" />
-                                                <ComboBoxItem Content="On Hold" />
-                                                <ComboBoxItem Content="Completed" />
-                                            </ComboBox>
+                                                    <TextBlock Text="Use a short name that the team can recognize in lists."
+                                                               Style="{StaticResource HelperTextStyle}" />
+                                                </StackPanel>
+                                            </Border>
 
-                                            <TextBlock Text="Due date"
-                                                       Margin="0,12,0,6"
-                                                       Style="{StaticResource FieldLabelStyle}" />
+                                            <Border Style="{StaticResource FormGroupStyle}">
+                                                <StackPanel>
+                                                    <TextBlock Text="Workflow"
+                                                               Style="{StaticResource FormGroupTitleStyle}" />
 
-                                            <DatePicker x:Name="ProjectDueDatePicker"
-                                                        Height="38" />
+                                                    <TextBlock Text="Project lifecycle"
+                                                               Style="{StaticResource HelperTextStyle}" />
+
+                                                    <UniformGrid Columns="2" Margin="0,10,0,4">
+                                                        <Border Style="{StaticResource WorkflowStepStyle}" BorderBrush="#BFDBFE" Background="#EFF6FF" Margin="0,0,6,6">
+                                                            <TextBlock Text="Planning" Style="{StaticResource WorkflowStepTextStyle}" Foreground="#1D4ED8" />
+                                                        </Border>
+                                                        <Border Style="{StaticResource WorkflowStepStyle}" BorderBrush="#BBF7D0" Background="#EAF8F0" Margin="6,0,0,6">
+                                                            <TextBlock Text="Active" Style="{StaticResource WorkflowStepTextStyle}" Foreground="#166534" />
+                                                        </Border>
+                                                        <Border Style="{StaticResource WorkflowStepStyle}" BorderBrush="#FED7AA" Background="#FFF7ED" Margin="0,6,6,0">
+                                                            <TextBlock Text="On Hold" Style="{StaticResource WorkflowStepTextStyle}" Foreground="#9A3412" />
+                                                        </Border>
+                                                        <Border Style="{StaticResource WorkflowStepStyle}" BorderBrush="#DDD6FE" Background="#F5F3FF" Margin="6,6,0,0">
+                                                            <TextBlock Text="Completed" Style="{StaticResource WorkflowStepTextStyle}" Foreground="#6D28D9" />
+                                                        </Border>
+                                                    </UniformGrid>
+
+                                                    <TextBlock Text="Status"
+                                                               Margin="0,14,0,6"
+                                                               Style="{StaticResource FieldLabelStyle}" />
+
+                                                    <ComboBox x:Name="ProjectStatusComboBox"
+                                                              Height="40"
+                                                              SelectedIndex="0">
+                                                        <ComboBoxItem Content="Planning" />
+                                                        <ComboBoxItem Content="Active" />
+                                                        <ComboBoxItem Content="On Hold" />
+                                                        <ComboBoxItem Content="Completed" />
+                                                    </ComboBox>
+
+                                                    <TextBlock Text="Status drives dashboards and project overview lists."
+                                                               Style="{StaticResource HelperTextStyle}" />
+
+                                                    <TextBlock Text="Due date"
+                                                               Margin="0,14,0,6"
+                                                               Style="{StaticResource FieldLabelStyle}" />
+
+                                                    <DatePicker x:Name="ProjectDueDatePicker"
+                                                                Height="40" />
+
+                                                    <TextBlock Text="Optional, but recommended for due-soon tracking."
+                                                               Style="{StaticResource HelperTextStyle}" />
+                                                </StackPanel>
+                                            </Border>
 
                                             <Button x:Name="AddProjectButton"
                                                     Content="Add project"
@@ -696,6 +1039,7 @@
                                                        TextWrapping="Wrap"
                                                        Visibility="Collapsed" />
                                         </StackPanel>
+                                        </ScrollViewer>
                                     </Border>
                                 </Grid>
                             </TabItem>
@@ -806,8 +1150,37 @@
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn Header="Task" Binding="{Binding Title}" Width="*" />
                                                     <DataGridTextColumn Header="Assigned To" Binding="{Binding AssignedEmployee.FullName}" Width="0.9*" />
-                                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="0.8*" />
-                                                    <DataGridTextColumn Header="Priority" Binding="{Binding Priority}" Width="0.75*" />
+                                                    <DataGridTemplateColumn Header="Status" Width="0.8*">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <Border Style="{StaticResource BadgeBorderStyle}"
+                                                                        Background="{Binding Status, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Background}"
+                                                                        BorderBrush="{Binding Status, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Border}">
+                                                                    <TextBlock Text="{Binding Status, Converter={StaticResource StatusBadgeConverter}}"
+                                                                               Foreground="{Binding Status, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Foreground}"
+                                                                               FontSize="12"
+                                                                               FontWeight="SemiBold"
+                                                                               VerticalAlignment="Center" />
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
+                                                    <DataGridTemplateColumn Header="Priority" Width="0.75*">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <Border Style="{StaticResource BadgeBorderStyle}"
+                                                                        Background="{Binding Priority, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Background}"
+                                                                        BorderBrush="{Binding Priority, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Border}">
+                                                                    <TextBlock Text="{Binding Priority, Converter={StaticResource StatusBadgeConverter}}"
+                                                                               Foreground="{Binding Priority, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Foreground}"
+                                                                               FontSize="12"
+                                                                               FontWeight="SemiBold"
+                                                                               VerticalAlignment="Center" />
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
+                                                    <DataGridTextColumn Header="Blocked by" Binding="{Binding BlockedBy}" Width="0.9*" />
                                                     <DataGridTextColumn Header="Due" Binding="{Binding DueDate, StringFormat={}{0:dd.MM.yyyy}}" Width="0.75*" />
                                                 </DataGrid.Columns>
                                             </DataGrid>
@@ -835,53 +1208,100 @@
                                                        TextWrapping="Wrap"
                                                        Foreground="#64748B" />
 
-                                            <TextBlock Text="Task title"
-                                                       Style="{StaticResource FieldLabelStyle}" />
+                                            <Border Style="{StaticResource FormGroupStyle}" Margin="0,0,0,0">
+                                                <StackPanel>
+                                                    <TextBlock Text="Task identity"
+                                                               Style="{StaticResource FormGroupTitleStyle}" />
 
-                                            <TextBox x:Name="TaskTitleTextBox"
-                                                     Style="{StaticResource InputStyle}" />
+                                                    <TextBlock Text="Task title"
+                                                               Margin="0,14,0,6"
+                                                               Style="{StaticResource FieldLabelStyle}" />
 
-                                            <TextBlock Text="Status"
-                                                       Margin="0,12,0,6"
-                                                       Style="{StaticResource FieldLabelStyle}" />
+                                                    <TextBox x:Name="TaskTitleTextBox"
+                                                             Style="{StaticResource InputStyle}" />
 
-                                            <ComboBox x:Name="TaskStatusComboBox"
-                                                      Height="38"
-                                                      SelectedIndex="0">
-                                                <ComboBoxItem Content="To Do" />
-                                                <ComboBoxItem Content="In Progress" />
-                                                <ComboBoxItem Content="Blocked" />
-                                                <ComboBoxItem Content="Done" />
-                                            </ComboBox>
+                                                    <TextBlock Text="Keep it action-oriented so the assignee knows what to do."
+                                                               Style="{StaticResource HelperTextStyle}" />
+                                                </StackPanel>
+                                            </Border>
 
-                                            <TextBlock Text="Priority"
-                                                       Margin="0,12,0,6"
-                                                       Style="{StaticResource FieldLabelStyle}" />
+                                            <Border Style="{StaticResource FormGroupStyle}">
+                                                <StackPanel>
+                                                    <TextBlock Text="Workflow"
+                                                               Style="{StaticResource FormGroupTitleStyle}" />
 
-                                            <ComboBox x:Name="TaskPriorityComboBox"
-                                                      Height="38"
-                                                      SelectedIndex="1">
-                                                <ComboBoxItem Content="Low" />
-                                                <ComboBoxItem Content="Normal" />
-                                                <ComboBoxItem Content="High" />
-                                                <ComboBoxItem Content="Critical" />
-                                            </ComboBox>
+                                                    <TextBlock Text="Status"
+                                                               Margin="0,14,0,6"
+                                                               Style="{StaticResource FieldLabelStyle}" />
 
-                                            <TextBlock Text="Assigned to"
-                                                       Margin="0,12,0,6"
-                                                       Style="{StaticResource FieldLabelStyle}" />
+                                                    <ComboBox x:Name="TaskStatusComboBox"
+                                                              Height="40"
+                                                              SelectedIndex="0">
+                                                        <ComboBoxItem Content="To Do" />
+                                                        <ComboBoxItem Content="In Progress" />
+                                                        <ComboBoxItem Content="Blocked" />
+                                                        <ComboBoxItem Content="Done" />
+                                                    </ComboBox>
 
-                                            <ComboBox x:Name="TaskAssignedEmployeeComboBox"
-                                                      Height="38"
-                                                      DisplayMemberPath="FullName"
-                                                      SelectedValuePath="Id" />
+                                                    <TextBlock Text="Use Blocked when progress needs a manager or customer decision."
+                                                               Style="{StaticResource HelperTextStyle}" />
 
-                                            <TextBlock Text="Due date"
-                                                       Margin="0,12,0,6"
-                                                       Style="{StaticResource FieldLabelStyle}" />
+                                                    <TextBlock Text="Priority"
+                                                               Margin="0,14,0,6"
+                                                               Style="{StaticResource FieldLabelStyle}" />
 
-                                            <DatePicker x:Name="TaskDueDatePicker"
-                                                        Height="38" />
+                                                    <ComboBox x:Name="TaskPriorityComboBox"
+                                                              Height="40"
+                                                              SelectedIndex="1">
+                                                        <ComboBoxItem Content="Low" />
+                                                        <ComboBoxItem Content="Normal" />
+                                                        <ComboBoxItem Content="High" />
+                                                        <ComboBoxItem Content="Critical" />
+                                                    </ComboBox>
+
+                                                    <TextBlock Text="High and Critical tasks stand out in lists and dashboards."
+                                                               Style="{StaticResource HelperTextStyle}" />
+                                                </StackPanel>
+                                            </Border>
+
+                                            <Border Style="{StaticResource FormGroupStyle}">
+                                                <StackPanel>
+                                                    <TextBlock Text="Ownership"
+                                                               Style="{StaticResource FormGroupTitleStyle}" />
+
+                                                    <TextBlock Text="Assigned to"
+                                                               Margin="0,14,0,6"
+                                                               Style="{StaticResource FieldLabelStyle}" />
+
+                                                    <ComboBox x:Name="TaskAssignedEmployeeComboBox"
+                                                              Height="40"
+                                                              DisplayMemberPath="FullName"
+                                                              SelectedValuePath="Id" />
+
+                                                    <TextBlock Text="Optional, but required for staff-specific task views."
+                                                               Style="{StaticResource HelperTextStyle}" />
+
+                                                    <TextBlock Text="Due date"
+                                                               Margin="0,14,0,6"
+                                                               Style="{StaticResource FieldLabelStyle}" />
+
+                                                    <DatePicker x:Name="TaskDueDatePicker"
+                                                                Height="40" />
+
+                                                    <TextBlock Text="Used for overdue and due-soon filtering."
+                                                               Style="{StaticResource HelperTextStyle}" />
+
+                                                    <TextBlock Text="Blocked by / dependency"
+                                                               Margin="0,14,0,6"
+                                                               Style="{StaticResource FieldLabelStyle}" />
+
+                                                    <TextBox x:Name="TaskBlockedByTextBox"
+                                                             Style="{StaticResource InputStyle}" />
+
+                                                    <TextBlock Text="Example: customer approval, API access, contract signoff."
+                                                               Style="{StaticResource HelperTextStyle}" />
+                                                </StackPanel>
+                                            </Border>
 
                                             <Button x:Name="AddTaskButton"
                                                     Content="Add task"
@@ -932,7 +1352,7 @@
                                             <StackPanel>
                                                 <TextBlock Text="Project documents" Style="{StaticResource SectionTitleStyle}" />
 
-                                                <TextBlock Text="Secili project belgeleri veya Staff icin erisilebilir proje belgeleri burada listelenir."
+                                                <TextBlock Text="Analyze project documents with file check, text extraction, and AI review."
                                                            Margin="0,4,0,0"
                                                            FontSize="13"
                                                            TextWrapping="Wrap"
@@ -940,7 +1360,7 @@
 
                                                 <TextBlock x:Name="SelectedProjectForDocumentTextBlock"
                                                            Text="Once Projects sekmesinden bir project sec."
-                                                           Margin="0,10,0,0"
+                                                           Margin="0,12,0,0"
                                                            FontSize="13"
                                                            FontWeight="SemiBold"
                                                            TextWrapping="Wrap"
@@ -961,18 +1381,99 @@
                                                       BorderBrush="#E2E8F0"
                                                       BorderThickness="1">
                                                 <DataGrid.Columns>
-                                                    <DataGridTextColumn Header="File" Binding="{Binding FileName}" Width="*" />
-                                                    <DataGridTextColumn Header="Project" Binding="{Binding Project.Name}" Width="*" />
-                                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="0.75*" />
-                                                    <DataGridTextColumn Header="AI policy" Binding="{Binding AIProcessingPolicy}" Width="1*" />
-                                                    <DataGridTextColumn Header="File check" Binding="{Binding FileCheckStatus}" Width="0.9*" />
-                                                    <DataGridTextColumn Header="Text" Binding="{Binding TextExtractionStatus}" Width="0.9*" />
-                                                    <DataGridTextColumn Header="AI" Binding="{Binding AIAnalysisStatus}" Width="0.8*" />
-                                                    <DataGridTextColumn Header="Provider" Binding="{Binding AIProviderName}" Width="0.85*" />
-                                                    <DataGridTextColumn Header="Risk" Binding="{Binding AIRiskLevel}" Width="0.65*" />
-                                                    <DataGridTextColumn Header="Analyzed" Binding="{Binding AnalyzedAt, StringFormat={}{0:dd.MM.yyyy}}" Width="0.75*" />
-                                                    <DataGridTextColumn Header="Uploaded" Binding="{Binding UploadedAt, StringFormat={}{0:dd.MM.yyyy}}" Width="0.75*" />
-                                                    <DataGridTextColumn Header="By" Binding="{Binding UploadedByEmail}" Width="1*" />
+                                                    <DataGridTextColumn Header="File" Binding="{Binding FileName}" Width="1.6*" />
+                                                    <DataGridTemplateColumn Header="Status" Width="0.95*">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <Border Style="{StaticResource BadgeBorderStyle}"
+                                                                        Background="{Binding Status, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Background}"
+                                                                        BorderBrush="{Binding Status, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Border}">
+                                                                    <TextBlock Text="{Binding Status, Converter={StaticResource StatusBadgeConverter}}"
+                                                                               Foreground="{Binding Status, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Foreground}"
+                                                                               FontSize="12"
+                                                                               FontWeight="SemiBold"
+                                                                               VerticalAlignment="Center" />
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
+                                                    <DataGridTemplateColumn Header="AI policy" Width="1.15*">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <Border Style="{StaticResource BadgeBorderStyle}"
+                                                                        Background="{Binding AIProcessingPolicy, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Background}"
+                                                                        BorderBrush="{Binding AIProcessingPolicy, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Border}">
+                                                                    <TextBlock Text="{Binding AIProcessingPolicy, Converter={StaticResource StatusBadgeConverter}}"
+                                                                               Foreground="{Binding AIProcessingPolicy, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Foreground}"
+                                                                               FontSize="12"
+                                                                               FontWeight="SemiBold"
+                                                                               VerticalAlignment="Center" />
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
+                                                    <DataGridTemplateColumn Header="Check" Width="0.95*">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <Border Style="{StaticResource BadgeBorderStyle}"
+                                                                        Background="{Binding FileCheckStatus, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Background}"
+                                                                        BorderBrush="{Binding FileCheckStatus, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Border}">
+                                                                    <TextBlock Text="{Binding FileCheckStatus, Converter={StaticResource StatusBadgeConverter}}"
+                                                                               Foreground="{Binding FileCheckStatus, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Foreground}"
+                                                                               FontSize="12"
+                                                                               FontWeight="SemiBold"
+                                                                               VerticalAlignment="Center" />
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
+                                                    <DataGridTemplateColumn Header="Text" Width="0.95*">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <Border Style="{StaticResource BadgeBorderStyle}"
+                                                                        Background="{Binding TextExtractionStatus, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Background}"
+                                                                        BorderBrush="{Binding TextExtractionStatus, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Border}">
+                                                                    <TextBlock Text="{Binding TextExtractionStatus, Converter={StaticResource StatusBadgeConverter}}"
+                                                                               Foreground="{Binding TextExtractionStatus, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Foreground}"
+                                                                               FontSize="12"
+                                                                               FontWeight="SemiBold"
+                                                                               VerticalAlignment="Center" />
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
+                                                    <DataGridTemplateColumn Header="AI" Width="0.95*">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <Border Style="{StaticResource BadgeBorderStyle}"
+                                                                        Background="{Binding AIAnalysisStatus, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Background}"
+                                                                        BorderBrush="{Binding AIAnalysisStatus, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Border}">
+                                                                    <TextBlock Text="{Binding AIAnalysisStatus, Converter={StaticResource StatusBadgeConverter}}"
+                                                                               Foreground="{Binding AIAnalysisStatus, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Foreground}"
+                                                                               FontSize="12"
+                                                                               FontWeight="SemiBold"
+                                                                               VerticalAlignment="Center" />
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
+                                                    <DataGridTextColumn Header="Provider" Binding="{Binding AIProviderName}" Width="0.8*" />
+                                                    <DataGridTemplateColumn Header="Risk" Width="0.75*">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <Border Style="{StaticResource BadgeBorderStyle}"
+                                                                        Background="{Binding AIRiskLevel, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Background}"
+                                                                        BorderBrush="{Binding AIRiskLevel, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Border}">
+                                                                    <TextBlock Text="{Binding AIRiskLevel, Converter={StaticResource StatusBadgeConverter}}"
+                                                                               Foreground="{Binding AIRiskLevel, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Foreground}"
+                                                                               FontSize="12"
+                                                                               FontWeight="SemiBold"
+                                                                               VerticalAlignment="Center" />
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
+                                                    <DataGridTextColumn Header="Analyzed" Binding="{Binding AnalyzedAt, StringFormat={}{0:dd.MM.yyyy}}" Width="0.85*" />
                                                 </DataGrid.Columns>
                                             </DataGrid>
 
@@ -1015,48 +1516,89 @@
                                                            TextWrapping="Wrap"
                                                            Foreground="#64748B" />
 
-                                                <TextBlock Text="File name" Style="{StaticResource FieldLabelStyle}" />
-                                                <TextBox x:Name="DocumentFileNameTextBox" Style="{StaticResource InputStyle}" />
+                                                <Border Style="{StaticResource FormGroupStyle}" Margin="0,0,0,0">
+                                                    <StackPanel>
+                                                        <TextBlock Text="File"
+                                                                   Style="{StaticResource FormGroupTitleStyle}" />
 
-                                                <TextBlock Text="File path" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
-                                                <TextBox x:Name="DocumentFilePathTextBox" Style="{StaticResource InputStyle}" />
+                                                        <TextBlock Text="File name" Margin="0,14,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                        <TextBox x:Name="DocumentFileNameTextBox" Style="{StaticResource InputStyle}" />
 
-                                                <TextBlock Text="Status" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
-                                                <ComboBox x:Name="DocumentStatusComboBox"
-                                                          Height="38"
-                                                          SelectedIndex="0">
-                                                    <ComboBoxItem Content="Uploaded" />
-                                                    <ComboBoxItem Content="In Review" />
-                                                    <ComboBoxItem Content="Approved" />
-                                                    <ComboBoxItem Content="Needs Update" />
-                                                </ComboBox>
+                                                        <TextBlock Text="Shown in the document list; keep the extension visible."
+                                                                   Style="{StaticResource HelperTextStyle}" />
 
-                                                <TextBlock Text="AI processing policy" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
-                                                <ComboBox x:Name="DocumentAIProcessingPolicyComboBox"
-                                                          Height="38"
-                                                          SelectedIndex="0"
-                                                          SelectionChanged="DocumentAIProcessingPolicyComboBox_SelectionChanged">
-                                                    <ComboBoxItem Content="Internal Only" />
-                                                    <ComboBoxItem Content="External AI Allowed" />
-                                                    <ComboBoxItem Content="Needs Approval" />
-                                                    <ComboBoxItem Content="Blocked" />
-                                                </ComboBox>
+                                                        <TextBlock Text="File path" Margin="0,14,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                        <TextBox x:Name="DocumentFilePathTextBox" Style="{StaticResource InputStyle}" />
 
-                                                <TextBlock x:Name="DocumentAIProcessingPolicyDescriptionTextBlock"
-                                                           Margin="0,6,0,0"
-                                                           FontSize="12"
-                                                           TextWrapping="Wrap"
-                                                           Foreground="#64748B"
-                                                           Text="Belge sadece internal analizde tutulur; dis AI servisine gonderilmez." />
+                                                        <TextBlock Text="The app checks this path before extracting text."
+                                                                   Style="{StaticResource HelperTextStyle}" />
+                                                    </StackPanel>
+                                                </Border>
 
-                                                <TextBlock Text="Notes" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
-                                                <TextBox x:Name="DocumentNotesTextBox"
-                                                         Height="84"
-                                                         Padding="10,8"
-                                                         TextWrapping="Wrap"
-                                                         AcceptsReturn="True"
-                                                         BorderBrush="#CBD5E1"
-                                                         BorderThickness="1" />
+                                                <Border Style="{StaticResource FormGroupStyle}">
+                                                    <StackPanel>
+                                                        <TextBlock Text="Review settings"
+                                                                   Style="{StaticResource FormGroupTitleStyle}" />
+
+                                                        <TextBlock Text="Approval and AI flow"
+                                                                   Style="{StaticResource HelperTextStyle}" />
+
+                                                        <StackPanel Margin="0,10,0,4" Orientation="Horizontal">
+                                                            <Border Style="{StaticResource WorkflowStepStyle}" BorderBrush="#BFDBFE" Background="#EFF6FF">
+                                                                <TextBlock Text="Uploaded" Style="{StaticResource WorkflowStepTextStyle}" Foreground="#1D4ED8" />
+                                                            </Border>
+                                                            <TextBlock Style="{StaticResource WorkflowArrowStyle}" />
+                                                            <Border Style="{StaticResource WorkflowStepStyle}" BorderBrush="#FED7AA" Background="#FFF7ED">
+                                                                <TextBlock Text="Review" Style="{StaticResource WorkflowStepTextStyle}" Foreground="#9A3412" />
+                                                            </Border>
+                                                            <TextBlock Style="{StaticResource WorkflowArrowStyle}" />
+                                                            <Border Style="{StaticResource WorkflowStepStyle}" BorderBrush="#DDD6FE" Background="#F5F3FF">
+                                                                <TextBlock Text="AI policy" Style="{StaticResource WorkflowStepTextStyle}" Foreground="#6D28D9" />
+                                                            </Border>
+                                                            <TextBlock Style="{StaticResource WorkflowArrowStyle}" />
+                                                            <Border Style="{StaticResource WorkflowStepStyle}" BorderBrush="#BBF7D0" Background="#EAF8F0">
+                                                                <TextBlock Text="Approved" Style="{StaticResource WorkflowStepTextStyle}" Foreground="#166534" />
+                                                            </Border>
+                                                        </StackPanel>
+
+                                                        <TextBlock Text="Status" Margin="0,14,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                        <ComboBox x:Name="DocumentStatusComboBox"
+                                                                  Height="40"
+                                                                  SelectedIndex="0">
+                                                            <ComboBoxItem Content="Uploaded" />
+                                                            <ComboBoxItem Content="In Review" />
+                                                            <ComboBoxItem Content="Approved" />
+                                                            <ComboBoxItem Content="Needs Update" />
+                                                        </ComboBox>
+
+                                                        <TextBlock Text="Use Needs Update when the document must be revised."
+                                                                   Style="{StaticResource HelperTextStyle}" />
+
+                                                        <TextBlock Text="AI processing policy" Margin="0,14,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                        <ComboBox x:Name="DocumentAIProcessingPolicyComboBox"
+                                                                  Height="40"
+                                                                  SelectedIndex="0"
+                                                                  SelectionChanged="DocumentAIProcessingPolicyComboBox_SelectionChanged">
+                                                            <ComboBoxItem Content="Internal Only" />
+                                                            <ComboBoxItem Content="External AI Allowed" />
+                                                            <ComboBoxItem Content="Needs Approval" />
+                                                            <ComboBoxItem Content="Blocked" />
+                                                        </ComboBox>
+
+                                                        <TextBlock x:Name="DocumentAIProcessingPolicyDescriptionTextBlock"
+                                                                   Style="{StaticResource HelperTextStyle}"
+                                                                   Text="Belge sadece internal analizde tutulur; dis AI servisine gonderilmez." />
+
+                                                        <TextBlock Text="Notes" Margin="0,14,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                        <TextBox x:Name="DocumentNotesTextBox"
+                                                                 Height="84"
+                                                                 Padding="10,8"
+                                                                 TextWrapping="Wrap"
+                                                                 AcceptsReturn="True"
+                                                                 BorderBrush="#CBD5E1"
+                                                                 BorderThickness="1" />
+                                                    </StackPanel>
+                                                </Border>
 
                                                 <Border Padding="12"
                                                         Margin="0,14,0,0"
@@ -1307,7 +1849,21 @@
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn Header="Name" Binding="{Binding FullName}" Width="*" />
                                                     <DataGridTextColumn Header="Dept" Binding="{Binding Department}" Width="0.75*" />
-                                                    <DataGridTextColumn Header="Status" Binding="{Binding AvailabilityStatus}" Width="0.85*" />
+                                                    <DataGridTemplateColumn Header="Status" Width="0.85*">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <Border Style="{StaticResource BadgeBorderStyle}"
+                                                                        Background="{Binding AvailabilityStatus, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Background}"
+                                                                        BorderBrush="{Binding AvailabilityStatus, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Border}">
+                                                                    <TextBlock Text="{Binding AvailabilityStatus, Converter={StaticResource StatusBadgeConverter}}"
+                                                                               Foreground="{Binding AvailabilityStatus, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Foreground}"
+                                                                               FontSize="12"
+                                                                               FontWeight="SemiBold"
+                                                                               VerticalAlignment="Center" />
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
                                                     <DataGridTextColumn Header="Open" Binding="{Binding OpenTaskCount}" Width="0.45*" />
                                                     <DataGridTextColumn Header="Next due" Binding="{Binding NextOpenTaskDueDate, StringFormat={}{0:dd.MM.yyyy}}" Width="0.7*" />
                                                     <DataGridTextColumn Header="Backup" Binding="{Binding BackupEmployeeName}" Width="0.9*" />
@@ -1358,57 +1914,87 @@
                                                                Foreground="#1E3A8A" />
                                                 </Border>
 
-                                                <TextBlock Text="Full name" Style="{StaticResource FieldLabelStyle}" />
-                                                <TextBox x:Name="EmployeeFullNameTextBox" Style="{StaticResource InputStyle}" />
+                                                <Border Style="{StaticResource FormGroupStyle}" Margin="0,0,0,0">
+                                                    <StackPanel>
+                                                        <TextBlock Text="Profile"
+                                                                   Style="{StaticResource FormGroupTitleStyle}" />
 
-                                                <TextBlock Text="Email" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
-                                                <TextBox x:Name="EmployeeEmailTextBox" Style="{StaticResource InputStyle}" />
+                                                        <TextBlock Text="Full name" Margin="0,14,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                        <TextBox x:Name="EmployeeFullNameTextBox" Style="{StaticResource InputStyle}" />
 
-                                                <TextBlock Text="Department" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
-                                                <TextBox x:Name="EmployeeDepartmentTextBox" Style="{StaticResource InputStyle}" />
+                                                        <TextBlock Text="Email" Margin="0,14,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                        <TextBox x:Name="EmployeeEmailTextBox" Style="{StaticResource InputStyle}" />
 
-                                                <TextBlock Text="Role" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
-                                                <TextBox x:Name="EmployeeRoleTextBox" Style="{StaticResource InputStyle}" />
-
-                                                <TextBlock Text="Availability" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
-                                                <ComboBox x:Name="EmployeeAvailabilityComboBox"
-                                                          Height="38"
-                                                          SelectedIndex="0">
-                                                    <ComboBoxItem Content="Available" />
-                                                    <ComboBoxItem Content="Busy" />
-                                                    <ComboBoxItem Content="On Leave" />
-                                                    <ComboBoxItem Content="Emergency Cover" />
-                                                </ComboBox>
-
-                                                <Grid Margin="0,12,0,0">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="10" />
-                                                        <ColumnDefinition Width="*" />
-                                                    </Grid.ColumnDefinitions>
-
-                                                    <StackPanel Grid.Column="0">
-                                                        <TextBlock Text="Leave start" Style="{StaticResource FieldLabelStyle}" />
-                                                        <DatePicker x:Name="EmployeeLeaveStartDatePicker" Height="38" />
+                                                        <TextBlock Text="Used for sign-in links and assignment context."
+                                                                   Style="{StaticResource HelperTextStyle}" />
                                                     </StackPanel>
+                                                </Border>
 
-                                                    <StackPanel Grid.Column="2">
-                                                        <TextBlock Text="Leave end" Style="{StaticResource FieldLabelStyle}" />
-                                                        <DatePicker x:Name="EmployeeLeaveEndDatePicker" Height="38" />
+                                                <Border Style="{StaticResource FormGroupStyle}">
+                                                    <StackPanel>
+                                                        <TextBlock Text="Role and capacity"
+                                                                   Style="{StaticResource FormGroupTitleStyle}" />
+
+                                                        <TextBlock Text="Department" Margin="0,14,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                        <TextBox x:Name="EmployeeDepartmentTextBox" Style="{StaticResource InputStyle}" />
+
+                                                        <TextBlock Text="Role" Margin="0,14,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                        <TextBox x:Name="EmployeeRoleTextBox" Style="{StaticResource InputStyle}" />
+
+                                                        <TextBlock Text="Availability" Margin="0,14,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                        <ComboBox x:Name="EmployeeAvailabilityComboBox"
+                                                                  Height="40"
+                                                                  SelectedIndex="0">
+                                                            <ComboBoxItem Content="Available" />
+                                                            <ComboBoxItem Content="Busy" />
+                                                            <ComboBoxItem Content="On Leave" />
+                                                            <ComboBoxItem Content="Emergency Cover" />
+                                                        </ComboBox>
+
+                                                        <TextBlock Text="Availability affects workload warnings and coverage planning."
+                                                                   Style="{StaticResource HelperTextStyle}" />
                                                     </StackPanel>
-                                                </Grid>
+                                                </Border>
 
-                                                <TextBlock Text="Skills / notes" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
-                                                <TextBox x:Name="EmployeeSkillsTextBox"
-                                                         Height="70"
-                                                         Padding="10,8"
-                                                         TextWrapping="Wrap"
-                                                         AcceptsReturn="True"
-                                                         BorderBrush="#CBD5E1"
-                                                         BorderThickness="1" />
+                                                <Border Style="{StaticResource FormGroupStyle}">
+                                                    <StackPanel>
+                                                        <TextBlock Text="Coverage"
+                                                                   Style="{StaticResource FormGroupTitleStyle}" />
 
-                                                <TextBlock Text="Emergency backup" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
-                                                <TextBox x:Name="EmployeeBackupTextBox" Style="{StaticResource InputStyle}" />
+                                                        <Grid Margin="0,14,0,0">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="10" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <StackPanel Grid.Column="0">
+                                                                <TextBlock Text="Leave start" Style="{StaticResource FieldLabelStyle}" />
+                                                                <DatePicker x:Name="EmployeeLeaveStartDatePicker" Height="40" />
+                                                            </StackPanel>
+
+                                                            <StackPanel Grid.Column="2">
+                                                                <TextBlock Text="Leave end" Style="{StaticResource FieldLabelStyle}" />
+                                                                <DatePicker x:Name="EmployeeLeaveEndDatePicker" Height="40" />
+                                                            </StackPanel>
+                                                        </Grid>
+
+                                                        <TextBlock Text="Skills / notes" Margin="0,14,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                        <TextBox x:Name="EmployeeSkillsTextBox"
+                                                                 Height="70"
+                                                                 Padding="10,8"
+                                                                 TextWrapping="Wrap"
+                                                                 AcceptsReturn="True"
+                                                                 BorderBrush="#CBD5E1"
+                                                                 BorderThickness="1" />
+
+                                                        <TextBlock Text="Emergency backup" Margin="0,14,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                        <TextBox x:Name="EmployeeBackupTextBox" Style="{StaticResource InputStyle}" />
+
+                                                        <TextBlock Text="Backup is shown when coverage may be needed."
+                                                                   Style="{StaticResource HelperTextStyle}" />
+                                                    </StackPanel>
+                                                </Border>
 
                                                 <Button x:Name="AddEmployeeButton"
                                                         Content="Add employee"
@@ -1518,41 +2104,74 @@
                                                            TextWrapping="Wrap"
                                                            Foreground="#64748B" />
 
-                                                <TextBlock Text="Email" Style="{StaticResource FieldLabelStyle}" />
-                                                <TextBox x:Name="UserEmailTextBox" Style="{StaticResource InputStyle}" />
+                                                <Border Style="{StaticResource FormGroupStyle}" Margin="0,0,0,0">
+                                                    <StackPanel>
+                                                        <TextBlock Text="Account"
+                                                                   Style="{StaticResource FormGroupTitleStyle}" />
 
-                                                <TextBlock Text="Role" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
-                                                <ComboBox x:Name="UserRoleComboBox"
-                                                          Height="38"
-                                                          SelectedIndex="2">
-                                                    <ComboBoxItem Content="Admin" />
-                                                    <ComboBoxItem Content="Manager" />
-                                                    <ComboBoxItem Content="Staff" />
-                                                </ComboBox>
+                                                        <TextBlock Text="Email" Margin="0,14,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                        <TextBox x:Name="UserEmailTextBox" Style="{StaticResource InputStyle}" />
 
-                                                <TextBlock Text="Employee link" Margin="0,12,0,6" Style="{StaticResource FieldLabelStyle}" />
-                                                <ComboBox x:Name="UserEmployeeComboBox"
-                                                          Height="38"
-                                                          DisplayMemberPath="FullName"
-                                                          SelectedValuePath="Id" />
+                                                        <TextBlock Text="This is the sign-in email and must be unique."
+                                                                   Style="{StaticResource HelperTextStyle}" />
 
-                                                <CheckBox x:Name="UserIsActiveCheckBox"
-                                                          Content="Active user"
-                                                          Margin="0,14,0,0"
-                                                          IsChecked="True"
-                                                          FontWeight="SemiBold"
-                                                          Foreground="#334155" />
+                                                        <CheckBox x:Name="UserIsActiveCheckBox"
+                                                                  Content="Active user"
+                                                                  Margin="0,14,0,0"
+                                                                  IsChecked="True"
+                                                                  FontWeight="SemiBold"
+                                                                  Foreground="#334155" />
+                                                    </StackPanel>
+                                                </Border>
 
-                                                <TextBlock Text="Password / reset"
-                                                           Margin="0,14,0,6"
-                                                           Style="{StaticResource FieldLabelStyle}" />
+                                                <Border Style="{StaticResource FormGroupStyle}">
+                                                    <StackPanel>
+                                                        <TextBlock Text="Access"
+                                                                   Style="{StaticResource FormGroupTitleStyle}" />
 
-                                                <PasswordBox x:Name="NewUserPasswordBox"
-                                                             Height="38"
-                                                             Padding="12,0"
-                                                             VerticalContentAlignment="Center"
-                                                             BorderBrush="#CBD5E1"
-                                                             BorderThickness="1" />
+                                                        <TextBlock Text="Role" Margin="0,14,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                        <ComboBox x:Name="UserRoleComboBox"
+                                                                  Height="40"
+                                                                  SelectedIndex="2">
+                                                            <ComboBoxItem Content="Admin" />
+                                                            <ComboBoxItem Content="Manager" />
+                                                            <ComboBoxItem Content="Staff" />
+                                                        </ComboBox>
+
+                                                        <TextBlock Text="Role controls which tabs and actions are available."
+                                                                   Style="{StaticResource HelperTextStyle}" />
+
+                                                        <TextBlock Text="Employee link" Margin="0,14,0,6" Style="{StaticResource FieldLabelStyle}" />
+                                                        <ComboBox x:Name="UserEmployeeComboBox"
+                                                                  Height="40"
+                                                                  DisplayMemberPath="FullName"
+                                                                  SelectedValuePath="Id" />
+
+                                                        <TextBlock Text="Optional for Admin/Manager, useful for Staff task filtering."
+                                                                   Style="{StaticResource HelperTextStyle}" />
+                                                    </StackPanel>
+                                                </Border>
+
+                                                <Border Style="{StaticResource FormGroupStyle}">
+                                                    <StackPanel>
+                                                        <TextBlock Text="Password"
+                                                                   Style="{StaticResource FormGroupTitleStyle}" />
+
+                                                        <TextBlock Text="Password / reset"
+                                                                   Margin="0,14,0,6"
+                                                                   Style="{StaticResource FieldLabelStyle}" />
+
+                                                        <PasswordBox x:Name="NewUserPasswordBox"
+                                                                     Height="40"
+                                                                     Padding="12,0"
+                                                                     VerticalContentAlignment="Center"
+                                                                     BorderBrush="#CBD5E1"
+                                                                     BorderThickness="1" />
+
+                                                        <TextBlock Text="Required for new users; used as reset value for existing users."
+                                                                   Style="{StaticResource HelperTextStyle}" />
+                                                    </StackPanel>
+                                                </Border>
 
                                                 <Button x:Name="AddUserButton"
                                                         Content="Add user"
@@ -1640,7 +2259,21 @@
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Project" Binding="{Binding Name}" Width="*" />
                                         <DataGridTextColumn Header="Customer" Binding="{Binding Customer.CompanyName}" Width="*" />
-                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="0.8*" />
+                                        <DataGridTemplateColumn Header="Status" Width="0.8*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Border Style="{StaticResource BadgeBorderStyle}"
+                                                            Background="{Binding Status, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Background}"
+                                                            BorderBrush="{Binding Status, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Border}">
+                                                        <TextBlock Text="{Binding Status, Converter={StaticResource StatusBadgeConverter}}"
+                                                                   Foreground="{Binding Status, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Foreground}"
+                                                                   FontSize="12"
+                                                                   FontWeight="SemiBold"
+                                                                   VerticalAlignment="Center" />
+                                                    </Border>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
                                         <DataGridTextColumn Header="Due" Binding="{Binding DueDate, StringFormat={}{0:dd.MM.yyyy}}" Width="0.8*" />
                                     </DataGrid.Columns>
                                 </DataGrid>

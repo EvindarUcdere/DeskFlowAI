@@ -871,6 +871,8 @@
                                     </Grid.ColumnDefinitions>
 
                                     <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                                      VerticalScrollBarVisibility="Auto">
                                         <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
@@ -907,12 +909,14 @@
                                                       SelectionChanged="ProjectsDataGrid_SelectionChanged"
                                                       HeadersVisibility="Column"
                                                       GridLinesVisibility="Horizontal"
+                                                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
                                                       BorderBrush="#E2E8F0"
                                                       BorderThickness="1">
                                                 <DataGrid.Columns>
-                                                    <DataGridTextColumn Header="Project" Binding="{Binding Name}" Width="*" />
-                                                    <DataGridTextColumn Header="Customer" Binding="{Binding Customer.CompanyName}" Width="*" />
-                                                    <DataGridTemplateColumn Header="Status" Width="0.8*">
+                                                    <DataGridTextColumn Header="Project" Binding="{Binding Name}" Width="220" />
+                                                    <DataGridTextColumn Header="Customer" Binding="{Binding Customer.CompanyName}" Width="180" />
+                                                    <DataGridTemplateColumn Header="Status" Width="130">
                                                         <DataGridTemplateColumn.CellTemplate>
                                                             <DataTemplate>
                                                                 <Border Style="{StaticResource BadgeBorderStyle}"
@@ -927,7 +931,7 @@
                                                             </DataTemplate>
                                                         </DataGridTemplateColumn.CellTemplate>
                                                     </DataGridTemplateColumn>
-                                                    <DataGridTextColumn Header="Due" Binding="{Binding DueDate, StringFormat={}{0:dd.MM.yyyy}}" Width="0.75*" />
+                                                    <DataGridTextColumn Header="Due" Binding="{Binding DueDate, StringFormat={}{0:dd.MM.yyyy}}" Width="110" />
                                                 </DataGrid.Columns>
                                             </DataGrid>
 
@@ -939,6 +943,7 @@
                                                        Foreground="#64748B"
                                                        Visibility="Collapsed" />
                                         </Grid>
+                                        </ScrollViewer>
                                     </Border>
 
                                     <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Margin="0">
@@ -1032,6 +1037,94 @@
                                                     Style="{StaticResource SecondaryButtonStyle}"
                                                     IsEnabled="False"
                                                     Click="UpdateProjectStatusButton_Click" />
+
+                                            <Border Style="{StaticResource FormGroupStyle}" Margin="0,18,0,0">
+                                                <StackPanel>
+                                                    <TextBlock Text="Activity timeline"
+                                                               Style="{StaticResource FormGroupTitleStyle}" />
+
+                                                    <TextBlock Text="Secili proje icin task, belge ve AI aktivitesi."
+                                                               Style="{StaticResource HelperTextStyle}" />
+
+                                                    <ItemsControl x:Name="ProjectTimelineItemsControl"
+                                                                  Margin="0,12,0,0">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Grid Margin="0,0,0,12">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="18" />
+                                                                        <ColumnDefinition Width="*" />
+                                                                    </Grid.ColumnDefinitions>
+
+                                                                    <Grid Grid.Column="0">
+                                                                        <Border Width="2"
+                                                                                Margin="8,12,0,-18"
+                                                                                HorizontalAlignment="Left"
+                                                                                Background="#E2E8F0" />
+                                                                        <Ellipse Width="10"
+                                                                                 Height="10"
+                                                                                 Margin="4,8,0,0"
+                                                                                 HorizontalAlignment="Left"
+                                                                                 VerticalAlignment="Top"
+                                                                                 Fill="#2563EB" />
+                                                                    </Grid>
+
+                                                                    <Border Grid.Column="1"
+                                                                            Background="White"
+                                                                            BorderBrush="#E2E8F0"
+                                                                            BorderThickness="1"
+                                                                            CornerRadius="8"
+                                                                            Padding="10">
+                                                                        <StackPanel>
+                                                                            <DockPanel LastChildFill="True">
+                                                                                <TextBlock Text="{Binding TimeText}"
+                                                                                           DockPanel.Dock="Right"
+                                                                                           Margin="10,0,0,0"
+                                                                                           FontSize="11"
+                                                                                           Foreground="#94A3B8" />
+                                                                                <StackPanel Orientation="Horizontal">
+                                                                                    <Border Style="{StaticResource BadgeBorderStyle}"
+                                                                                            Background="{Binding Action, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Background}"
+                                                                                            BorderBrush="{Binding Action, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Border}">
+                                                                                        <TextBlock Text="{Binding Action}"
+                                                                                                   Foreground="{Binding Action, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Foreground}"
+                                                                                                   FontSize="11"
+                                                                                                   FontWeight="SemiBold" />
+                                                                                    </Border>
+
+                                                                                    <TextBlock Text="{Binding EntityName}"
+                                                                                               Margin="8,2,0,0"
+                                                                                               FontSize="12"
+                                                                                               FontWeight="SemiBold"
+                                                                                               Foreground="#334155" />
+                                                                                </StackPanel>
+                                                                            </DockPanel>
+
+                                                                            <TextBlock Text="{Binding Details}"
+                                                                                       Margin="0,8,0,0"
+                                                                                       FontSize="12"
+                                                                                       TextWrapping="Wrap"
+                                                                                       Foreground="#475569" />
+
+                                                                            <TextBlock Text="{Binding ActorEmail}"
+                                                                                       Margin="0,6,0,0"
+                                                                                       FontSize="11"
+                                                                                       Foreground="#64748B" />
+                                                                        </StackPanel>
+                                                                    </Border>
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+
+                                                    <TextBlock x:Name="ProjectTimelineEmptyTextBlock"
+                                                               Text="Bu proje icin henuz timeline aktivitesi yok."
+                                                               Margin="0,10,0,0"
+                                                               FontSize="12"
+                                                               Foreground="#64748B"
+                                                               Visibility="Visible" />
+                                                </StackPanel>
+                                            </Border>
 
                                             <TextBlock x:Name="ProjectFormMessageTextBlock"
                                                        Margin="0,12,0,0"
@@ -1145,13 +1238,15 @@
                                                       SelectionChanged="TasksDataGrid_SelectionChanged"
                                                       HeadersVisibility="Column"
                                                       GridLinesVisibility="Horizontal"
+                                                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
                                                       BorderBrush="#E2E8F0"
                                                       BorderThickness="1"
                                                       RowStyle="{StaticResource OverdueTaskRowStyle}">
                                                 <DataGrid.Columns>
-                                                    <DataGridTextColumn Header="Task" Binding="{Binding Title}" Width="*" />
-                                                    <DataGridTextColumn Header="Assigned To" Binding="{Binding AssignedEmployee.FullName}" Width="0.9*" />
-                                                    <DataGridTemplateColumn Header="Status" Width="0.8*">
+                                                    <DataGridTextColumn Header="Task" Binding="{Binding Title}" Width="190" />
+                                                    <DataGridTextColumn Header="Assigned To" Binding="{Binding AssignedEmployee.FullName}" Width="140" />
+                                                    <DataGridTemplateColumn Header="Status" Width="120">
                                                         <DataGridTemplateColumn.CellTemplate>
                                                             <DataTemplate>
                                                                 <Border Style="{StaticResource BadgeBorderStyle}"
@@ -1166,7 +1261,7 @@
                                                             </DataTemplate>
                                                         </DataGridTemplateColumn.CellTemplate>
                                                     </DataGridTemplateColumn>
-                                                    <DataGridTemplateColumn Header="Priority" Width="0.75*">
+                                                    <DataGridTemplateColumn Header="Priority" Width="110">
                                                         <DataGridTemplateColumn.CellTemplate>
                                                             <DataTemplate>
                                                                 <Border Style="{StaticResource BadgeBorderStyle}"
@@ -1181,8 +1276,8 @@
                                                             </DataTemplate>
                                                         </DataGridTemplateColumn.CellTemplate>
                                                     </DataGridTemplateColumn>
-                                                    <DataGridTextColumn Header="Blocked by" Binding="{Binding BlockedBy}" Width="0.9*" />
-                                                    <DataGridTextColumn Header="Due" Binding="{Binding DueDate, StringFormat={}{0:dd.MM.yyyy}}" Width="0.75*" />
+                                                    <DataGridTextColumn Header="Blocked by" Binding="{Binding BlockedBy}" Width="150" />
+                                                    <DataGridTextColumn Header="Due" Binding="{Binding DueDate, StringFormat={}{0:dd.MM.yyyy}}" Width="110" />
                                                 </DataGrid.Columns>
                                             </DataGrid>
 
@@ -1197,6 +1292,8 @@
                                     </Border>
 
                                     <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                                      HorizontalScrollBarVisibility="Disabled">
                                         <StackPanel>
                                             <TextBlock x:Name="TaskDetailsTitleTextBlock"
                                                        Text="Task details"
@@ -1331,6 +1428,7 @@
                                                        TextWrapping="Wrap"
                                                        Visibility="Collapsed" />
                                         </StackPanel>
+                                        </ScrollViewer>
                                     </Border>
                                 </Grid>
                             </TabItem>

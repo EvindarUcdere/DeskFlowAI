@@ -30,6 +30,7 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<WorkProject> _allProjects = [];
     private readonly ObservableCollection<WorkProject> _dueSoonProjects = [];
     private readonly ObservableCollection<AuditLogEntry> _auditLogs = [];
+    private readonly ObservableCollection<ProjectTimelineEntry> _projectTimelineEntries = [];
     private readonly ObservableCollection<WorkTask> _kanbanToDoTasks = [];
     private readonly ObservableCollection<WorkTask> _kanbanInProgressTasks = [];
     private readonly ObservableCollection<WorkTask> _kanbanReviewTasks = [];
@@ -53,6 +54,7 @@ public partial class MainWindow : Window
         LoadAuditLogs();
         ProjectsDataGrid.ItemsSource = _projects;
         TasksDataGrid.ItemsSource = _tasks;
+        ProjectTimelineItemsControl.ItemsSource = _projectTimelineEntries;
         KanbanToDoListBox.ItemsSource = _kanbanToDoTasks;
         KanbanInProgressListBox.ItemsSource = _kanbanInProgressTasks;
         KanbanReviewListBox.ItemsSource = _kanbanReviewTasks;
@@ -1211,6 +1213,7 @@ public partial class MainWindow : Window
 
         AuditLogEntry entry = _auditLogService.CreateEntry(_currentUser, action, entityName, details);
         _auditLogs.Insert(0, entry);
+        RefreshProjectTimeline();
     }
 
     private static string BuildCustomerChangeDetails(Customer oldCustomer, Customer newCustomer)
@@ -1368,11 +1371,13 @@ public partial class MainWindow : Window
         DocumentsDataGrid.SelectedItem = null;
         _tasks.Clear();
         RefreshKanbanBoard([]);
+        RefreshProjectTimeline();
         _documents.Clear();
         SelectedProjectForTaskTextBlock.Text = "Once Projects sekmesinden bir project sec.";
         SelectedProjectForBoardTextBlock.Text = "Once Projects sekmesinden bir project sec.";
         TasksEmptyTextBlock.Visibility = Visibility.Collapsed;
         KanbanEmptyTextBlock.Visibility = Visibility.Collapsed;
+        ProjectTimelineEmptyTextBlock.Visibility = Visibility.Visible;
         SelectedProjectForDocumentTextBlock.Text = "Once Projects sekmesinden bir project sec.";
         DocumentsEmptyTextBlock.Visibility = Visibility.Collapsed;
         UpdateProjectActionState();
@@ -1429,9 +1434,58 @@ public partial class MainWindow : Window
         ProjectNameTextBox.Text = project.Name;
         SelectProjectStatus(project.Status);
         ProjectDueDatePicker.SelectedDate = project.DueDate;
+        RefreshProjectTimeline();
         LoadTasksForSelectedProject();
         LoadDocumentsForCurrentContext();
         UpdateProjectActionState();
+    }
+
+    private void RefreshProjectTimeline()
+    {
+        _projectTimelineEntries.Clear();
+
+        if (_selectedProject is null)
+        {
+            ProjectTimelineEmptyTextBlock.Visibility = Visibility.Visible;
+            return;
+        }
+
+        HashSet<string> projectSignals = new(StringComparer.OrdinalIgnoreCase)
+        {
+            _selectedProject.Name
+        };
+
+        foreach (WorkTask task in _taskService.GetTasksForProject(_selectedProject.Id))
+        {
+            projectSignals.Add(task.Title);
+        }
+
+        foreach (ProjectDocument document in _documentService.GetDocumentsForProject(_selectedProject.Id))
+        {
+            projectSignals.Add(document.FileName);
+        }
+
+        foreach (AuditLogEntry auditLog in _auditLogs
+            .Where(entry => ProjectTimelineMatches(entry, projectSignals))
+            .Take(8))
+        {
+            _projectTimelineEntries.Add(new ProjectTimelineEntry(
+                auditLog.OccurredAt.ToString("dd.MM.yyyy HH:mm"),
+                auditLog.ActorEmail,
+                auditLog.Action,
+                auditLog.EntityName,
+                auditLog.Details));
+        }
+
+        ProjectTimelineEmptyTextBlock.Visibility = _projectTimelineEntries.Count == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    private static bool ProjectTimelineMatches(AuditLogEntry auditLog, IEnumerable<string> projectSignals)
+    {
+        return projectSignals.Any(signal => !string.IsNullOrWhiteSpace(signal)
+            && auditLog.Details.Contains(signal, StringComparison.OrdinalIgnoreCase));
     }
 
     private void LoadTasksForCurrentContext(int? taskIdToSelect = null, bool selectFirstTask = false)

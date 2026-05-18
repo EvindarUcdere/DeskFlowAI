@@ -21,6 +21,7 @@ public partial class MainWindow : Window
     private readonly DemoUserAccountService _userAccountService = new();
     private readonly DemoAuditLogService _auditLogService = new();
     private readonly DemoProjectCommunicationService _projectCommunicationService = new();
+    private readonly DemoOverviewService _overviewService = new();
     private readonly ObservableCollection<Customer> _customers = [];
     private readonly ObservableCollection<Customer> _filteredCustomers = [];
     private readonly ObservableCollection<WorkProject> _projects = [];
@@ -34,6 +35,10 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<DashboardNotification> _dashboardNotifications = [];
     private readonly ObservableCollection<ProjectTimelineEntry> _projectTimelineEntries = [];
     private readonly ObservableCollection<ProjectTeamMemberSummary> _projectTeamMembers = [];
+    private readonly ObservableCollection<OverviewWorkloadItem> _overviewWorkloadItems = [];
+    private readonly ObservableCollection<OverviewHeatmapItem> _overviewHeatmapItems = [];
+    private readonly ObservableCollection<OverviewProductivityItem> _overviewProductivityItems = [];
+    private readonly ObservableCollection<OverviewAIMetricItem> _overviewAIMetricItems = [];
     private readonly ObservableCollection<WorkTask> _kanbanToDoTasks = [];
     private readonly ObservableCollection<WorkTask> _kanbanInProgressTasks = [];
     private readonly ObservableCollection<WorkTask> _kanbanReviewTasks = [];
@@ -72,6 +77,10 @@ public partial class MainWindow : Window
         TaskAssignedEmployeeComboBox.ItemsSource = _employees;
         AllProjectsDataGrid.ItemsSource = _allProjects;
         DueSoonProjectsDataGrid.ItemsSource = _dueSoonProjects;
+        OverviewWorkloadDataGrid.ItemsSource = _overviewWorkloadItems;
+        OverviewHeatmapDataGrid.ItemsSource = _overviewHeatmapItems;
+        OverviewProductivityDataGrid.ItemsSource = _overviewProductivityItems;
+        OverviewAIMetricsDataGrid.ItemsSource = _overviewAIMetricItems;
         ProjectDueDatePicker.SelectedDate = DateTime.Today.AddDays(14);
         TaskDueDatePicker.SelectedDate = DateTime.Today.AddDays(7);
         LoadProjectsForSelectedCustomer();
@@ -153,6 +162,46 @@ public partial class MainWindow : Window
         NeedsApprovalDocumentsTextBlock.Text = $"Needs Approval: {summary.NeedsApprovalDocuments}";
         BlockedDocumentsTextBlock.Text = $"Blocked: {summary.BlockedDocuments}";
         RefreshDashboardNotifications(summary);
+        RefreshOverviewInsights();
+    }
+
+    private void RefreshOverviewInsights()
+    {
+        OverviewInsights insights = _overviewService.GetInsights();
+
+        OverviewProjectProgressTextBlock.Text = $"{insights.ProjectCompletionPercent}%";
+        OverviewProjectProgressDetailTextBlock.Text = insights.ProjectCompletionText;
+        OverviewProjectProgressBar.Value = insights.ProjectCompletionPercent;
+
+        OverviewTaskCompletionTextBlock.Text = $"{insights.TaskCompletionPercent}%";
+        OverviewTaskCompletionDetailTextBlock.Text = insights.TaskCompletionText;
+        OverviewTaskCompletionBar.Value = insights.TaskCompletionPercent;
+
+        OverviewAIUsageTextBlock.Text = $"{insights.AIUsagePercent}%";
+        OverviewAIUsageDetailTextBlock.Text = insights.AIUsageText;
+        OverviewAIUsageBar.Value = insights.AIUsagePercent;
+
+        ReplaceItems(_overviewWorkloadItems, insights.WorkloadItems);
+        ReplaceItems(_overviewHeatmapItems, insights.OverdueHeatmapItems);
+        ReplaceItems(_overviewProductivityItems, insights.ProductivityItems);
+        ReplaceItems(_overviewAIMetricItems, insights.AIMetricItems);
+
+        OverviewHeatmapEmptyTextBlock.Visibility = _overviewHeatmapItems.Count == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        OverviewProductivityEmptyTextBlock.Visibility = _overviewProductivityItems.Count == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    private static void ReplaceItems<T>(ObservableCollection<T> target, IEnumerable<T> items)
+    {
+        target.Clear();
+
+        foreach (T item in items)
+        {
+            target.Add(item);
+        }
     }
 
     private void RefreshDashboardNotifications(DashboardSummary summary)
@@ -2025,6 +2074,7 @@ public partial class MainWindow : Window
         DueSoonNotificationTextBlock.Foreground = _dueSoonProjects.Count == 0
             ? System.Windows.Media.Brushes.SlateGray
             : System.Windows.Media.Brushes.Firebrick;
+        RefreshOverviewInsights();
     }
 
     private void UpdateProjectActionState()

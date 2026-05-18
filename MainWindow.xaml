@@ -2886,8 +2886,226 @@
                             </TabItem>
 
                             <TabItem x:Name="OverviewTab" Header="Overview">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                              HorizontalScrollBarVisibility="Auto">
                                     <StackPanel Margin="0,12,0,0">
+                                        <Grid MinWidth="920" Margin="0,0,0,16">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="12" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="12" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Border Grid.Column="0" Style="{StaticResource MetricCardStyle}" Background="#EFF6FF">
+                                                <StackPanel>
+                                                    <DockPanel LastChildFill="False">
+                                                        <TextBlock Text="Project progress"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#1E3A8A" />
+                                                        <TextBlock x:Name="OverviewProjectProgressTextBlock"
+                                                                   DockPanel.Dock="Right"
+                                                                   Text="0%"
+                                                                   FontSize="26"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#1D4ED8" />
+                                                    </DockPanel>
+                                                    <ProgressBar x:Name="OverviewProjectProgressBar"
+                                                                 Height="7"
+                                                                 Margin="0,12,0,0"
+                                                                 Minimum="0"
+                                                                 Maximum="100" />
+                                                    <TextBlock x:Name="OverviewProjectProgressDetailTextBlock"
+                                                               Text="0/0 projects completed"
+                                                               Margin="0,8,0,0"
+                                                               FontSize="12"
+                                                               Foreground="#64748B" />
+                                                </StackPanel>
+                                            </Border>
+
+                                            <Border Grid.Column="2" Style="{StaticResource MetricCardStyle}" Background="#ECFDF5" BorderBrush="#BBF7D0">
+                                                <StackPanel>
+                                                    <DockPanel LastChildFill="False">
+                                                        <TextBlock Text="Task completion"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#166534" />
+                                                        <TextBlock x:Name="OverviewTaskCompletionTextBlock"
+                                                                   DockPanel.Dock="Right"
+                                                                   Text="0%"
+                                                                   FontSize="26"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#15803D" />
+                                                    </DockPanel>
+                                                    <ProgressBar x:Name="OverviewTaskCompletionBar"
+                                                                 Height="7"
+                                                                 Margin="0,12,0,0"
+                                                                 Minimum="0"
+                                                                 Maximum="100" />
+                                                    <TextBlock x:Name="OverviewTaskCompletionDetailTextBlock"
+                                                               Text="0/0 tasks done"
+                                                               Margin="0,8,0,0"
+                                                               FontSize="12"
+                                                               Foreground="#64748B" />
+                                                </StackPanel>
+                                            </Border>
+
+                                            <Border Grid.Column="4" Style="{StaticResource MetricCardStyle}" Background="#F5F3FF" BorderBrush="#DDD6FE">
+                                                <StackPanel>
+                                                    <DockPanel LastChildFill="False">
+                                                        <TextBlock Text="AI usage"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#6D28D9" />
+                                                        <TextBlock x:Name="OverviewAIUsageTextBlock"
+                                                                   DockPanel.Dock="Right"
+                                                                   Text="0%"
+                                                                   FontSize="26"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#6D28D9" />
+                                                    </DockPanel>
+                                                    <ProgressBar x:Name="OverviewAIUsageBar"
+                                                                 Height="7"
+                                                                 Margin="0,12,0,0"
+                                                                 Minimum="0"
+                                                                 Maximum="100" />
+                                                    <TextBlock x:Name="OverviewAIUsageDetailTextBlock"
+                                                               Text="0/0 documents analyzed"
+                                                               Margin="0,8,0,0"
+                                                               FontSize="12"
+                                                               Foreground="#64748B" />
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+
+                                        <Grid MinWidth="920" Margin="0,0,0,16">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="14" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                                <StackPanel>
+                                                    <TextBlock Text="Workload chart" Style="{StaticResource SectionTitleStyle}" />
+                                                    <DataGrid x:Name="OverviewWorkloadDataGrid"
+                                                              Height="190"
+                                                              MinWidth="620"
+                                                              Margin="0,12,0,0"
+                                                              AutoGenerateColumns="False"
+                                                              CanUserAddRows="False"
+                                                              IsReadOnly="True"
+                                                              HeadersVisibility="Column"
+                                                              GridLinesVisibility="Horizontal"
+                                                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                                              BorderBrush="#E2E8F0"
+                                                              BorderThickness="1">
+                                                        <DataGrid.Columns>
+                                                            <DataGridTextColumn Header="Member" Binding="{Binding Name}" Width="160" />
+                                                            <DataGridTextColumn Header="Role" Binding="{Binding RoleText}" Width="150" />
+                                                            <DataGridTextColumn Header="Open tasks" Binding="{Binding OpenTaskText}" Width="170" />
+                                                            <DataGridTextColumn Header="Load" Binding="{Binding WorkloadPercent, StringFormat={}{0}%}" Width="90" />
+                                                        </DataGrid.Columns>
+                                                    </DataGrid>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                                <StackPanel>
+                                                    <TextBlock Text="Overdue heatmap" Style="{StaticResource SectionTitleStyle}" />
+                                                    <DataGrid x:Name="OverviewHeatmapDataGrid"
+                                                              Height="190"
+                                                              MinWidth="620"
+                                                              Margin="0,12,0,0"
+                                                              AutoGenerateColumns="False"
+                                                              CanUserAddRows="False"
+                                                              IsReadOnly="True"
+                                                              HeadersVisibility="Column"
+                                                              GridLinesVisibility="Horizontal"
+                                                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                                              BorderBrush="#E2E8F0"
+                                                              BorderThickness="1">
+                                                        <DataGrid.Columns>
+                                                            <DataGridTextColumn Header="Project" Binding="{Binding ProjectName}" Width="190" />
+                                                            <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="170" />
+                                                            <DataGridTextColumn Header="Overdue" Binding="{Binding OverdueText}" Width="150" />
+                                                            <DataGridTextColumn Header="Level" Binding="{Binding Severity}" Width="100" />
+                                                        </DataGrid.Columns>
+                                                    </DataGrid>
+                                                    <TextBlock x:Name="OverviewHeatmapEmptyTextBlock"
+                                                               Text="Overdue task bulunmuyor."
+                                                               Margin="0,8,0,0"
+                                                               FontSize="12"
+                                                               Foreground="#64748B" />
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+
+                                        <Grid MinWidth="920" Margin="0,0,0,16">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="14" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                                <StackPanel>
+                                                    <TextBlock Text="Team productivity" Style="{StaticResource SectionTitleStyle}" />
+                                                    <DataGrid x:Name="OverviewProductivityDataGrid"
+                                                              Height="190"
+                                                              MinWidth="620"
+                                                              Margin="0,12,0,0"
+                                                              AutoGenerateColumns="False"
+                                                              CanUserAddRows="False"
+                                                              IsReadOnly="True"
+                                                              HeadersVisibility="Column"
+                                                              GridLinesVisibility="Horizontal"
+                                                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                                              BorderBrush="#E2E8F0"
+                                                              BorderThickness="1">
+                                                        <DataGrid.Columns>
+                                                            <DataGridTextColumn Header="Member" Binding="{Binding Name}" Width="190" />
+                                                            <DataGridTextColumn Header="Done" Binding="{Binding CompletionText}" Width="230" />
+                                                            <DataGridTextColumn Header="Completion" Binding="{Binding CompletionPercent, StringFormat={}{0}%}" Width="130" />
+                                                        </DataGrid.Columns>
+                                                    </DataGrid>
+                                                    <TextBlock x:Name="OverviewProductivityEmptyTextBlock"
+                                                               Text="Team productivity icin task atamasi yok."
+                                                               Margin="0,8,0,0"
+                                                               FontSize="12"
+                                                               Foreground="#64748B" />
+                                                </StackPanel>
+                                            </Border>
+
+                                            <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                                <StackPanel>
+                                                    <TextBlock Text="AI usage metrics" Style="{StaticResource SectionTitleStyle}" />
+                                                    <DataGrid x:Name="OverviewAIMetricsDataGrid"
+                                                              Height="190"
+                                                              MinWidth="620"
+                                                              Margin="0,12,0,0"
+                                                              AutoGenerateColumns="False"
+                                                              CanUserAddRows="False"
+                                                              IsReadOnly="True"
+                                                              HeadersVisibility="Column"
+                                                              GridLinesVisibility="Horizontal"
+                                                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                                              BorderBrush="#E2E8F0"
+                                                              BorderThickness="1">
+                                                        <DataGrid.Columns>
+                                                            <DataGridTextColumn Header="Metric" Binding="{Binding Title}" Width="150" />
+                                                            <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="110" />
+                                                            <DataGridTextColumn Header="Detail" Binding="{Binding Detail}" Width="250" />
+                                                            <DataGridTextColumn Header="Level" Binding="{Binding Severity}" Width="100" />
+                                                        </DataGrid.Columns>
+                                                    </DataGrid>
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+
                                         <Border Style="{StaticResource SectionCardStyle}">
                                             <StackPanel>
                                                 <TextBlock Text="Due soon" Style="{StaticResource SectionTitleStyle}" />

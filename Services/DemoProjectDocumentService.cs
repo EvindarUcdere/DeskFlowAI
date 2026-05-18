@@ -175,7 +175,10 @@ public sealed class DemoProjectDocumentService
                 riskLevel: "Blocked",
                 recommendations: "Yetkili bir yonetici belge AI policy bilgisini guncellemeden analiz calistirilamaz.",
                 confidenceScore: 1,
-                detectedIssues: "AI policy is Blocked");
+                detectedIssues: "AI policy is Blocked",
+                riskScore: 100,
+                complianceStatus: AIComplianceStatusNames.ViolationDetected,
+                policyViolations: "AI processing policy is Blocked");
             _dbContext.SaveChanges();
 
             return document;
@@ -192,7 +195,10 @@ public sealed class DemoProjectDocumentService
             result.RiskLevel,
             result.Recommendations,
             result.ConfidenceScore,
-            result.DetectedIssues);
+            result.DetectedIssues,
+            result.RiskScore,
+            result.ComplianceStatus,
+            result.PolicyViolations);
         _dbContext.SaveChanges();
 
         return document;

@@ -11,7 +11,10 @@ public sealed class DocumentAIAnalysisResult
         string riskLevel = "",
         string recommendations = "",
         double? confidenceScore = null,
-        string detectedIssues = "")
+        string detectedIssues = "",
+        int riskScore = 0,
+        string complianceStatus = "",
+        string policyViolations = "")
     {
         Status = status;
         Summary = summary;
@@ -22,6 +25,9 @@ public sealed class DocumentAIAnalysisResult
         Recommendations = recommendations;
         ConfidenceScore = confidenceScore;
         DetectedIssues = detectedIssues;
+        RiskScore = riskScore;
+        ComplianceStatus = complianceStatus;
+        PolicyViolations = policyViolations;
     }
 
     public string Status { get; }
@@ -41,4 +47,10 @@ public sealed class DocumentAIAnalysisResult
     public double? ConfidenceScore { get; }
 
     public string DetectedIssues { get; }
+
+    public int RiskScore { get; }
+
+    public string ComplianceStatus { get; }
+
+    public string PolicyViolations { get; }
 }

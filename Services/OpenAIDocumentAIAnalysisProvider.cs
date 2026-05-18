@@ -92,7 +92,10 @@ public sealed class OpenAIDocumentAIAnalysisProvider : IDocumentAIAnalysisProvid
             riskLevel: NormalizeRiskLevel(payload.RiskLevel),
             recommendations: Truncate(payload.Recommendations, 1200),
             confidenceScore: NormalizeConfidenceScore(payload.ConfidenceScore),
-            detectedIssues: Truncate(payload.DetectedIssues, 1200));
+            detectedIssues: Truncate(payload.DetectedIssues, 1200),
+            riskScore: NormalizeRiskScore(payload.RiskScore),
+            complianceStatus: NormalizeComplianceStatus(payload.ComplianceStatus),
+            policyViolations: Truncate(payload.PolicyViolations, 1200));
     }
 
     private object BuildRequest(ProjectDocument document)
@@ -151,9 +154,26 @@ public sealed class OpenAIDocumentAIAnalysisProvider : IDocumentAIAnalysisProvid
                             {
                                 type = "string",
                                 description = "Short Turkish list of detected issues or 'Belirgin sorun yok'."
+                            },
+                            risk_score = new
+                            {
+                                type = "integer",
+                                minimum = 0,
+                                maximum = 100,
+                                description = "Overall document risk score from 0 to 100."
+                            },
+                            compliance_status = new
+                            {
+                                type = "string",
+                                @enum = new[] { AIComplianceStatusNames.Passed, AIComplianceStatusNames.ReviewRequired, AIComplianceStatusNames.ViolationDetected }
+                            },
+                            policy_violations = new
+                            {
+                                type = "string",
+                                description = "Short Turkish list of policy or compliance violations, or 'Policy violation bulunmadi'."
                             }
                         },
-                        required = new[] { "status", "summary", "risk_notes", "risk_level", "recommendations", "confidence_score", "detected_issues" }
+                        required = new[] { "status", "summary", "risk_notes", "risk_level", "recommendations", "confidence_score", "detected_issues", "risk_score", "compliance_status", "policy_violations" }
                     }
                 }
             }
@@ -186,6 +206,11 @@ public sealed class OpenAIDocumentAIAnalysisProvider : IDocumentAIAnalysisProvid
             - Analyzed: no major follow-up risk is visible
             - Needs Review: approval, compliance, delay, missing information, blocked work, or update risk is visible
             - Failed: the content cannot be meaningfully analyzed
+
+            Also return:
+            - risk_score: 0-100 score combining operational, compliance, schedule, and policy risk
+            - compliance_status: Passed, Review Required, or Violation Detected
+            - policy_violations: concrete policy/compliance concerns such as personal data, external AI approval, confidentiality, missing approval, blocked processing, or "Policy violation bulunmadi"
             """;
     }
 
@@ -281,6 +306,27 @@ public sealed class OpenAIDocumentAIAnalysisProvider : IDocumentAIAnalysisProvid
         return confidenceScore > 1 ? 1 : confidenceScore;
     }
 
+    private static int NormalizeRiskScore(int riskScore)
+    {
+        if (riskScore < 0)
+        {
+            return 0;
+        }
+
+        return riskScore > 100 ? 100 : riskScore;
+    }
+
+    private static string NormalizeComplianceStatus(string complianceStatus)
+    {
+        return complianceStatus.Trim() switch
+        {
+            AIComplianceStatusNames.Passed => AIComplianceStatusNames.Passed,
+            AIComplianceStatusNames.ReviewRequired => AIComplianceStatusNames.ReviewRequired,
+            AIComplianceStatusNames.ViolationDetected => AIComplianceStatusNames.ViolationDetected,
+            _ => AIComplianceStatusNames.ReviewRequired
+        };
+    }
+
     private static string BuildBaseUrl(string baseUrl)
     {
         string value = string.IsNullOrWhiteSpace(baseUrl)
@@ -332,7 +378,10 @@ public sealed class OpenAIDocumentAIAnalysisProvider : IDocumentAIAnalysisProvid
             riskLevel: fallbackResult.RiskLevel,
             recommendations: fallbackResult.Recommendations,
             confidenceScore: fallbackResult.ConfidenceScore,
-            detectedIssues: fallbackResult.DetectedIssues);
+            detectedIssues: fallbackResult.DetectedIssues,
+            riskScore: fallbackResult.RiskScore,
+            complianceStatus: fallbackResult.ComplianceStatus,
+            policyViolations: fallbackResult.PolicyViolations);
     }
 
     private sealed class OpenAIAnalysisPayload
@@ -354,5 +403,14 @@ public sealed class OpenAIDocumentAIAnalysisProvider : IDocumentAIAnalysisProvid
 
         [JsonPropertyName("detected_issues")]
         public string DetectedIssues { get; init; } = string.Empty;
+
+        [JsonPropertyName("risk_score")]
+        public int RiskScore { get; init; }
+
+        [JsonPropertyName("compliance_status")]
+        public string ComplianceStatus { get; init; } = string.Empty;
+
+        [JsonPropertyName("policy_violations")]
+        public string PolicyViolations { get; init; } = string.Empty;
     }
 }

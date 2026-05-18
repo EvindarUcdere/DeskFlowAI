@@ -20,6 +20,10 @@ public sealed class RuleBasedDocumentAIAnalysisProvider : IDocumentAIAnalysisPro
         string riskNotes = hasExtractedText
             ? BuildContentBasedRiskNotes(document)
             : BuildMetadataBasedRiskNotes(document);
+        string riskLevel = DetermineRiskLevel(document, riskNotes, analysisStatus);
+        int riskScore = DetermineRiskScore(riskLevel, riskNotes);
+        string complianceStatus = DetermineComplianceStatus(document, riskNotes);
+        string policyViolations = BuildPolicyViolations(document, riskNotes);
 
         return new DocumentAIAnalysisResult(
             analysisStatus,
@@ -27,12 +31,15 @@ public sealed class RuleBasedDocumentAIAnalysisProvider : IDocumentAIAnalysisPro
             riskNotes,
             DocumentAIProviderNames.RuleBased,
             usedFallback: false,
-            riskLevel: analysisStatus == AIAnalysisStatusNames.NeedsReview ? "Medium" : "Low",
+            riskLevel: riskLevel,
             recommendations: analysisStatus == AIAnalysisStatusNames.NeedsReview
                 ? "Manager review surecini tamamla ve belge status'unu teslim planina gore guncelle."
                 : "Rutin belge review surecini tamamla.",
             confidenceScore: hasExtractedText ? 0.68 : 0.55,
-            detectedIssues: riskNotes);
+            detectedIssues: riskNotes,
+            riskScore: riskScore,
+            complianceStatus: complianceStatus,
+            policyViolations: policyViolations);
     }
 
     private static string BuildSafeNote(string notes)
@@ -136,5 +143,74 @@ public sealed class RuleBasedDocumentAIAnalysisProvider : IDocumentAIAnalysisPro
     private static bool ContainsAny(string text, params string[] keywords)
     {
         return keywords.Any(text.Contains);
+    }
+
+    private static string DetermineRiskLevel(ProjectDocument document, string riskNotes, string analysisStatus)
+    {
+        if (document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.Blocked
+            || ContainsAny(riskNotes.ToLowerInvariant(), "kisisel veri", "uyumluluk", "hukuki", "gecikme", "blokaj"))
+        {
+            return "High";
+        }
+
+        return analysisStatus == AIAnalysisStatusNames.NeedsReview ? "Medium" : "Low";
+    }
+
+    private static int DetermineRiskScore(string riskLevel, string riskNotes)
+    {
+        int score = riskLevel switch
+        {
+            "High" => 78,
+            "Medium" => 52,
+            _ => 22
+        };
+
+        if (riskNotes.Contains("onay", StringComparison.OrdinalIgnoreCase)
+            || riskNotes.Contains("approval", StringComparison.OrdinalIgnoreCase))
+        {
+            score += 8;
+        }
+
+        return Math.Min(score, 100);
+    }
+
+    private static string DetermineComplianceStatus(ProjectDocument document, string riskNotes)
+    {
+        if (document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.Blocked
+            || riskNotes.Contains("kisisel veri", StringComparison.OrdinalIgnoreCase)
+            || riskNotes.Contains("uyumluluk", StringComparison.OrdinalIgnoreCase)
+            || riskNotes.Contains("hukuki", StringComparison.OrdinalIgnoreCase))
+        {
+            return AIComplianceStatusNames.ViolationDetected;
+        }
+
+        return document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.NeedsApproval
+            ? AIComplianceStatusNames.ReviewRequired
+            : AIComplianceStatusNames.Passed;
+    }
+
+    private static string BuildPolicyViolations(ProjectDocument document, string riskNotes)
+    {
+        List<string> violations = [];
+
+        if (document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.NeedsApproval)
+        {
+            violations.Add("External AI approval is required before external processing.");
+        }
+
+        if (document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.Blocked)
+        {
+            violations.Add("AI processing is blocked by policy.");
+        }
+
+        if (riskNotes.Contains("kisisel veri", StringComparison.OrdinalIgnoreCase)
+            || riskNotes.Contains("uyumluluk", StringComparison.OrdinalIgnoreCase))
+        {
+            violations.Add("Compliance or personal data wording detected.");
+        }
+
+        return violations.Count == 0
+            ? "No policy violations detected"
+            : string.Join("; ", violations);
     }
 }

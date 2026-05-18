@@ -103,6 +103,8 @@ public sealed class DeskFlowDbContext : DbContext
             entity.Property(document => document.AIRiskLevel).HasMaxLength(20);
             entity.Property(document => document.AIRecommendations).HasMaxLength(1200);
             entity.Property(document => document.AIDetectedIssues).HasMaxLength(1200);
+            entity.Property(document => document.AIComplianceStatus).HasMaxLength(60);
+            entity.Property(document => document.AIPolicyViolations).HasMaxLength(1200);
             entity.Property(document => document.AIProcessingPolicy).HasMaxLength(60);
             entity.Property(document => document.FileCheckStatus).HasMaxLength(40);
             entity.Property(document => document.FileCheckMessage).HasMaxLength(800);
@@ -115,6 +117,8 @@ public sealed class DeskFlowDbContext : DbContext
             entity.HasIndex(document => document.AIProviderName);
             entity.HasIndex(document => document.AIReviewStatus);
             entity.HasIndex(document => document.AIRiskLevel);
+            entity.HasIndex(document => document.AIRiskScore);
+            entity.HasIndex(document => document.AIComplianceStatus);
             entity.HasIndex(document => document.AIProcessingPolicy);
             entity.HasIndex(document => document.FileCheckStatus);
             entity.HasIndex(document => document.TextExtractionStatus);

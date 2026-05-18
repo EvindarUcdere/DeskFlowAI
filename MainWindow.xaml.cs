@@ -2594,11 +2594,14 @@ public partial class MainWindow : Window
         DocumentAIStatusTextBlock.Text = AIAnalysisStatusNames.NotAnalyzed;
         DocumentAIProviderTextBlock.Text = "Provider: none";
         DocumentAIRiskLevelTextBlock.Text = "Risk: none";
+        DocumentAIRiskScoreTextBlock.Text = "Risk score: 0";
+        DocumentAIComplianceStatusTextBlock.Text = "Compliance: none";
         DocumentAIReviewStatusTextBlock.Text = $"Review: {AIReviewStatusNames.NotReady}";
         DocumentAISummaryTextBox.Clear();
         DocumentAIRiskNotesTextBox.Clear();
         DocumentAIRecommendationsTextBox.Clear();
         DocumentAIDetectedIssuesTextBox.Clear();
+        DocumentAIPolicyViolationsTextBox.Clear();
         DocumentFormMessageTextBlock.Visibility = Visibility.Collapsed;
         UpdateDocumentActionState();
     }
@@ -2642,11 +2645,14 @@ public partial class MainWindow : Window
 
         DocumentAIProviderTextBlock.Text = $"Provider: {providerText}{fallbackText}{confidenceText}";
         DocumentAIRiskLevelTextBlock.Text = $"Risk: {riskLevelText}";
+        DocumentAIRiskScoreTextBlock.Text = $"Risk score: {document.AIRiskScore}/100";
+        DocumentAIComplianceStatusTextBlock.Text = $"Compliance: {document.AIComplianceStatus}";
         DocumentAIReviewStatusTextBlock.Text = $"Review: {reviewText}";
         DocumentAISummaryTextBox.Text = document.AISummary;
         DocumentAIRiskNotesTextBox.Text = document.AIRiskNotes;
         DocumentAIRecommendationsTextBox.Text = document.AIRecommendations;
         DocumentAIDetectedIssuesTextBox.Text = document.AIDetectedIssues;
+        DocumentAIPolicyViolationsTextBox.Text = document.AIPolicyViolations;
     }
 
     private string GetSelectedDocumentStatus()

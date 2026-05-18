@@ -35,6 +35,9 @@ public sealed class MockDocumentAIAnalysisProvider : IDocumentAIAnalysisProvider
             : AIAnalysisStatusNames.NeedsReview;
         string detectedIssues = BuildDetectedIssues(highRiskIssues, mediumRiskIssues);
         double confidenceScore = DetermineConfidenceScore(riskLevel, detectedIssues);
+        int riskScore = DetermineRiskScore(riskLevel, highRiskIssues.Count, mediumRiskIssues.Count);
+        string complianceStatus = DetermineComplianceStatus(analysisText, riskLevel);
+        string policyViolations = DetectPolicyViolations(analysisText, document.AIProcessingPolicy);
         string projectName = document.Project?.Name ?? "Unknown project";
         string customerName = document.Project?.Customer?.CompanyName ?? "Unknown customer";
 
@@ -61,7 +64,10 @@ public sealed class MockDocumentAIAnalysisProvider : IDocumentAIAnalysisProvider
             riskLevel: riskLevel,
             recommendations: recommendations,
             confidenceScore: confidenceScore,
-            detectedIssues: detectedIssues);
+            detectedIssues: detectedIssues,
+            riskScore: riskScore,
+            complianceStatus: complianceStatus,
+            policyViolations: policyViolations);
     }
 
     private static string BuildAnalysisText(ProjectDocument document)
@@ -125,5 +131,53 @@ public sealed class MockDocumentAIAnalysisProvider : IDocumentAIAnalysisProvider
         }
 
         return detectedIssues.Contains("No configured", StringComparison.OrdinalIgnoreCase) ? 0.74 : 0.78;
+    }
+
+    private static int DetermineRiskScore(string riskLevel, int highRiskIssueCount, int mediumRiskIssueCount)
+    {
+        int baseScore = riskLevel switch
+        {
+            "High" => 82,
+            "Medium" => 52,
+            _ => 18
+        };
+
+        return Math.Min(100, baseScore + (highRiskIssueCount * 4) + (mediumRiskIssueCount * 3));
+    }
+
+    private static string DetermineComplianceStatus(string text, string riskLevel)
+    {
+        if (ContainsAny(text, "breach", "termination", "penalty", "gdpr", "kvkk", "personal data", "confidential"))
+        {
+            return AIComplianceStatusNames.ViolationDetected;
+        }
+
+        return riskLevel == "Medium"
+            ? AIComplianceStatusNames.ReviewRequired
+            : AIComplianceStatusNames.Passed;
+    }
+
+    private static string DetectPolicyViolations(string text, string aiProcessingPolicy)
+    {
+        List<string> violations = [];
+
+        if (aiProcessingPolicy == DocumentAIProcessingPolicyNames.NeedsApproval)
+        {
+            violations.Add("External AI approval is required before external processing.");
+        }
+
+        if (ContainsAny(text, "gdpr", "kvkk", "personal data", "confidential"))
+        {
+            violations.Add("Sensitive or compliance-related wording detected.");
+        }
+
+        return violations.Count == 0
+            ? "No policy violations detected"
+            : string.Join("; ", violations);
+    }
+
+    private static bool ContainsAny(string text, params string[] keywords)
+    {
+        return keywords.Any(keyword => text.Contains(keyword, StringComparison.OrdinalIgnoreCase));
     }
 }

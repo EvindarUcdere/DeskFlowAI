@@ -18,6 +18,8 @@ public sealed class ProjectDocument
         AIRiskLevel = string.Empty;
         AIRecommendations = string.Empty;
         AIDetectedIssues = string.Empty;
+        AIComplianceStatus = string.Empty;
+        AIPolicyViolations = string.Empty;
         AIProcessingPolicy = string.Empty;
         FileCheckStatus = string.Empty;
         FileCheckMessage = string.Empty;
@@ -51,6 +53,9 @@ public sealed class ProjectDocument
         AIRecommendations = string.Empty;
         AIConfidenceScore = null;
         AIDetectedIssues = string.Empty;
+        AIRiskScore = 0;
+        AIComplianceStatus = AIComplianceStatusNames.Passed;
+        AIPolicyViolations = string.Empty;
         AIProcessingPolicy = DocumentAIProcessingPolicyNames.InternalOnly;
         FileCheckStatus = DocumentFileCheckStatusNames.NotChecked;
         FileCheckMessage = string.Empty;
@@ -100,6 +105,12 @@ public sealed class ProjectDocument
 
     public string AIDetectedIssues { get; private set; }
 
+    public int AIRiskScore { get; private set; }
+
+    public string AIComplianceStatus { get; private set; }
+
+    public string AIPolicyViolations { get; private set; }
+
     public DateTime? AnalyzedAt { get; private set; }
 
     public string AIProcessingPolicy { get; private set; }
@@ -142,7 +153,10 @@ public sealed class ProjectDocument
         string riskLevel = "",
         string recommendations = "",
         double? confidenceScore = null,
-        string detectedIssues = "")
+        string detectedIssues = "",
+        int riskScore = 0,
+        string complianceStatus = "",
+        string policyViolations = "")
     {
         AIAnalysisStatus = analysisStatus;
         AISummary = summary;
@@ -154,6 +168,11 @@ public sealed class ProjectDocument
         AIRecommendations = recommendations;
         AIConfidenceScore = confidenceScore;
         AIDetectedIssues = detectedIssues;
+        AIRiskScore = riskScore;
+        AIComplianceStatus = string.IsNullOrWhiteSpace(complianceStatus)
+            ? AIComplianceStatusNames.Passed
+            : complianceStatus;
+        AIPolicyViolations = policyViolations;
         AIReviewStatus = analysisStatus == AIAnalysisStatusNames.Analyzed
             ? AIReviewStatusNames.Ready
             : AIReviewStatusNames.NotReady;

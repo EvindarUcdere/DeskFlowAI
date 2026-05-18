@@ -40,48 +40,6 @@ public sealed class DemoAuthService
             user.Email,
             user.Role,
             user.EmployeeId,
-            GetPermissionsForRole(user.Role));
-    }
-
-    private static IReadOnlyCollection<string> GetPermissionsForRole(string role)
-    {
-        return role switch
-        {
-            RoleNames.Admin =>
-                [
-                    PermissionNames.CustomerCreate,
-                    PermissionNames.CustomerUpdate,
-                    PermissionNames.CustomerDelete,
-                    PermissionNames.ProjectCreate,
-                    PermissionNames.ProjectUpdate,
-                    PermissionNames.TaskCreate,
-                    PermissionNames.TaskUpdate,
-                    PermissionNames.EmployeeManage,
-                    PermissionNames.UserManage,
-                    PermissionNames.DocumentCreate,
-                    PermissionNames.DocumentUpdate
-                ],
-
-            RoleNames.Manager =>
-                [
-                    PermissionNames.CustomerCreate,
-                    PermissionNames.CustomerUpdate,
-                    PermissionNames.ProjectCreate,
-                    PermissionNames.ProjectUpdate,
-                    PermissionNames.TaskCreate,
-                    PermissionNames.TaskUpdate,
-                    PermissionNames.EmployeeManage,
-                    PermissionNames.DocumentCreate,
-                    PermissionNames.DocumentUpdate
-                ],
-
-            RoleNames.Staff =>
-                [
-                    PermissionNames.TaskCreate,
-                    PermissionNames.TaskUpdate
-                ],
-
-            _ => []
-        };
+            new PermissionPolicyService().GetPermissionsForRole(user.Role));
     }
 }

@@ -54,4 +54,27 @@ public sealed class DemoProjectCommunicationService
             .Take(6)
             .ToList();
     }
+
+    public int GetUnreadNotificationCountFor(string recipientEmail)
+    {
+        return _dbContext.UserNotifications
+            .AsNoTracking()
+            .Count(notification => notification.RecipientEmail == recipientEmail && !notification.IsRead);
+    }
+
+    public int MarkAllNotificationsReadFor(string recipientEmail)
+    {
+        List<UserNotification> unreadNotifications = _dbContext.UserNotifications
+            .Where(notification => notification.RecipientEmail == recipientEmail && !notification.IsRead)
+            .ToList();
+
+        foreach (UserNotification notification in unreadNotifications)
+        {
+            notification.MarkRead();
+        }
+
+        _dbContext.SaveChanges();
+
+        return unreadNotifications.Count;
+    }
 }

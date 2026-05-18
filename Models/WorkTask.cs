@@ -48,6 +48,11 @@ public sealed class WorkTask
         && DueDate.Value.Date < DateTime.Today
         && Status != TaskStatusNames.Done;
 
+    public void Rename(string title)
+    {
+        Title = title;
+    }
+
     public void ChangeWorkflow(string status, string priority, DateTime? dueDate, int? assignedEmployeeId, string blockedBy = "")
     {
         Status = status;

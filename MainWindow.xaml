@@ -229,6 +229,8 @@
             <Setter Property="ColumnHeaderHeight" Value="40" />
             <Setter Property="HeadersVisibility" Value="Column" />
             <Setter Property="GridLinesVisibility" Value="None" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
             <Setter Property="AlternationCount" Value="2" />
             <Setter Property="AlternatingRowBackground" Value="#F8FAFC" />
             <Setter Property="HorizontalGridLinesBrush" Value="#EEF2F7" />
@@ -299,15 +301,15 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Thumb">
                         <Border x:Name="ThumbBorder"
-                                Margin="2"
-                                Background="#CBD5E1"
-                                CornerRadius="4" />
+                                Margin="1.5"
+                                Background="#94A3B8"
+                                CornerRadius="6" />
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ThumbBorder" Property="Background" Value="#94A3B8" />
+                                <Setter TargetName="ThumbBorder" Property="Background" Value="#64748B" />
                             </Trigger>
                             <Trigger Property="IsDragging" Value="True">
-                                <Setter TargetName="ThumbBorder" Property="Background" Value="#64748B" />
+                                <Setter TargetName="ThumbBorder" Property="Background" Value="#475569" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -316,14 +318,14 @@
         </Style>
 
         <Style TargetType="ScrollBar">
-            <Setter Property="Width" Value="10" />
-            <Setter Property="Height" Value="10" />
+            <Setter Property="Width" Value="14" />
+            <Setter Property="Height" Value="14" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ScrollBar">
-                        <Border Background="#F1F5F9"
-                                CornerRadius="5">
+                        <Border Background="#E2E8F0"
+                                CornerRadius="7">
                             <Track x:Name="PART_Track"
                                    Orientation="{TemplateBinding Orientation}"
                                    IsDirectionReversed="True">
@@ -407,7 +409,7 @@
                                FontWeight="SemiBold"
                                Foreground="White" />
 
-                    <TextBlock Text="Musteri, proje, gorev ve belge sureclerini tek masaustu uygulamasinda yonet."
+                    <TextBlock Text="Manage customers, projects, tasks, documents, and AI review in one workspace."
                                Margin="0,18,0,0"
                                FontSize="18"
                                LineHeight="28"
@@ -421,7 +423,7 @@
                             BorderThickness="1"
                             CornerRadius="8">
                         <StackPanel>
-                            <TextBlock Text="Demo kullanici"
+                            <TextBlock Text="Demo accounts"
                                        FontSize="14"
                                        FontWeight="SemiBold"
                                        Foreground="White" />
@@ -451,7 +453,7 @@
                                    FontWeight="SemiBold"
                                    Foreground="#1F2937" />
 
-                        <TextBlock Text="Sirket calisma alanina giris yap."
+                        <TextBlock Text="Sign in to the internal operations workspace."
                                    Margin="0,8,0,28"
                                    FontSize="15"
                                    Foreground="#64748B" />
@@ -568,7 +570,7 @@
                         <Border Grid.Column="0" Style="{StaticResource MetricCardStyle}" Background="#ECFDF5" BorderBrush="#BBF7D0">
                             <StackPanel>
                                 <DockPanel>
-                                    <TextBlock Text="Acik gorevler"
+                                    <TextBlock Text="Open tasks"
                                                Foreground="#166534"
                                                FontSize="15"
                                                FontWeight="SemiBold"
@@ -599,7 +601,7 @@
                         <Border Grid.Column="2" Style="{StaticResource MetricCardStyle}" Background="#EFF6FF">
                             <StackPanel>
                                 <DockPanel>
-                                    <TextBlock Text="Aktif projeler" Foreground="#1E3A8A" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <TextBlock Text="Active projects" Foreground="#1E3A8A" FontWeight="SemiBold" VerticalAlignment="Center" />
                                     <TextBlock x:Name="ActiveProjectsTextBlock" DockPanel.Dock="Right" Text="0" FontSize="26" FontWeight="SemiBold" Foreground="#1D4ED8" HorizontalAlignment="Right" />
                                 </DockPanel>
 
@@ -613,7 +615,7 @@
                         <Border Grid.Column="4" Style="{StaticResource MetricCardStyle}" Background="#FEF2F2" BorderBrush="#FECACA">
                             <StackPanel>
                                 <DockPanel>
-                                    <TextBlock Text="Geciken isler" Foreground="#991B1B" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <TextBlock Text="Overdue work" Foreground="#991B1B" FontWeight="SemiBold" VerticalAlignment="Center" />
                                     <TextBlock x:Name="OverdueTasksTextBlock" DockPanel.Dock="Right" Text="0" FontSize="26" FontWeight="SemiBold" Foreground="#B91C1C" HorizontalAlignment="Right" />
                                 </DockPanel>
 
@@ -634,7 +636,7 @@
                         <Border Grid.Column="6" Style="{StaticResource MetricCardStyle}" Background="#FFFBEB" BorderBrush="#FDE68A">
                             <StackPanel>
                                 <DockPanel>
-                                    <TextBlock Text="AI bekleyen belgeler" Foreground="#92400E" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <TextBlock Text="AI queue" Foreground="#92400E" FontWeight="SemiBold" VerticalAlignment="Center" />
                                     <TextBlock x:Name="PendingAiDocumentsTextBlock" DockPanel.Dock="Right" Text="0" FontSize="26" FontWeight="SemiBold" Foreground="#B45309" HorizontalAlignment="Right" />
                                 </DockPanel>
 
@@ -704,7 +706,9 @@
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Text="Notifications"
@@ -712,7 +716,22 @@
                                    FontWeight="SemiBold"
                                    Foreground="#334155" />
 
-                        <Grid Grid.Column="1" Margin="18,0,0,0">
+                        <Border Grid.Column="1"
+                                Margin="8,0,0,0"
+                                Padding="8,3"
+                                Background="#EFF6FF"
+                                BorderBrush="#BFDBFE"
+                                BorderThickness="1"
+                                CornerRadius="9"
+                                VerticalAlignment="Center">
+                            <TextBlock x:Name="UnreadNotificationsTextBlock"
+                                       Text="0 unread"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Foreground="#1D4ED8" />
+                        </Border>
+
+                        <Grid Grid.Column="2" Margin="18,0,0,0">
                             <ItemsControl x:Name="DashboardNotificationsItemsControl">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
@@ -750,6 +769,15 @@
                                        VerticalAlignment="Center"
                                        Visibility="Visible" />
                         </Grid>
+
+                        <Button x:Name="MarkNotificationsReadButton"
+                                Grid.Column="3"
+                                Content="Mark all read"
+                                Height="30"
+                                Margin="12,0,0,0"
+                                Padding="12,0"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Click="MarkNotificationsReadButton_Click" />
                     </Grid>
                 </Border>
                 </Grid>
@@ -773,13 +801,14 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="2*" />
+                                <RowDefinition Height="1*" MinHeight="120" />
+                                <RowDefinition Height="8" />
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="*" />
+                                <RowDefinition Height="1.2*" MinHeight="160" />
                             </Grid.RowDefinitions>
 
-                            <Border Margin="0,0,0,12"
-                                    Padding="14"
+                            <Border Margin="0,0,0,8"
+                                    Padding="12"
                                     Background="#F8FAFC"
                                     BorderBrush="#E2E8F0"
                                     BorderThickness="1"
@@ -793,13 +822,13 @@
 
                                     <StackPanel>
                                         <TextBlock Text="Customers"
-                                                   FontSize="20"
+                                                   FontSize="18"
                                                    FontWeight="SemiBold"
                                                    Foreground="#0F172A" />
 
-                                        <TextBlock Text="Musteri kayitlari, iletisim bilgileri ve durum takibi."
+                                        <TextBlock Text="Customer records, contacts, and account status."
                                                    Margin="0,4,0,0"
-                                                   FontSize="13"
+                                                   FontSize="12"
                                                    TextWrapping="Wrap"
                                                    Foreground="#64748B" />
                                     </StackPanel>
@@ -808,6 +837,7 @@
                                             Grid.Column="2"
                                             Content="Delete selected"
                                             Width="138"
+                                            Height="38"
                                             VerticalAlignment="Center"
                                             Style="{StaticResource DangerButtonStyle}"
                                             Click="DeleteCustomerButton_Click" />
@@ -815,7 +845,7 @@
                             </Border>
 
                             <Grid Grid.Row="1"
-                                  Margin="0,0,0,12">
+                                  Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="10" />
@@ -823,7 +853,7 @@
                                 </Grid.ColumnDefinitions>
 
                                 <TextBox x:Name="CustomerSearchTextBox"
-                                         Height="38"
+                                         Height="34"
                                          Padding="12,0"
                                          FontSize="14"
                                          VerticalContentAlignment="Center"
@@ -833,6 +863,7 @@
 
                                 <Button Grid.Column="2"
                                         Content="Clear"
+                                        Height="34"
                                         Style="{StaticResource SecondaryButtonStyle}"
                                         Click="ClearCustomerSearchButton_Click" />
                             </Grid>
@@ -846,13 +877,15 @@
                                       SelectionChanged="CustomersDataGrid_SelectionChanged"
                                       HeadersVisibility="Column"
                                       GridLinesVisibility="Horizontal"
+                                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
                                       BorderBrush="#E2E8F0"
                                       BorderThickness="1">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Company" Binding="{Binding CompanyName}" Width="*" />
-                                    <DataGridTextColumn Header="Contact" Binding="{Binding ContactName}" Width="*" />
-                                    <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="1.3*" />
-                                    <DataGridTemplateColumn Header="Status" Width="0.7*">
+                                    <DataGridTextColumn Header="Company" Binding="{Binding CompanyName}" Width="180" />
+                                    <DataGridTextColumn Header="Contact" Binding="{Binding ContactName}" Width="150" />
+                                    <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="240" />
+                                    <DataGridTemplateColumn Header="Status" Width="120">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Border Style="{StaticResource BadgeBorderStyle}"
@@ -870,27 +903,51 @@
                                 </DataGrid.Columns>
                             </DataGrid>
 
-                            <TextBlock Grid.Row="3"
+                            <GridSplitter Grid.Row="3"
+                                          Height="8"
+                                          HorizontalAlignment="Stretch"
+                                          VerticalAlignment="Center"
+                                          ResizeDirection="Rows"
+                                          ResizeBehavior="PreviousAndNext"
+                                          Background="Transparent"
+                                          ShowsPreview="True">
+                                <GridSplitter.Template>
+                                    <ControlTemplate TargetType="GridSplitter">
+                                        <Grid Background="Transparent">
+                                            <Border Height="2"
+                                                    Width="72"
+                                                    Background="#CBD5E1"
+                                                    CornerRadius="1"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center" />
+                                        </Grid>
+                                    </ControlTemplate>
+                                </GridSplitter.Template>
+                            </GridSplitter>
+
+                            <TextBlock Grid.Row="4"
                                        Text="Audit log"
-                                       Margin="0,14,0,8"
+                                       Margin="0,8,0,8"
                                        FontSize="16"
                                        FontWeight="SemiBold"
                                        Foreground="#1F2937" />
 
                             <DataGrid x:Name="AuditLogsDataGrid"
-                                      Grid.Row="4"
+                                      Grid.Row="5"
                                       AutoGenerateColumns="False"
                                       CanUserAddRows="False"
                                       IsReadOnly="True"
                                       HeadersVisibility="Column"
                                       GridLinesVisibility="Horizontal"
+                                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
                                       BorderBrush="#E2E8F0"
                                       BorderThickness="1">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Time" Binding="{Binding OccurredAt, StringFormat={}{0:HH:mm:ss}}" Width="0.7*" />
-                                    <DataGridTextColumn Header="Actor" Binding="{Binding ActorEmail}" Width="1.2*" />
-                                    <DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="0.8*" />
-                                    <DataGridTextColumn Header="Details" Binding="{Binding Details}" Width="2*" />
+                                    <DataGridTextColumn Header="Time" Binding="{Binding OccurredAt, StringFormat={}{0:HH:mm:ss}}" Width="90" />
+                                    <DataGridTextColumn Header="Actor" Binding="{Binding ActorEmail}" Width="180" />
+                                    <DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="110" />
+                                    <DataGridTextColumn Header="Details" Binding="{Binding Details}" Width="360" />
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Grid>
@@ -1031,14 +1088,14 @@
                                             <StackPanel>
                                                 <TextBlock Text="Project list" Style="{StaticResource SectionTitleStyle}" />
 
-                                                <TextBlock Text="Tum projeleri veya secili customer projelerini teslim tarihine gore gosterir."
+                                                <TextBlock Text="Shows all projects or the selected customer's projects by due date."
                                                            Margin="0,4,0,0"
                                                            FontSize="13"
                                                            TextWrapping="Wrap"
                                                            Foreground="#64748B" />
 
                                                 <TextBlock x:Name="SelectedCustomerForProjectTextBlock"
-                                                           Text="Once listeden bir customer sec."
+                                                           Text="Select a customer from the list first."
                                                            Margin="0,10,0,0"
                                                            FontSize="13"
                                                            FontWeight="SemiBold"
@@ -1085,7 +1142,7 @@
 
                                             <TextBlock x:Name="ProjectsEmptyTextBlock"
                                                        Grid.Row="2"
-                                                       Text="Bu customer icin henuz proje yok."
+                                                       Text="No projects for this customer yet."
                                                        Margin="0,10,0,0"
                                                        FontSize="13"
                                                        Foreground="#64748B"
@@ -1100,7 +1157,7 @@
                                         <StackPanel MinWidth="380">
                                             <TextBlock Text="Project details" Style="{StaticResource SectionTitleStyle}" />
 
-                                            <TextBlock Text="Yeni proje ekle veya listeden sectigin projenin durumunu guncelle."
+                                            <TextBlock Text="Add a project or update the selected project's status."
                                                        Margin="0,4,0,16"
                                                        FontSize="13"
                                                        TextWrapping="Wrap"
@@ -1192,7 +1249,7 @@
                                                     <TextBlock Text="Project team"
                                                                Style="{StaticResource FormGroupTitleStyle}" />
 
-                                                    <TextBlock Text="Task atamalarina gore bu projede calisan ekip."
+                                                    <TextBlock Text="Team members working on this project based on task assignments."
                                                                Style="{StaticResource HelperTextStyle}" />
 
                                                     <ItemsControl x:Name="ProjectTeamItemsControl"
@@ -1255,7 +1312,7 @@
                                                     </ItemsControl>
 
                                                     <TextBlock x:Name="ProjectTeamEmptyTextBlock"
-                                                               Text="Bu projede henuz atanmis ekip uyesi yok."
+                                                               Text="No assigned team members for this project yet."
                                                                Margin="0,10,0,0"
                                                                FontSize="12"
                                                                Foreground="#64748B"
@@ -1268,7 +1325,7 @@
                                                     <TextBlock Text="Team note"
                                                                Style="{StaticResource FormGroupTitleStyle}" />
 
-                                                    <TextBlock Text="Secili proje ekibine bildirim olarak gonderilir."
+                                                    <TextBlock Text="Sent as a notification to the selected project team."
                                                                Style="{StaticResource HelperTextStyle}" />
 
                                                     <TextBox x:Name="ProjectNoteTextBox"
@@ -1293,7 +1350,7 @@
                                                     <TextBlock Text="Activity timeline"
                                                                Style="{StaticResource FormGroupTitleStyle}" />
 
-                                                    <TextBlock Text="Secili proje icin task, belge ve AI aktivitesi."
+                                                    <TextBlock Text="Task, document, and AI activity for the selected project."
                                                                Style="{StaticResource HelperTextStyle}" />
 
                                                     <ItemsControl x:Name="ProjectTimelineItemsControl"
@@ -1368,7 +1425,7 @@
                                                     </ItemsControl>
 
                                                     <TextBlock x:Name="ProjectTimelineEmptyTextBlock"
-                                                               Text="Bu proje icin henuz timeline aktivitesi yok."
+                                                               Text="No timeline activity for this project yet."
                                                                Margin="0,10,0,0"
                                                                FontSize="12"
                                                                Foreground="#64748B"
@@ -1412,14 +1469,14 @@
                                                            Style="{StaticResource SectionTitleStyle}" />
 
                                                 <TextBlock x:Name="TaskListDescriptionTextBlock"
-                                                           Text="Secili project icindeki gorevler teslim tarihine ve oncelige gore siralanir."
+                                                           Text="Tasks in the selected project are sorted by due date and priority."
                                                            Margin="0,4,0,0"
                                                            FontSize="13"
                                                            TextWrapping="Wrap"
                                                            Foreground="#64748B" />
 
                                                 <TextBlock x:Name="SelectedProjectForTaskTextBlock"
-                                                           Text="Once Projects sekmesinden bir project sec."
+                                                           Text="Select a project from the Projects tab first."
                                                            Margin="0,10,0,0"
                                                            FontSize="13"
                                                            FontWeight="SemiBold"
@@ -1536,7 +1593,7 @@
 
                                             <TextBlock x:Name="TasksEmptyTextBlock"
                                                        Grid.Row="2"
-                                                       Text="Bu project icin henuz task yok."
+                                                       Text="No tasks for this project yet."
                                                        Margin="0,10,0,0"
                                                        FontSize="13"
                                                        Foreground="#64748B"
@@ -1555,7 +1612,7 @@
                                                        Style="{StaticResource SectionTitleStyle}" />
 
                                             <TextBlock x:Name="TaskDetailsDescriptionTextBlock"
-                                                       Text="Yeni gorev ekle veya secili gorevin is akis bilgilerini guncelle."
+                                                       Text="Add a task or update the selected task workflow."
                                                        Margin="0,4,0,16"
                                                        FontSize="13"
                                                        TextWrapping="Wrap"
@@ -1702,7 +1759,7 @@
                                                        Style="{StaticResource SectionTitleStyle}" />
 
                                             <TextBlock x:Name="SelectedProjectForBoardTextBlock"
-                                                       Text="Once Projects sekmesinden bir project sec."
+                                                       Text="Select a project from the Projects tab first."
                                                        Margin="0,4,0,0"
                                                        FontSize="13"
                                                        FontWeight="SemiBold"
@@ -1923,7 +1980,7 @@
 
                                         <TextBlock x:Name="KanbanEmptyTextBlock"
                                                    Grid.Row="2"
-                                                   Text="Board icin task bulunamadi."
+                                                   Text="No tasks found for the board."
                                                    Margin="0,10,0,0"
                                                    FontSize="13"
                                                    Foreground="#64748B"
@@ -1960,7 +2017,7 @@
                                                            Foreground="#64748B" />
 
                                                 <TextBlock x:Name="SelectedProjectForDocumentTextBlock"
-                                                           Text="Once Projects sekmesinden bir project sec."
+                                                           Text="Select a project from the Projects tab first."
                                                            Margin="0,12,0,0"
                                                            FontSize="13"
                                                            FontWeight="SemiBold"
@@ -2113,7 +2170,7 @@
 
                                             <TextBlock x:Name="DocumentsEmptyTextBlock"
                                                        Grid.Row="2"
-                                                       Text="Bu project icin henuz belge yok."
+                                                       Text="No documents for this project yet."
                                                        Margin="0,10,0,0"
                                                        FontSize="13"
                                                        Foreground="#64748B"
@@ -2145,7 +2202,7 @@
                                             <StackPanel>
                                                 <TextBlock Text="Document details" Style="{StaticResource SectionTitleStyle}" />
 
-                                                <TextBlock Text="Belge kaydi ekle veya secili belgenin review durumunu guncelle."
+                                                <TextBlock Text="Add a document or update the selected document review status."
                                                            Margin="0,4,0,16"
                                                            FontSize="13"
                                                            TextWrapping="Wrap"
@@ -2222,7 +2279,7 @@
 
                                                         <TextBlock x:Name="DocumentAIProcessingPolicyDescriptionTextBlock"
                                                                    Style="{StaticResource HelperTextStyle}"
-                                                                   Text="Belge sadece internal analizde tutulur; dis AI servisine gonderilmez." />
+                                                                   Text="Document stays in internal analysis and is not sent to an external AI service." />
 
                                                         <TextBlock Text="Notes" Margin="0,14,0,6" Style="{StaticResource FieldLabelStyle}" />
                                                         <TextBox x:Name="DocumentNotesTextBox"
@@ -2501,7 +2558,7 @@
                                             <StackPanel>
                                                 <TextBlock Text="Team overview" Style="{StaticResource SectionTitleStyle}" />
 
-                                                <TextBlock Text="Yoneticiler ekip uygunlugunu, acik is yukunu ve acil durum yedeklerini buradan takip eder."
+                                                <TextBlock Text="Managers track availability, open workload, and backup coverage here."
                                                            Margin="0,4,0,0"
                                                            FontSize="13"
                                                            TextWrapping="Wrap"
@@ -2584,7 +2641,7 @@
                                                         BorderThickness="1"
                                                         CornerRadius="6">
                                                     <TextBlock x:Name="EmployeeWorkloadSummaryTextBlock"
-                                                               Text="Listeden bir calisan sec."
+                                                               Text="Select a team member from the list."
                                                                FontSize="13"
                                                                TextWrapping="Wrap"
                                                                Foreground="#1E3A8A" />
@@ -2721,7 +2778,7 @@
                                             <StackPanel>
                                                 <TextBlock Text="User accounts" Style="{StaticResource SectionTitleStyle}" />
 
-                                                <TextBlock Text="Admin kullanicilari, rollerini ve calisan baglantilarini buradan yonetir."
+                                                <TextBlock Text="Manage users, roles, and employee links."
                                                            Margin="0,4,0,0"
                                                            FontSize="13"
                                                            TextWrapping="Wrap"
@@ -2774,7 +2831,7 @@
                                             <StackPanel>
                                                 <TextBlock Text="User details" Style="{StaticResource SectionTitleStyle}" />
 
-                                                <TextBlock Text="Yeni kullanici olustur, role ata, calisanla bagla veya sifre resetle."
+                                                <TextBlock Text="Create users, assign roles, link employees, or reset passwords."
                                                            Margin="0,4,0,16"
                                                            FontSize="13"
                                                            TextWrapping="Wrap"
@@ -2887,18 +2944,10 @@
 
                             <TabItem x:Name="OverviewTab" Header="Overview">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                              HorizontalScrollBarVisibility="Auto">
+                                              HorizontalScrollBarVisibility="Disabled">
                                     <StackPanel Margin="0,12,0,0">
-                                        <Grid MinWidth="920" Margin="0,0,0,16">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="12" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="12" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-
-                                            <Border Grid.Column="0" Style="{StaticResource MetricCardStyle}" Background="#EFF6FF">
+                                        <StackPanel Margin="0,0,0,16">
+                                            <Border Style="{StaticResource MetricCardStyle}" Background="#EFF6FF" Margin="0,0,0,10">
                                                 <StackPanel>
                                                     <DockPanel LastChildFill="False">
                                                         <TextBlock Text="Project progress"
@@ -2924,7 +2973,7 @@
                                                 </StackPanel>
                                             </Border>
 
-                                            <Border Grid.Column="2" Style="{StaticResource MetricCardStyle}" Background="#ECFDF5" BorderBrush="#BBF7D0">
+                                            <Border Style="{StaticResource MetricCardStyle}" Background="#ECFDF5" BorderBrush="#BBF7D0" Margin="0,0,0,10">
                                                 <StackPanel>
                                                     <DockPanel LastChildFill="False">
                                                         <TextBlock Text="Task completion"
@@ -2950,7 +2999,7 @@
                                                 </StackPanel>
                                             </Border>
 
-                                            <Border Grid.Column="4" Style="{StaticResource MetricCardStyle}" Background="#F5F3FF" BorderBrush="#DDD6FE">
+                                            <Border Style="{StaticResource MetricCardStyle}" Background="#F5F3FF" BorderBrush="#DDD6FE">
                                                 <StackPanel>
                                                     <DockPanel LastChildFill="False">
                                                         <TextBlock Text="AI usage"
@@ -2975,143 +3024,127 @@
                                                                Foreground="#64748B" />
                                                 </StackPanel>
                                             </Border>
-                                        </Grid>
+                                        </StackPanel>
 
-                                        <Grid MinWidth="920" Margin="0,0,0,16">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="14" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-
-                                            <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                        <StackPanel Margin="0,0,0,16">
+                                            <Border Style="{StaticResource SectionCardStyle}" Margin="0">
                                                 <StackPanel>
                                                     <TextBlock Text="Workload chart" Style="{StaticResource SectionTitleStyle}" />
                                                     <DataGrid x:Name="OverviewWorkloadDataGrid"
                                                               Height="190"
-                                                              MinWidth="620"
                                                               Margin="0,12,0,0"
                                                               AutoGenerateColumns="False"
                                                               CanUserAddRows="False"
                                                               IsReadOnly="True"
                                                               HeadersVisibility="Column"
                                                               GridLinesVisibility="Horizontal"
-                                                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                                               ScrollViewer.VerticalScrollBarVisibility="Auto"
                                                               BorderBrush="#E2E8F0"
                                                               BorderThickness="1">
                                                         <DataGrid.Columns>
-                                                            <DataGridTextColumn Header="Member" Binding="{Binding Name}" Width="160" />
-                                                            <DataGridTextColumn Header="Role" Binding="{Binding RoleText}" Width="150" />
-                                                            <DataGridTextColumn Header="Open tasks" Binding="{Binding OpenTaskText}" Width="170" />
-                                                            <DataGridTextColumn Header="Load" Binding="{Binding WorkloadPercent, StringFormat={}{0}%}" Width="90" />
+                                                            <DataGridTextColumn Header="Member" Binding="{Binding Name}" Width="1.1*" />
+                                                            <DataGridTextColumn Header="Role" Binding="{Binding RoleText}" Width="1.5*" />
+                                                            <DataGridTextColumn Header="Open tasks" Binding="{Binding OpenTaskText}" Width="1.1*" />
+                                                            <DataGridTextColumn Header="Load" Binding="{Binding WorkloadPercent, StringFormat={}{0}%}" Width="0.7*" />
                                                         </DataGrid.Columns>
                                                     </DataGrid>
                                                 </StackPanel>
                                             </Border>
 
-                                            <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                            <Border Style="{StaticResource SectionCardStyle}" Margin="0,12,0,0">
                                                 <StackPanel>
                                                     <TextBlock Text="Overdue heatmap" Style="{StaticResource SectionTitleStyle}" />
                                                     <DataGrid x:Name="OverviewHeatmapDataGrid"
                                                               Height="190"
-                                                              MinWidth="620"
                                                               Margin="0,12,0,0"
                                                               AutoGenerateColumns="False"
                                                               CanUserAddRows="False"
                                                               IsReadOnly="True"
                                                               HeadersVisibility="Column"
                                                               GridLinesVisibility="Horizontal"
-                                                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                                               ScrollViewer.VerticalScrollBarVisibility="Auto"
                                                               BorderBrush="#E2E8F0"
                                                               BorderThickness="1">
                                                         <DataGrid.Columns>
-                                                            <DataGridTextColumn Header="Project" Binding="{Binding ProjectName}" Width="190" />
-                                                            <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="170" />
-                                                            <DataGridTextColumn Header="Overdue" Binding="{Binding OverdueText}" Width="150" />
-                                                            <DataGridTextColumn Header="Level" Binding="{Binding Severity}" Width="100" />
+                                                            <DataGridTextColumn Header="Project" Binding="{Binding ProjectName}" Width="1.6*" />
+                                                            <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="1.2*" />
+                                                            <DataGridTextColumn Header="Overdue" Binding="{Binding OverdueText}" Width="1*" />
+                                                            <DataGridTextColumn Header="Level" Binding="{Binding Severity}" Width="0.8*" />
                                                         </DataGrid.Columns>
                                                     </DataGrid>
                                                     <TextBlock x:Name="OverviewHeatmapEmptyTextBlock"
-                                                               Text="Overdue task bulunmuyor."
+                                                               Text="No overdue tasks."
                                                                Margin="0,8,0,0"
                                                                FontSize="12"
                                                                Foreground="#64748B" />
                                                 </StackPanel>
                                             </Border>
-                                        </Grid>
+                                        </StackPanel>
 
-                                        <Grid MinWidth="920" Margin="0,0,0,16">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="14" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-
-                                            <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                        <StackPanel Margin="0,0,0,16">
+                                            <Border Style="{StaticResource SectionCardStyle}" Margin="0">
                                                 <StackPanel>
                                                     <TextBlock Text="Team productivity" Style="{StaticResource SectionTitleStyle}" />
                                                     <DataGrid x:Name="OverviewProductivityDataGrid"
                                                               Height="190"
-                                                              MinWidth="620"
                                                               Margin="0,12,0,0"
                                                               AutoGenerateColumns="False"
                                                               CanUserAddRows="False"
                                                               IsReadOnly="True"
                                                               HeadersVisibility="Column"
                                                               GridLinesVisibility="Horizontal"
-                                                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                                               ScrollViewer.VerticalScrollBarVisibility="Auto"
                                                               BorderBrush="#E2E8F0"
                                                               BorderThickness="1">
                                                         <DataGrid.Columns>
-                                                            <DataGridTextColumn Header="Member" Binding="{Binding Name}" Width="190" />
-                                                            <DataGridTextColumn Header="Done" Binding="{Binding CompletionText}" Width="230" />
-                                                            <DataGridTextColumn Header="Completion" Binding="{Binding CompletionPercent, StringFormat={}{0}%}" Width="130" />
+                                                            <DataGridTextColumn Header="Member" Binding="{Binding Name}" Width="1.4*" />
+                                                            <DataGridTextColumn Header="Done" Binding="{Binding CompletionText}" Width="1.6*" />
+                                                            <DataGridTextColumn Header="Completion" Binding="{Binding CompletionPercent, StringFormat={}{0}%}" Width="1*" />
                                                         </DataGrid.Columns>
                                                     </DataGrid>
                                                     <TextBlock x:Name="OverviewProductivityEmptyTextBlock"
-                                                               Text="Team productivity icin task atamasi yok."
+                                                               Text="No task assignments for team productivity yet."
                                                                Margin="0,8,0,0"
                                                                FontSize="12"
                                                                Foreground="#64748B" />
                                                 </StackPanel>
                                             </Border>
 
-                                            <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                            <Border Style="{StaticResource SectionCardStyle}" Margin="0,12,0,0">
                                                 <StackPanel>
                                                     <TextBlock Text="AI usage metrics" Style="{StaticResource SectionTitleStyle}" />
                                                     <DataGrid x:Name="OverviewAIMetricsDataGrid"
                                                               Height="190"
-                                                              MinWidth="620"
                                                               Margin="0,12,0,0"
                                                               AutoGenerateColumns="False"
                                                               CanUserAddRows="False"
                                                               IsReadOnly="True"
                                                               HeadersVisibility="Column"
                                                               GridLinesVisibility="Horizontal"
-                                                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                                               ScrollViewer.VerticalScrollBarVisibility="Auto"
                                                               BorderBrush="#E2E8F0"
                                                               BorderThickness="1">
                                                         <DataGrid.Columns>
-                                                            <DataGridTextColumn Header="Metric" Binding="{Binding Title}" Width="150" />
-                                                            <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="110" />
-                                                            <DataGridTextColumn Header="Detail" Binding="{Binding Detail}" Width="250" />
-                                                            <DataGridTextColumn Header="Level" Binding="{Binding Severity}" Width="100" />
+                                                            <DataGridTextColumn Header="Metric" Binding="{Binding Title}" Width="1.1*" />
+                                                            <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="0.8*" />
+                                                            <DataGridTextColumn Header="Detail" Binding="{Binding Detail}" Width="1.8*" />
+                                                            <DataGridTextColumn Header="Level" Binding="{Binding Severity}" Width="0.8*" />
                                                         </DataGrid.Columns>
                                                     </DataGrid>
                                                 </StackPanel>
                                             </Border>
-                                        </Grid>
+                                        </StackPanel>
 
                                         <Border Style="{StaticResource SectionCardStyle}">
                                             <StackPanel>
                                                 <TextBlock Text="Due soon" Style="{StaticResource SectionTitleStyle}" />
 
                                 <TextBlock x:Name="DueSoonNotificationTextBlock"
-                                           Text="Son 7 gun icinde teslimi olan proje yok."
+                                           Text="No projects due in the next 7 days."
                                            Margin="0,8,0,0"
                                            FontSize="13"
                                            TextWrapping="Wrap"

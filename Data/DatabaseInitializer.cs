@@ -144,21 +144,37 @@ public sealed class DatabaseInitializer
         WorkProject backoffice = GetProject(dbContext, "E-Commerce Backoffice");
         WorkProject intakeWorkflow = GetProject(dbContext, "Patient Intake Workflow");
 
-        AddTaskIfMissing(dbContext, customerPortal.Id, "Login ekranini musteri markasina gore duzenle", TaskStatusNames.InProgress, TaskPriorityNames.High, DateTime.Today.AddDays(1));
-        AddTaskIfMissing(dbContext, customerPortal.Id, "Kullanici kabul test listesini hazirla", TaskStatusNames.ToDo, TaskPriorityNames.Critical, DateTime.Today.AddDays(2));
-        AddTaskIfMissing(dbContext, customerPortal.Id, "Eski portal linklerini yonlendir", TaskStatusNames.Blocked, TaskPriorityNames.Normal, DateTime.Today.AddDays(-1), "Customer DNS approval");
-        AddTaskIfMissing(dbContext, contractAutomation.Id, "Sozlesme sablon alanlarini belirle", TaskStatusNames.ToDo, TaskPriorityNames.Normal, DateTime.Today.AddDays(10));
-        AddTaskIfMissing(dbContext, contractAutomation.Id, "Onay akis rollerini netlestir", TaskStatusNames.ToDo, TaskPriorityNames.High, DateTime.Today.AddDays(14));
-        AddTaskIfMissing(dbContext, warehouseApp.Id, "Barkod tarama ekranini test et", TaskStatusNames.InProgress, TaskPriorityNames.Critical, DateTime.Today);
-        AddTaskIfMissing(dbContext, warehouseApp.Id, "Offline senkronizasyon hatalarini incele", TaskStatusNames.ToDo, TaskPriorityNames.High, DateTime.Today.AddDays(5));
-        AddTaskIfMissing(dbContext, routeDashboard.Id, "Harita servis maliyetlerini karsilastir", TaskStatusNames.Blocked, TaskPriorityNames.Normal, null, "Vendor pricing response");
-        AddTaskIfMissing(dbContext, riskReporting.Id, "Yonetim ozeti grafiklerini tamamla", TaskStatusNames.InProgress, TaskPriorityNames.Critical, DateTime.Today.AddDays(1));
-        AddTaskIfMissing(dbContext, riskReporting.Id, "Excel export formatini dogrula", TaskStatusNames.ToDo, TaskPriorityNames.High, DateTime.Today.AddDays(3));
-        AddTaskIfMissing(dbContext, dataMigration.Id, "Final veri kontrol raporunu arsivle", TaskStatusNames.Done, TaskPriorityNames.Low, DateTime.Today.AddDays(-6));
-        AddTaskIfMissing(dbContext, backoffice.Id, "Stok alarm kurallarini tanimla", TaskStatusNames.ToDo, TaskPriorityNames.High, DateTime.Today.AddDays(7));
-        AddTaskIfMissing(dbContext, backoffice.Id, "Iade sureci ekran metinlerini guncelle", TaskStatusNames.ToDo, TaskPriorityNames.Normal, DateTime.Today.AddDays(12));
-        AddTaskIfMissing(dbContext, intakeWorkflow.Id, "Hasta kayit form alanlarini gozden gecir", TaskStatusNames.ToDo, TaskPriorityNames.Normal, null);
-        AddTaskIfMissing(dbContext, intakeWorkflow.Id, "KVKK onay adimini tasarla", TaskStatusNames.ToDo, TaskPriorityNames.High, DateTime.Today.AddDays(18));
+        RenameTaskIfExists(dbContext, "Login ekranini musteri markasina gore duzenle", "Customize login screen for client brand");
+        RenameTaskIfExists(dbContext, "Kullanici kabul test listesini hazirla", "Prepare user acceptance test checklist");
+        RenameTaskIfExists(dbContext, "Eski portal linklerini yonlendir", "Redirect legacy portal links");
+        RenameTaskIfExists(dbContext, "Sozlesme sablon alanlarini belirle", "Define contract template fields");
+        RenameTaskIfExists(dbContext, "Onay akis rollerini netlestir", "Clarify approval workflow roles");
+        RenameTaskIfExists(dbContext, "Barkod tarama ekranini test et", "Test barcode scanning screen");
+        RenameTaskIfExists(dbContext, "Offline senkronizasyon hatalarini incele", "Review offline sync errors");
+        RenameTaskIfExists(dbContext, "Harita servis maliyetlerini karsilastir", "Compare map service costs");
+        RenameTaskIfExists(dbContext, "Yonetim ozeti grafiklerini tamamla", "Finalize executive summary charts");
+        RenameTaskIfExists(dbContext, "Excel export formatini dogrula", "Validate Excel export format");
+        RenameTaskIfExists(dbContext, "Final veri kontrol raporunu arsivle", "Archive final data validation report");
+        RenameTaskIfExists(dbContext, "Stok alarm kurallarini tanimla", "Define stock alert rules");
+        RenameTaskIfExists(dbContext, "Iade sureci ekran metinlerini guncelle", "Update refund workflow screen copy");
+        RenameTaskIfExists(dbContext, "Hasta kayit form alanlarini gozden gecir", "Review patient intake form fields");
+        RenameTaskIfExists(dbContext, "KVKK onay adimini tasarla", "Design privacy consent approval step");
+
+        AddTaskIfMissing(dbContext, customerPortal.Id, "Customize login screen for client brand", TaskStatusNames.InProgress, TaskPriorityNames.High, DateTime.Today.AddDays(1));
+        AddTaskIfMissing(dbContext, customerPortal.Id, "Prepare user acceptance test checklist", TaskStatusNames.ToDo, TaskPriorityNames.Critical, DateTime.Today.AddDays(2));
+        AddTaskIfMissing(dbContext, customerPortal.Id, "Redirect legacy portal links", TaskStatusNames.Blocked, TaskPriorityNames.Normal, DateTime.Today.AddDays(-1), "Customer DNS approval");
+        AddTaskIfMissing(dbContext, contractAutomation.Id, "Define contract template fields", TaskStatusNames.ToDo, TaskPriorityNames.Normal, DateTime.Today.AddDays(10));
+        AddTaskIfMissing(dbContext, contractAutomation.Id, "Clarify approval workflow roles", TaskStatusNames.ToDo, TaskPriorityNames.High, DateTime.Today.AddDays(14));
+        AddTaskIfMissing(dbContext, warehouseApp.Id, "Test barcode scanning screen", TaskStatusNames.InProgress, TaskPriorityNames.Critical, DateTime.Today);
+        AddTaskIfMissing(dbContext, warehouseApp.Id, "Review offline sync errors", TaskStatusNames.ToDo, TaskPriorityNames.High, DateTime.Today.AddDays(5));
+        AddTaskIfMissing(dbContext, routeDashboard.Id, "Compare map service costs", TaskStatusNames.Blocked, TaskPriorityNames.Normal, null, "Vendor pricing response");
+        AddTaskIfMissing(dbContext, riskReporting.Id, "Finalize executive summary charts", TaskStatusNames.InProgress, TaskPriorityNames.Critical, DateTime.Today.AddDays(1));
+        AddTaskIfMissing(dbContext, riskReporting.Id, "Validate Excel export format", TaskStatusNames.ToDo, TaskPriorityNames.High, DateTime.Today.AddDays(3));
+        AddTaskIfMissing(dbContext, dataMigration.Id, "Archive final data validation report", TaskStatusNames.Done, TaskPriorityNames.Low, DateTime.Today.AddDays(-6));
+        AddTaskIfMissing(dbContext, backoffice.Id, "Define stock alert rules", TaskStatusNames.ToDo, TaskPriorityNames.High, DateTime.Today.AddDays(7));
+        AddTaskIfMissing(dbContext, backoffice.Id, "Update refund workflow screen copy", TaskStatusNames.ToDo, TaskPriorityNames.Normal, DateTime.Today.AddDays(12));
+        AddTaskIfMissing(dbContext, intakeWorkflow.Id, "Review patient intake form fields", TaskStatusNames.ToDo, TaskPriorityNames.Normal, null);
+        AddTaskIfMissing(dbContext, intakeWorkflow.Id, "Design privacy consent approval step", TaskStatusNames.ToDo, TaskPriorityNames.High, DateTime.Today.AddDays(18));
 
         dbContext.SaveChanges();
         AssignDemoTasksIfNeeded(dbContext);
@@ -173,21 +189,21 @@ public sealed class DatabaseInitializer
         Employee zeynep = GetEmployee(dbContext, "zeynep@deskflow.ai");
         Employee arda = GetEmployee(dbContext, "arda@deskflow.ai");
 
-        AssignTaskIfUnassigned(dbContext, "Login ekranini musteri markasina gore duzenle", can.Id);
-        AssignTaskIfUnassigned(dbContext, "Kullanici kabul test listesini hazirla", merve.Id);
-        AssignTaskIfUnassigned(dbContext, "Eski portal linklerini yonlendir", zeynep.Id);
-        AssignTaskIfUnassigned(dbContext, "Sozlesme sablon alanlarini belirle", evin.Id);
-        AssignTaskIfUnassigned(dbContext, "Onay akis rollerini netlestir", merve.Id);
-        AssignTaskIfUnassigned(dbContext, "Barkod tarama ekranini test et", can.Id);
-        AssignTaskIfUnassigned(dbContext, "Offline senkronizasyon hatalarini incele", arda.Id);
-        AssignTaskIfUnassigned(dbContext, "Harita servis maliyetlerini karsilastir", zeynep.Id);
-        AssignTaskIfUnassigned(dbContext, "Yonetim ozeti grafiklerini tamamla", merve.Id);
-        AssignTaskIfUnassigned(dbContext, "Excel export formatini dogrula", evin.Id);
-        AssignTaskIfUnassigned(dbContext, "Final veri kontrol raporunu arsivle", can.Id);
-        AssignTaskIfUnassigned(dbContext, "Stok alarm kurallarini tanimla", arda.Id);
-        AssignTaskIfUnassigned(dbContext, "Iade sureci ekran metinlerini guncelle", zeynep.Id);
-        AssignTaskIfUnassigned(dbContext, "Hasta kayit form alanlarini gozden gecir", evin.Id);
-        AssignTaskIfUnassigned(dbContext, "KVKK onay adimini tasarla", merve.Id);
+        AssignTaskIfUnassigned(dbContext, "Customize login screen for client brand", can.Id);
+        AssignTaskIfUnassigned(dbContext, "Prepare user acceptance test checklist", merve.Id);
+        AssignTaskIfUnassigned(dbContext, "Redirect legacy portal links", zeynep.Id);
+        AssignTaskIfUnassigned(dbContext, "Define contract template fields", evin.Id);
+        AssignTaskIfUnassigned(dbContext, "Clarify approval workflow roles", merve.Id);
+        AssignTaskIfUnassigned(dbContext, "Test barcode scanning screen", can.Id);
+        AssignTaskIfUnassigned(dbContext, "Review offline sync errors", arda.Id);
+        AssignTaskIfUnassigned(dbContext, "Compare map service costs", zeynep.Id);
+        AssignTaskIfUnassigned(dbContext, "Finalize executive summary charts", merve.Id);
+        AssignTaskIfUnassigned(dbContext, "Validate Excel export format", evin.Id);
+        AssignTaskIfUnassigned(dbContext, "Archive final data validation report", can.Id);
+        AssignTaskIfUnassigned(dbContext, "Define stock alert rules", arda.Id);
+        AssignTaskIfUnassigned(dbContext, "Update refund workflow screen copy", zeynep.Id);
+        AssignTaskIfUnassigned(dbContext, "Review patient intake form fields", evin.Id);
+        AssignTaskIfUnassigned(dbContext, "Design privacy consent approval step", merve.Id);
     }
 
     private static void SeedProjectDocumentsIfNeeded(DeskFlowDbContext dbContext)
@@ -400,6 +416,18 @@ public sealed class DatabaseInitializer
         }
 
         dbContext.Tasks.Add(new WorkTask(projectId, title, status, priority, dueDate, blockedBy: blockedBy));
+    }
+
+    private static void RenameTaskIfExists(DeskFlowDbContext dbContext, string oldTitle, string newTitle)
+    {
+        WorkTask? task = dbContext.Tasks.FirstOrDefault(task => task.Title == oldTitle);
+
+        if (task is null || dbContext.Tasks.Any(existingTask => existingTask.Title == newTitle))
+        {
+            return;
+        }
+
+        task.Rename(newTitle);
     }
 
     private static void AddDocumentIfMissing(

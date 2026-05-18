@@ -207,9 +207,12 @@ public partial class MainWindow : Window
     private void RefreshDashboardNotifications(DashboardSummary summary)
     {
         _dashboardNotifications.Clear();
+        int unreadNotificationCount = 0;
 
         if (_currentUser is not null)
         {
+            unreadNotificationCount = _projectCommunicationService.GetUnreadNotificationCountFor(_currentUser.Email);
+
             foreach (UserNotification notification in _projectCommunicationService.GetUnreadNotificationsFor(_currentUser.Email))
             {
                 _dashboardNotifications.Add(new DashboardNotification(
@@ -222,8 +225,8 @@ public partial class MainWindow : Window
         if (summary.OverdueTasks > 0)
         {
             _dashboardNotifications.Add(new DashboardNotification(
-                "Geciken gorevler",
-                $"{summary.OverdueTasks} gorev gecikti.",
+                "Overdue work",
+                $"{summary.OverdueTasks} tasks are overdue.",
                 "Danger"));
         }
 
@@ -231,37 +234,56 @@ public partial class MainWindow : Window
         {
             _dashboardNotifications.Add(new DashboardNotification(
                 "AI review queue",
-                $"{summary.PendingAiDocuments} belge AI analizi bekliyor.",
+                $"{summary.PendingAiDocuments} documents are waiting for AI analysis.",
                 "Warning"));
         }
 
         if (summary.AnalyzedAiDocuments > 0)
         {
             _dashboardNotifications.Add(new DashboardNotification(
-                "AI analizi hazir",
-                $"{summary.AnalyzedAiDocuments} belge analizi hazir.",
+                "AI review ready",
+                $"{summary.AnalyzedAiDocuments} document analyses are ready for review.",
                 "Success"));
         }
 
         if (summary.NeedsApprovalDocuments > 0)
         {
             _dashboardNotifications.Add(new DashboardNotification(
-                "Onay gerekli",
-                $"{summary.NeedsApprovalDocuments} belge external AI onayi bekliyor.",
+                "Approval required",
+                $"{summary.NeedsApprovalDocuments} documents need external AI approval.",
                 "Warning"));
         }
 
         if (summary.BlockedDocuments > 0)
         {
             _dashboardNotifications.Add(new DashboardNotification(
-                "Blocked belgeler",
-                $"{summary.BlockedDocuments} belge AI akisi disinda tutuluyor.",
+                "Blocked documents",
+                $"{summary.BlockedDocuments} documents are blocked from the AI workflow.",
                 "Danger"));
         }
 
         NotificationsEmptyTextBlock.Visibility = _dashboardNotifications.Count == 0
             ? Visibility.Visible
             : Visibility.Collapsed;
+        UnreadNotificationsTextBlock.Text = $"{unreadNotificationCount} unread";
+        MarkNotificationsReadButton.IsEnabled = unreadNotificationCount > 0;
+    }
+
+    private void MarkNotificationsReadButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentUser is null)
+        {
+            return;
+        }
+
+        int markedCount = _projectCommunicationService.MarkAllNotificationsReadFor(_currentUser.Email);
+
+        if (markedCount > 0)
+        {
+            RecordAudit("Updated", "Notification", $"{markedCount} notifications marked as read.");
+        }
+
+        RefreshDashboardSummary();
     }
 
     private void LoadCustomers()
@@ -312,14 +334,14 @@ public partial class MainWindow : Window
 
     private void UpdateCustomerButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsurePermission(PermissionNames.CustomerUpdate, "customer guncelleme"))
+        if (!EnsurePermission(PermissionNames.CustomerUpdate, "customer update"))
         {
             return;
         }
 
         if (_selectedCustomer is null)
         {
-            ShowCustomerFormMessage("Guncellemek icin listeden bir customer sec.", isError: true);
+            ShowCustomerFormMessage("Select a customer from the list before updating.", isError: true);
             return;
         }
 
@@ -346,7 +368,7 @@ public partial class MainWindow : Window
             CustomersDataGrid.SelectedItem = updatedCustomer;
             _selectedCustomer = updatedCustomer;
             RecordAudit("Updated", "Customer", $"{updatedCustomer.CompanyName}: {changeDetails}");
-            ShowCustomerFormMessage("Selected customer guncellendi.", isError: false);
+            ShowCustomerFormMessage("Selected customer updated.", isError: false);
         }
     }
 
@@ -359,7 +381,7 @@ public partial class MainWindow : Window
 
         if (CustomersDataGrid.SelectedItem is not Customer selectedCustomer)
         {
-            ShowCustomerFormMessage("Silmek icin listeden bir customer sec.", isError: true);
+            ShowCustomerFormMessage("Select a customer from the list before deleting.", isError: true);
             return;
         }
 
@@ -561,7 +583,7 @@ public partial class MainWindow : Window
 
         if (_currentUser?.HasPermission(PermissionNames.TaskUpdate) != true)
         {
-            ShowTaskFormMessage("Bu kullanicinin board uzerinden task guncelleme yetkisi yok.", isError: true);
+            ShowTaskFormMessage("This user cannot update tasks from the board.", isError: true);
             return;
         }
 
@@ -618,9 +640,9 @@ public partial class MainWindow : Window
         ClearDocumentForm();
         _tasks.Clear();
         _documents.Clear();
-        SelectedProjectForTaskTextBlock.Text = "Once Projects sekmesinden bir project sec.";
+        SelectedProjectForTaskTextBlock.Text = "Select a project from the Projects tab first.";
         TasksEmptyTextBlock.Visibility = Visibility.Collapsed;
-        SelectedProjectForDocumentTextBlock.Text = "Once Projects sekmesinden bir project sec.";
+        SelectedProjectForDocumentTextBlock.Text = "Select a project from the Projects tab first.";
         DocumentsEmptyTextBlock.Visibility = Visibility.Collapsed;
         UseDefaultWorkspaceLayout();
         LoadProjectsForSelectedCustomer();
@@ -632,14 +654,14 @@ public partial class MainWindow : Window
 
     private void AddProjectButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsurePermission(PermissionNames.ProjectCreate, "proje ekleme"))
+        if (!EnsurePermission(PermissionNames.ProjectCreate, "project creation"))
         {
             return;
         }
 
         if (_selectedCustomer is null)
         {
-            ShowProjectFormMessage("Proje eklemek icin once bir customer sec.", isError: true);
+            ShowProjectFormMessage("Select a customer before adding a project.", isError: true);
             return;
         }
 
@@ -658,20 +680,20 @@ public partial class MainWindow : Window
         RefreshDashboardSummary();
         RefreshProjectOverview();
         string dueDateText = dueDate.HasValue ? dueDate.Value.ToString("dd.MM.yyyy") : "teslim tarihi yok";
-        RecordAudit("Created", "Project", $"{project.Name} projesi {_selectedCustomer.CompanyName} icin {project.Status} status ile eklendi. Due: {dueDateText}.");
+        RecordAudit("Created", "Project", $"{project.Name} was created for {_selectedCustomer.CompanyName} with {project.Status} status. Due: {dueDateText}.");
         ShowProjectFormMessage("Project eklendi ve listede secildi.", isError: false);
     }
 
     private void UpdateProjectStatusButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsurePermission(PermissionNames.ProjectUpdate, "proje guncelleme"))
+        if (!EnsurePermission(PermissionNames.ProjectUpdate, "project update"))
         {
             return;
         }
 
         if (_selectedProject is null)
         {
-            ShowProjectFormMessage("Status guncellemek icin listeden bir project sec.", isError: true);
+            ShowProjectFormMessage("Select a project from the list before updating status.", isError: true);
             return;
         }
 
@@ -696,19 +718,19 @@ public partial class MainWindow : Window
         RefreshDashboardSummary();
         RefreshProjectOverview();
         RecordAudit("Updated", "Project", $"{updatedProject.Name}: Status '{oldStatus}' -> '{newStatus}'");
-        ShowProjectFormMessage("Project status guncellendi.", isError: false);
+        ShowProjectFormMessage("Project status updated.", isError: false);
     }
 
     private void SendProjectNoteButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsurePermission(PermissionNames.ProjectUpdate, "proje notu gonderme"))
+        if (!EnsurePermission(PermissionNames.ProjectNotifyTeam, "project note sending"))
         {
             return;
         }
 
         if (_selectedProject is null || _currentUser is null)
         {
-            ShowProjectFormMessage("Not gondermek icin once bir project sec.", isError: true);
+            ShowProjectFormMessage("Select a project before sending a note.", isError: true);
             return;
         }
 
@@ -732,14 +754,14 @@ public partial class MainWindow : Window
 
     private void AddTaskButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsurePermission(PermissionNames.TaskCreate, "gorev ekleme"))
+        if (!EnsurePermission(PermissionNames.TaskCreate, "task creation"))
         {
             return;
         }
 
         if (_selectedProject is null)
         {
-            ShowTaskFormMessage("Gorev eklemek icin once bir project sec.", isError: true);
+            ShowTaskFormMessage("Select a project before adding a task.", isError: true);
             return;
         }
 
@@ -763,23 +785,23 @@ public partial class MainWindow : Window
         string dueDateText = dueDate.HasValue ? dueDate.Value.ToString("dd.MM.yyyy") : "teslim tarihi yok";
         string assignedText = assignedEmployee is null ? "atanan kisi yok" : assignedEmployee.FullName;
         string dependencyText = string.IsNullOrWhiteSpace(blockedBy) ? "dependency yok" : blockedBy;
-        RecordAudit("Created", "Task", $"{task.Title} gorevi {_selectedProject.Name} projesine {priority} priority ile eklendi. Assigned: {assignedText}. Due: {dueDateText}. Dependency: {dependencyText}.");
+        RecordAudit("Created", "Task", $"{task.Title} was added to {_selectedProject.Name} with {priority} priority. Assigned: {assignedText}. Due: {dueDateText}. Dependency: {dependencyText}.");
         string createMessage = TaskIsVisibleInCurrentFilters(task)
             ? "Task eklendi ve listede secildi."
-            : "Task eklendi. Aktif filtreler nedeniyle listede gorunmuyor.";
+            : "Task was added but is hidden by the active filters.";
         ShowTaskFormMessage(AppendAssignmentWarning(createMessage, assignedEmployee), isError: false);
     }
 
     private void UpdateTaskButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsurePermission(PermissionNames.TaskUpdate, "gorev guncelleme"))
+        if (!EnsurePermission(PermissionNames.TaskUpdate, "task update"))
         {
             return;
         }
 
         if (_selectedTask is null)
         {
-            ShowTaskFormMessage("Guncellemek icin listeden bir task sec.", isError: true);
+            ShowTaskFormMessage("Select a task from the list before updating.", isError: true);
             return;
         }
 
@@ -804,21 +826,21 @@ public partial class MainWindow : Window
         string changeDetails = BuildTaskChangeDetails(oldStatus, newStatus, oldPriority, newPriority, oldAssignedEmployeeName, newAssignedEmployeeName, oldDueDate, newDueDate, oldBlockedBy, newBlockedBy);
         RecordAudit("Updated", "Task", $"{updatedTask.Title}: {changeDetails}");
         string updateMessage = TaskIsVisibleInCurrentFilters(updatedTask)
-            ? "Task guncellendi."
-            : "Task guncellendi. Aktif filtreler nedeniyle listede gorunmuyor.";
+            ? "Task updated."
+            : "Task updated but is hidden by the active filters.";
         ShowTaskFormMessage(AppendAssignmentWarning(updateMessage, newAssignedEmployee), isError: false);
     }
 
     private void MarkTaskDoneButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsurePermission(PermissionNames.TaskUpdate, "gorev tamamlama"))
+        if (!EnsurePermission(PermissionNames.TaskUpdate, "task completion"))
         {
             return;
         }
 
         if (_selectedTask is null)
         {
-            ShowTaskFormMessage("Tamamlamak icin listeden bir task sec.", isError: true);
+            ShowTaskFormMessage("Select a task from the list before marking it done.", isError: true);
             return;
         }
 
@@ -842,12 +864,12 @@ public partial class MainWindow : Window
         RecordAudit("Updated", "Task", $"{updatedTask.Title}: Status '{oldStatus}' -> '{TaskStatusNames.Done}'");
         ShowTaskFormMessage(TaskIsVisibleInCurrentFilters(updatedTask)
             ? "Task Done olarak isaretlendi."
-            : "Task Done olarak isaretlendi. Aktif filtreler nedeniyle listede gorunmuyor.", isError: false);
+            : "Task was marked Done but is hidden by the active filters.", isError: false);
     }
 
     private void AddEmployeeButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsurePermission(PermissionNames.EmployeeManage, "calisan yonetimi"))
+        if (!EnsurePermission(PermissionNames.EmployeeManage, "team management"))
         {
             return;
         }
@@ -878,20 +900,20 @@ public partial class MainWindow : Window
             backupEmployeeName);
 
         LoadEmployees(employee.Id);
-        RecordAudit("Created", "Employee", $"{employee.FullName} calisan kaydi {department} ekibine eklendi.");
+        RecordAudit("Created", "Employee", $"{employee.FullName} was added to the {department} team.");
         ShowEmployeeFormMessage("Calisan eklendi ve listede secildi.", isError: false);
     }
 
     private void UpdateEmployeeButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsurePermission(PermissionNames.EmployeeManage, "calisan yonetimi"))
+        if (!EnsurePermission(PermissionNames.EmployeeManage, "team management"))
         {
             return;
         }
 
         if (_selectedEmployee is null)
         {
-            ShowEmployeeFormMessage("Guncellemek icin listeden bir calisan sec.", isError: true);
+            ShowEmployeeFormMessage("Select a team member from the list before updating.", isError: true);
             return;
         }
 
@@ -924,7 +946,7 @@ public partial class MainWindow : Window
 
         LoadEmployees(employee.Id);
         RecordAudit("Updated", "Employee", $"{employee.FullName}: {changeDetails}");
-        ShowEmployeeFormMessage("Calisan bilgileri guncellendi.", isError: false);
+        ShowEmployeeFormMessage("Team member details updated.", isError: false);
     }
 
     private void ClearEmployeeFormButton_Click(object sender, RoutedEventArgs e)
@@ -934,7 +956,7 @@ public partial class MainWindow : Window
 
     private void AddUserButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsurePermission(PermissionNames.UserManage, "kullanici yonetimi"))
+        if (!EnsurePermission(PermissionNames.UserManage, "user management"))
         {
             return;
         }
@@ -948,25 +970,25 @@ public partial class MainWindow : Window
         {
             UserAccount user = _userAccountService.CreateUser(email, password, role, employeeId, isActive);
             LoadUserAccounts(user.Id);
-            RecordAudit("Created", "User", $"{user.Email} kullanicisi {role} rolu ile olusturuldu.");
+            RecordAudit("Created", "User", $"{user.Email} was created with the {role} role.");
             ShowUserFormMessage("Kullanici olusturuldu ve listede secildi.", isError: false);
         }
         catch (Microsoft.EntityFrameworkCore.DbUpdateException)
         {
-            ShowUserFormMessage("Bu email veya calisan baglantisi zaten baska bir kullanicida kullaniliyor.", isError: true);
+            ShowUserFormMessage("This email or employee link is already used by another user.", isError: true);
         }
     }
 
     private void UpdateUserButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsurePermission(PermissionNames.UserManage, "kullanici yonetimi"))
+        if (!EnsurePermission(PermissionNames.UserManage, "user management"))
         {
             return;
         }
 
         if (_selectedUserAccount is null)
         {
-            ShowUserFormMessage("Guncellemek icin listeden bir kullanici sec.", isError: true);
+            ShowUserFormMessage("Select a user from the list before updating.", isError: true);
             return;
         }
 
@@ -982,11 +1004,11 @@ public partial class MainWindow : Window
             UserAccount user = _userAccountService.UpdateUser(_selectedUserAccount, email, role, employeeId, isActive);
             LoadUserAccounts(user.Id);
             RecordAudit("Updated", "User", $"{oldEmail}: Role '{oldRole}' -> '{role}', Active: {isActive}");
-            ShowUserFormMessage("Kullanici bilgileri guncellendi.", isError: false);
+            ShowUserFormMessage("User details updated.", isError: false);
         }
         catch (Microsoft.EntityFrameworkCore.DbUpdateException)
         {
-            ShowUserFormMessage("Bu email veya calisan baglantisi zaten baska bir kullanicida kullaniliyor.", isError: true);
+            ShowUserFormMessage("This email or employee link is already used by another user.", isError: true);
         }
     }
 
@@ -999,7 +1021,7 @@ public partial class MainWindow : Window
 
         if (_selectedUserAccount is null)
         {
-            ShowUserFormMessage("Sifre resetlemek icin listeden bir kullanici sec.", isError: true);
+            ShowUserFormMessage("Select a user from the list before resetting the password.", isError: true);
             return;
         }
 
@@ -1007,7 +1029,7 @@ public partial class MainWindow : Window
 
         if (password.Length < 6)
         {
-            ShowUserFormMessage("Yeni sifre en az 6 karakter olmalidir.", isError: true);
+            ShowUserFormMessage("New password must be at least 6 characters.", isError: true);
             return;
         }
 
@@ -1025,14 +1047,14 @@ public partial class MainWindow : Window
 
     private void AddDocumentButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsurePermission(PermissionNames.DocumentCreate, "belge ekleme"))
+        if (!EnsurePermission(PermissionNames.DocumentCreate, "document creation"))
         {
             return;
         }
 
         if (_selectedProject is null)
         {
-            ShowDocumentFormMessage("Belge eklemek icin once bir project sec.", isError: true);
+            ShowDocumentFormMessage("Select a project before adding a document.", isError: true);
             return;
         }
 
@@ -1045,20 +1067,20 @@ public partial class MainWindow : Window
         ProjectDocument document = _documentService.CreateDocument(_selectedProject.Id, fileName, filePath, status, aiProcessingPolicy, uploadedByEmail, notes);
         LoadDocumentsForCurrentContext(document.Id);
         RefreshDashboardSummary();
-        RecordAudit("Created", "Document", $"{fileName} belgesi {_selectedProject.Name} projesine {uploadedByEmail} tarafindan eklendi.");
+        RecordAudit("Created", "Document", $"{fileName} was added to {_selectedProject.Name} by {uploadedByEmail}.");
         ShowDocumentFormMessage("Belge eklendi ve listede secildi.", isError: false);
     }
 
     private void UpdateDocumentStatusButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsurePermission(PermissionNames.DocumentUpdate, "belge guncelleme"))
+        if (!EnsurePermission(PermissionNames.DocumentUpdate, "document update"))
         {
             return;
         }
 
         if (_selectedDocument is null)
         {
-            ShowDocumentFormMessage("Guncellemek icin listeden bir belge sec.", isError: true);
+            ShowDocumentFormMessage("Select a document from the list before updating.", isError: true);
             return;
         }
 
@@ -1071,19 +1093,19 @@ public partial class MainWindow : Window
         ProjectDocument document = _documentService.UpdateDocumentStatus(_selectedDocument, newStatus, newAIProcessingPolicy, notes);
         LoadDocumentsForCurrentContext(document.Id);
         RecordAudit("Updated", "Document", $"{document.FileName}: Status '{oldStatus}' -> '{newStatus}', AI Policy '{oldAIProcessingPolicy}' -> '{newAIProcessingPolicy}'");
-        ShowDocumentFormMessage("Belge status bilgisi guncellendi.", isError: false);
+        ShowDocumentFormMessage("Document status updated.", isError: false);
     }
 
     private void AnalyzeDocumentButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsurePermission(PermissionNames.DocumentUpdate, "belge analizi"))
+        if (!EnsurePermission(PermissionNames.DocumentAnalyze, "document analysis"))
         {
             return;
         }
 
         if (_selectedDocument is null)
         {
-            ShowDocumentFormMessage("Analiz etmek icin listeden bir belge sec.", isError: true);
+            ShowDocumentFormMessage("Select a document from the list before analyzing.", isError: true);
             return;
         }
 
@@ -1120,20 +1142,20 @@ public partial class MainWindow : Window
 
     private void ApproveExternalAIButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsurePermission(PermissionNames.DocumentUpdate, "dis AI onayi"))
+        if (!EnsurePermission(PermissionNames.DocumentApproveExternalAI, "external AI approval"))
         {
             return;
         }
 
         if (_selectedDocument is null)
         {
-            ShowDocumentFormMessage("Onay vermek icin listeden bir belge sec.", isError: true);
+            ShowDocumentFormMessage("Select a document from the list before approving.", isError: true);
             return;
         }
 
         if (_selectedDocument.AIProcessingPolicy != DocumentAIProcessingPolicyNames.NeedsApproval)
         {
-            ShowDocumentFormMessage("Bu belge dis AI onayi beklemiyor.", isError: true);
+            ShowDocumentFormMessage("This document is not waiting for external AI approval.", isError: true);
             return;
         }
 
@@ -1141,12 +1163,12 @@ public partial class MainWindow : Window
         LoadDocumentsForCurrentContext(document.Id);
         RefreshDashboardSummary();
         RecordAudit("Approved", "Document", $"{document.FileName}: External AI processing approved.");
-        ShowDocumentFormMessage("Dis AI kullanimi icin onay verildi.", isError: false);
+        ShowDocumentFormMessage("External AI usage approved.", isError: false);
     }
 
     private void MarkAIReviewedButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsurePermission(PermissionNames.DocumentUpdate, "AI review"))
+        if (!EnsurePermission(PermissionNames.DocumentReviewAI, "AI review"))
         {
             return;
         }
@@ -1158,7 +1180,7 @@ public partial class MainWindow : Window
 
         if (_selectedDocument.AIReviewStatus != AIReviewStatusNames.Ready)
         {
-            ShowDocumentFormMessage("Review icin once AI analiz sonucunun Ready olmasi gerekir.", isError: true);
+            ShowDocumentFormMessage("AI analysis must be Ready before it can be marked reviewed.", isError: true);
             return;
         }
 
@@ -1171,14 +1193,14 @@ public partial class MainWindow : Window
 
     private void CheckDocumentFileButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsurePermission(PermissionNames.DocumentUpdate, "belge dosya kontrolu"))
+        if (!EnsurePermission(PermissionNames.DocumentUpdate, "document file check"))
         {
             return;
         }
 
         if (_selectedDocument is null)
         {
-            ShowDocumentFormMessage("Dosya kontrolu icin listeden bir belge sec.", isError: true);
+            ShowDocumentFormMessage("Select a document from the list before file check.", isError: true);
             return;
         }
 
@@ -1191,14 +1213,14 @@ public partial class MainWindow : Window
 
     private void ExtractDocumentTextButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsurePermission(PermissionNames.DocumentUpdate, "belge metni cikarma"))
+        if (!EnsurePermission(PermissionNames.DocumentUpdate, "document text extraction"))
         {
             return;
         }
 
         if (_selectedDocument is null)
         {
-            ShowDocumentFormMessage("Metin cikarmak icin listeden bir belge sec.", isError: true);
+            ShowDocumentFormMessage("Select a document from the list before extracting text.", isError: true);
             return;
         }
 
@@ -1351,10 +1373,10 @@ public partial class MainWindow : Window
     {
         string fullName = user.FullName;
         TaskListTitleTextBlock.Text = "My tasks";
-        TaskListDescriptionTextBlock.Text = "Sana atanmis gorevler teslim tarihine ve oncelige gore siralanir.";
-        SelectedProjectForTaskTextBlock.Text = $"{fullName} icin atanmis tasklar.";
+        TaskListDescriptionTextBlock.Text = "Your assigned tasks are sorted by due date and priority.";
+        SelectedProjectForTaskTextBlock.Text = $"Tasks assigned to {fullName}.";
         TaskDetailsTitleTextBlock.Text = "My task details";
-        TaskDetailsDescriptionTextBlock.Text = "Secili gorevin durumunu, onceligini ve teslim tarihini guncelle.";
+        TaskDetailsDescriptionTextBlock.Text = "Update the selected task status, priority, and due date.";
         AddTaskButton.IsEnabled = false;
         TaskAssignedEmployeeComboBox.IsEnabled = false;
     }
@@ -1362,9 +1384,9 @@ public partial class MainWindow : Window
     private void ConfigureTaskWorkspaceForOperations()
     {
         TaskListTitleTextBlock.Text = "Task list";
-        TaskListDescriptionTextBlock.Text = "Secili project icindeki gorevler teslim tarihine ve oncelige gore siralanir.";
+        TaskListDescriptionTextBlock.Text = "Tasks in the selected project are sorted by due date and priority.";
         TaskDetailsTitleTextBlock.Text = "Task details";
-        TaskDetailsDescriptionTextBlock.Text = "Yeni gorev ekle veya secili gorevin is akis bilgilerini guncelle.";
+        TaskDetailsDescriptionTextBlock.Text = "Add a task or update the selected task workflow.";
         TaskAssignedEmployeeComboBox.IsEnabled = true;
     }
 
@@ -1375,7 +1397,7 @@ public partial class MainWindow : Window
             return true;
         }
 
-        ShowCustomerFormMessage($"Bu kullanicinin {operationName} yetkisi yok.", isError: true);
+        ShowCustomerFormMessage($"This user does not have permission for {operationName}.", isError: true);
         return false;
     }
 
@@ -1465,16 +1487,16 @@ public partial class MainWindow : Window
     private static string BuildSmartDocumentAnalysisFormMessage(ProjectDocument document, IReadOnlyCollection<string> automaticSteps)
     {
         string sourceMessage = document.TextExtractionStatus == DocumentTextExtractionStatusNames.Extracted
-            ? "AI analizi cikartilan belge metnine gore olusturuldu."
-            : "AI analizi belge kaydi bilgilerine gore olusturuldu.";
+            ? "AI analysis was generated from extracted document text."
+            : "AI analysis was generated from document record details.";
 
         if (document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.Blocked)
         {
-            sourceMessage = "AI analizi belge policy nedeniyle engellendi. Dosya kontrolu ve metin cikarma otomatik calistirilmadi.";
+            sourceMessage = "AI analysis was blocked by document policy. File check and text extraction were not run automatically.";
         }
         else if (document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.NeedsApproval)
         {
-            sourceMessage = $"{sourceMessage} Dis AI kullanimi icin onay gerekiyor.";
+            sourceMessage = $"{sourceMessage} External AI usage requires approval.";
         }
 
         if (!string.IsNullOrWhiteSpace(document.AIProviderName))
@@ -1548,12 +1570,12 @@ public partial class MainWindow : Window
         RefreshKanbanBoard([]);
         RefreshProjectTimeline();
         _documents.Clear();
-        SelectedProjectForTaskTextBlock.Text = "Once Projects sekmesinden bir project sec.";
-        SelectedProjectForBoardTextBlock.Text = "Once Projects sekmesinden bir project sec.";
+        SelectedProjectForTaskTextBlock.Text = "Select a project from the Projects tab first.";
+        SelectedProjectForBoardTextBlock.Text = "Select a project from the Projects tab first.";
         TasksEmptyTextBlock.Visibility = Visibility.Collapsed;
         KanbanEmptyTextBlock.Visibility = Visibility.Collapsed;
         ProjectTimelineEmptyTextBlock.Visibility = Visibility.Visible;
-        SelectedProjectForDocumentTextBlock.Text = "Once Projects sekmesinden bir project sec.";
+        SelectedProjectForDocumentTextBlock.Text = "Select a project from the Projects tab first.";
         DocumentsEmptyTextBlock.Visibility = Visibility.Collapsed;
         UpdateProjectActionState();
         UpdateTaskActionState();
@@ -1564,7 +1586,7 @@ public partial class MainWindow : Window
             : _projectService.GetProjectsForCustomer(_selectedCustomer.Id);
 
         SelectedCustomerForProjectTextBlock.Text = _selectedCustomer is null
-            ? "All projects: customer secilmedigi icin tum projeler listeleniyor."
+            ? "All projects are listed because no customer is selected."
             : $"Selected customer: {_selectedCustomer.CompanyName}";
 
         foreach (WorkProject project in projects)
@@ -1573,8 +1595,8 @@ public partial class MainWindow : Window
         }
 
         ProjectsEmptyTextBlock.Text = _selectedCustomer is null
-            ? "Henuz hic proje yok."
-            : "Bu customer icin henuz proje yok.";
+            ? "No projects yet."
+            : "No projects for this customer yet.";
         ProjectsEmptyTextBlock.Visibility = _projects.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
         if (projectIdToSelect is null && selectFirstProject && _projects.Count > 0)
@@ -1727,8 +1749,8 @@ public partial class MainWindow : Window
 
         if (_selectedProject is null)
         {
-            SelectedProjectForTaskTextBlock.Text = "Once Projects sekmesinden bir project sec.";
-            SelectedProjectForBoardTextBlock.Text = "Once Projects sekmesinden bir project sec.";
+            SelectedProjectForTaskTextBlock.Text = "Select a project from the Projects tab first.";
+            SelectedProjectForBoardTextBlock.Text = "Select a project from the Projects tab first.";
             RefreshKanbanBoard([]);
             TasksEmptyTextBlock.Visibility = Visibility.Collapsed;
             return;
@@ -1778,17 +1800,17 @@ public partial class MainWindow : Window
 
         if (_currentUser?.EmployeeId is null)
         {
-            SelectedProjectForTaskTextBlock.Text = "Bu kullanici bir employee kaydina bagli degil.";
-            SelectedProjectForBoardTextBlock.Text = "Bu kullanici bir employee kaydina bagli degil.";
+            SelectedProjectForTaskTextBlock.Text = "This user is not linked to an employee record.";
+            SelectedProjectForBoardTextBlock.Text = "This user is not linked to an employee record.";
             RefreshKanbanBoard([]);
-            TasksEmptyTextBlock.Text = "Employee baglantisi olmadigi icin task listelenemiyor.";
+            TasksEmptyTextBlock.Text = "Tasks cannot be listed because this user has no employee link.";
             TasksEmptyTextBlock.Visibility = Visibility.Visible;
             ResetTaskForm();
             return;
         }
 
-        SelectedProjectForTaskTextBlock.Text = $"{_currentUser.FullName} icin atanmis tasklar.";
-        SelectedProjectForBoardTextBlock.Text = $"{_currentUser.FullName} icin atanmis tasklar.";
+        SelectedProjectForTaskTextBlock.Text = $"Tasks assigned to {_currentUser.FullName}.";
+        SelectedProjectForBoardTextBlock.Text = $"Tasks assigned to {_currentUser.FullName}.";
 
         foreach (WorkTask task in GetFilteredTasksForCurrentContext())
         {
@@ -1897,21 +1919,21 @@ public partial class MainWindow : Window
         {
             if (_currentUser?.EmployeeId is null)
             {
-                SelectedProjectForDocumentTextBlock.Text = "Bu kullanici bir employee kaydina bagli degil.";
-                DocumentsEmptyTextBlock.Text = "Employee baglantisi olmadigi icin belge listelenemiyor.";
+                SelectedProjectForDocumentTextBlock.Text = "This user is not linked to an employee record.";
+                DocumentsEmptyTextBlock.Text = "Documents cannot be listed because this user has no employee link.";
                 DocumentsEmptyTextBlock.Visibility = Visibility.Visible;
                 ClearDocumentForm();
                 return;
             }
 
-            SelectedProjectForDocumentTextBlock.Text = $"{_currentUser.FullName} icin atanmis task projelerindeki belgeler.";
+            SelectedProjectForDocumentTextBlock.Text = $"Documents from projects assigned to {_currentUser.FullName}.";
             documents = _documentService.GetDocumentsForEmployeeProjects(_currentUser.EmployeeId.Value);
         }
         else
         {
             if (_selectedProject is null)
             {
-                SelectedProjectForDocumentTextBlock.Text = "Once Projects sekmesinden bir project sec.";
+                SelectedProjectForDocumentTextBlock.Text = "Select a project from the Projects tab first.";
                 DocumentsEmptyTextBlock.Visibility = Visibility.Collapsed;
                 ClearDocumentForm();
                 return;
@@ -1927,8 +1949,8 @@ public partial class MainWindow : Window
         }
 
         DocumentsEmptyTextBlock.Text = IsStaffUser()
-            ? "Erisebilecegin project belgeleri yok."
-            : "Bu project icin henuz belge yok.";
+            ? "No project documents available for your access."
+            : "No documents for this project yet.";
         DocumentsEmptyTextBlock.Visibility = _documents.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
         if (documentIdToSelect is null && selectFirstDocument && _documents.Count > 0)
@@ -2068,8 +2090,8 @@ public partial class MainWindow : Window
         }
 
         DueSoonNotificationTextBlock.Text = _dueSoonProjects.Count == 0
-            ? "Son 7 gun icinde teslimi olan proje yok."
-            : $"{_dueSoonProjects.Count} project icin teslim tarihi 7 gun icinde.";
+            ? "No projects due in the next 7 days."
+            : $"{_dueSoonProjects.Count} projects are due in the next 7 days.";
 
         DueSoonNotificationTextBlock.Foreground = _dueSoonProjects.Count == 0
             ? System.Windows.Media.Brushes.SlateGray
@@ -2081,9 +2103,11 @@ public partial class MainWindow : Window
     {
         bool canUpdateProject = _currentUser?.HasPermission(PermissionNames.ProjectUpdate) == true
             && _selectedProject is not null;
+        bool canNotifyProjectTeam = _currentUser?.HasPermission(PermissionNames.ProjectNotifyTeam) == true
+            && _selectedProject is not null;
 
         UpdateProjectStatusButton.IsEnabled = canUpdateProject;
-        SendProjectNoteButton.IsEnabled = canUpdateProject;
+        SendProjectNoteButton.IsEnabled = canNotifyProjectTeam;
     }
 
     private void UpdateTaskActionState()
@@ -2100,18 +2124,26 @@ public partial class MainWindow : Window
         bool canCreateDocument = _currentUser?.HasPermission(PermissionNames.DocumentCreate) == true;
         bool canUpdateDocument = _currentUser?.HasPermission(PermissionNames.DocumentUpdate) == true
             && _selectedDocument is not null;
+        bool canAnalyzeDocument = _currentUser?.HasPermission(PermissionNames.DocumentAnalyze) == true
+            && _selectedDocument is not null;
+        bool canApproveExternalAI = _currentUser?.HasPermission(PermissionNames.DocumentApproveExternalAI) == true
+            && _selectedDocument is not null;
+        bool canReviewAI = _currentUser?.HasPermission(PermissionNames.DocumentReviewAI) == true
+            && _selectedDocument is not null;
         bool canPrepareDocumentForAnalysis = canUpdateDocument
             && _selectedDocument?.AIProcessingPolicy != DocumentAIProcessingPolicyNames.Blocked;
 
         AddDocumentButton.IsEnabled = canCreateDocument && !IsStaffUser();
         UpdateDocumentStatusButton.IsEnabled = canUpdateDocument && !IsStaffUser();
-        ApproveExternalAIButton.IsEnabled = canUpdateDocument
+        ApproveExternalAIButton.IsEnabled = canApproveExternalAI
             && !IsStaffUser()
             && _selectedDocument?.AIProcessingPolicy == DocumentAIProcessingPolicyNames.NeedsApproval;
         CheckDocumentFileButton.IsEnabled = canPrepareDocumentForAnalysis && !IsStaffUser();
         ExtractDocumentTextButton.IsEnabled = canPrepareDocumentForAnalysis && !IsStaffUser();
-        AnalyzeDocumentButton.IsEnabled = canUpdateDocument && !IsStaffUser();
-        MarkAIReviewedButton.IsEnabled = canUpdateDocument
+        AnalyzeDocumentButton.IsEnabled = canAnalyzeDocument
+            && !IsStaffUser()
+            && _selectedDocument?.AIProcessingPolicy != DocumentAIProcessingPolicyNames.Blocked;
+        MarkAIReviewedButton.IsEnabled = canReviewAI
             && !IsStaffUser()
             && _selectedDocument?.AIReviewStatus == AIReviewStatusNames.Ready;
     }
@@ -2216,13 +2248,13 @@ public partial class MainWindow : Window
                 || GetSelectedComboBoxText(TaskDueDateFilterComboBox) != "All dates";
 
             return hasActiveStaffFilter
-                ? "Bu filtrelere uygun sana atanmis task bulunamadi."
-                : "Sana atanmis acik veya kapali task yok.";
+                ? "No assigned tasks match these filters."
+                : "You do not have assigned tasks yet.";
         }
 
         if (_selectedProject is null)
         {
-            return "Once Projects sekmesinden bir project sec.";
+            return "Select a project from the Projects tab first.";
         }
 
         bool hasActiveFilter = GetSelectedComboBoxText(TaskStatusFilterComboBox) != "All statuses"
@@ -2230,8 +2262,8 @@ public partial class MainWindow : Window
             || GetSelectedComboBoxText(TaskDueDateFilterComboBox) != "All dates";
 
         return hasActiveFilter
-            ? "Bu filtrelere uygun task bulunamadi."
-            : "Bu project icin henuz task yok.";
+            ? "No tasks match these filters."
+            : "No tasks for this project yet.";
     }
 
     private void ResetTaskForm()
@@ -2300,8 +2332,8 @@ public partial class MainWindow : Window
         }
 
         string backupText = string.IsNullOrWhiteSpace(employee.BackupEmployeeName)
-            ? "Yedek calisan tanimli degil."
-            : $"Yedek: {employee.BackupEmployeeName}.";
+            ? "No backup employee assigned."
+            : $"Backup: {employee.BackupEmployeeName}.";
 
         return $"{message} Uyari: {employee.FullName} su an {employee.AvailabilityStatus}. {backupText}";
     }
@@ -2455,7 +2487,7 @@ public partial class MainWindow : Window
         EmployeeLeaveEndDatePicker.SelectedDate = null;
         EmployeeSkillsTextBox.Clear();
         EmployeeBackupTextBox.Clear();
-        EmployeeWorkloadSummaryTextBlock.Text = "Listeden bir calisan sec.";
+        EmployeeWorkloadSummaryTextBlock.Text = "Select a team member from the list.";
         EmployeeFormMessageTextBlock.Visibility = Visibility.Collapsed;
         UpdateEmployeeActionState();
     }
@@ -2530,7 +2562,7 @@ public partial class MainWindow : Window
 
         if (requirePassword && password.Length < 6)
         {
-            ShowUserFormMessage("Yeni kullanici sifresi en az 6 karakter olmalidir.", isError: true);
+            ShowUserFormMessage("The new user password must be at least 6 characters.", isError: true);
             return false;
         }
 
@@ -2769,7 +2801,7 @@ public partial class MainWindow : Window
         return policy switch
         {
             DocumentAIProcessingPolicyNames.ExternalAIAllowed => "Belge dis AI provider ile analiz edilebilir; hassas veri kontrolu yapildigindan emin olun.",
-            DocumentAIProcessingPolicyNames.NeedsApproval => "Belge dis AI kullanimi icin yonetici onayi gerektirir; onay verilirse policy External AI Allowed olur.",
+            DocumentAIProcessingPolicyNames.NeedsApproval => "Document requires manager approval for external AI; after approval, policy becomes External AI Allowed.",
             DocumentAIProcessingPolicyNames.Blocked => "Belge AI islem hattina sokulmaz; dosya kontrolu, metin cikarma ve dis AI adimlari engellenir.",
             _ => "Belge sadece internal analizde tutulur; dis AI servisine gonderilmez."
         };

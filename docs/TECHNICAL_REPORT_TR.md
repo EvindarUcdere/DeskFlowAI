@@ -137,6 +137,7 @@ Project note, o projede task atanmış aktif kullanıcılara bildirim üretir. N
 - AI compliance status ve policy violation metni.
 - AI review workflow: Ready/Reviewed.
 - Overview metrics: project progress, task completion, AI usage, workload, overdue heatmap, productivity, AI metrics.
+- Project PDF report export.
 - README ve demo guide.
 - Permission policy ve Mock AI davranışı için hafif test runner.
 
@@ -237,7 +238,7 @@ Bu tasarım demo için güçlüdür çünkü OpenAI kotası olmasa bile uygulama
 
 1. Mevcut hafif permission ve Mock AI testleri genişletilerek AI provider seçimi, RuleBased fallback, document policy behavior ve UI workflow sınırları da test edilmeli.
 2. Business logic `MainWindow.xaml.cs` içinden view model veya workflow service sınıflarına çıkarılmalı.
-3. Project ve AI analysis result için PDF/report export eklenmeli.
+3. Report export daha zengin formatlama, grafikler ve ayrı AI analysis report çıktılarıyla genişletilmeli.
 4. Role-permission mapping database veya configuration tarafına taşınmalı.
 5. History, filtre ve tek tek read state destekleyen daha gelişmiş notification center yapılmalı.
 

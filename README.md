@@ -59,6 +59,7 @@ Add screenshots under `docs/screenshots/` and reference them here:
 - Overview insights for project progress, task completion, workload, overdue heatmap, team productivity, and AI usage metrics.
 - Document management with file checks, text extraction, AI processing policy, and AI analysis.
 - Document AI metadata: provider, fallback flag, risk level, risk score, compliance status, policy violations, confidence score, detected issues, recommendations, summary, and risk notes.
+- Project PDF report export with project, task, document, and AI summary sections.
 - Seeded demo text documents for Low, Medium, and High risk Mock AI analysis.
 
 ## Tech Stack

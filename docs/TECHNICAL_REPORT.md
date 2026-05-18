@@ -137,6 +137,7 @@ Project notes notify active users assigned to tasks in that project. Notificatio
 - AI compliance status and policy violation text.
 - AI review workflow: Ready/Reviewed.
 - Overview metrics: project progress, task completion, AI usage, workload, overdue heatmap, productivity, AI metrics.
+- Project PDF report export.
 - README and demo guide.
 - Lightweight test runner for permission policy and Mock AI behavior.
 
@@ -237,7 +238,7 @@ This is a strong design for demos because quota failure does not break the app.
 
 1. Expand automated tests beyond the current lightweight permission and Mock AI tests to cover provider selection, RuleBased fallback, document policy behavior, and UI workflow boundaries.
 2. Extract business logic from `MainWindow.xaml.cs` into view models or application workflow services.
-3. Add PDF/report export for project and AI analysis results.
+3. Expand report export with richer formatting, charts, and separate AI analysis reports.
 4. Move role-permission mapping into database or configuration.
 5. Add a richer notification center with history, filters, and per-notification read state.
 

@@ -207,8 +207,8 @@
         </Style>
 
         <Style x:Key="FormGroupStyle" TargetType="Border">
-            <Setter Property="Padding" Value="14" />
-            <Setter Property="Margin" Value="0,14,0,0" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="Margin" Value="0,10,0,0" />
             <Setter Property="Background" Value="#F8FAFC" />
             <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
@@ -1155,10 +1155,22 @@
                                         <ScrollViewer VerticalScrollBarVisibility="Auto"
                                                       HorizontalScrollBarVisibility="Auto">
                                         <StackPanel MinWidth="380">
-                                            <TextBlock Text="Project details" Style="{StaticResource SectionTitleStyle}" />
+                                            <DockPanel LastChildFill="True">
+                                                <Button x:Name="ExportProjectReportButton"
+                                                        DockPanel.Dock="Right"
+                                                        Content="Export PDF"
+                                                        Width="110"
+                                                        Height="32"
+                                                        Margin="10,0,0,0"
+                                                        Padding="8,0"
+                                                        Style="{StaticResource SecondaryButtonStyle}"
+                                                        IsEnabled="False"
+                                                        Click="ExportProjectReportButton_Click" />
+                                                <TextBlock Text="Project details" Style="{StaticResource SectionTitleStyle}" />
+                                            </DockPanel>
 
                                             <TextBlock Text="Add a project or update the selected project's status."
-                                                       Margin="0,4,0,16"
+                                                       Margin="0,4,0,10"
                                                        FontSize="13"
                                                        TextWrapping="Wrap"
                                                        Foreground="#64748B" />
@@ -1173,42 +1185,22 @@
                                                                Style="{StaticResource FieldLabelStyle}" />
 
                                                     <TextBox x:Name="ProjectNameTextBox"
+                                                             Height="36"
                                                              Style="{StaticResource InputStyle}" />
 
                                                     <TextBlock Text="Use a short name that the team can recognize in lists."
                                                                Style="{StaticResource HelperTextStyle}" />
-                                                </StackPanel>
-                                            </Border>
 
-                                            <Border Style="{StaticResource FormGroupStyle}">
-                                                <StackPanel>
                                                     <TextBlock Text="Workflow"
+                                                               Margin="0,16,0,0"
                                                                Style="{StaticResource FormGroupTitleStyle}" />
 
-                                                    <TextBlock Text="Project lifecycle"
-                                                               Style="{StaticResource HelperTextStyle}" />
-
-                                                    <UniformGrid Columns="2" Margin="0,10,0,4">
-                                                        <Border Style="{StaticResource WorkflowStepStyle}" BorderBrush="#BFDBFE" Background="#EFF6FF" Margin="0,0,6,6">
-                                                            <TextBlock Text="Planning" Style="{StaticResource WorkflowStepTextStyle}" Foreground="#1D4ED8" />
-                                                        </Border>
-                                                        <Border Style="{StaticResource WorkflowStepStyle}" BorderBrush="#BBF7D0" Background="#EAF8F0" Margin="6,0,0,6">
-                                                            <TextBlock Text="Active" Style="{StaticResource WorkflowStepTextStyle}" Foreground="#166534" />
-                                                        </Border>
-                                                        <Border Style="{StaticResource WorkflowStepStyle}" BorderBrush="#FED7AA" Background="#FFF7ED" Margin="0,6,6,0">
-                                                            <TextBlock Text="On Hold" Style="{StaticResource WorkflowStepTextStyle}" Foreground="#9A3412" />
-                                                        </Border>
-                                                        <Border Style="{StaticResource WorkflowStepStyle}" BorderBrush="#DDD6FE" Background="#F5F3FF" Margin="6,6,0,0">
-                                                            <TextBlock Text="Completed" Style="{StaticResource WorkflowStepTextStyle}" Foreground="#6D28D9" />
-                                                        </Border>
-                                                    </UniformGrid>
-
                                                     <TextBlock Text="Status"
-                                                               Margin="0,14,0,6"
+                                                               Margin="0,10,0,6"
                                                                Style="{StaticResource FieldLabelStyle}" />
 
                                                     <ComboBox x:Name="ProjectStatusComboBox"
-                                                              Height="40"
+                                                              Height="36"
                                                               SelectedIndex="0">
                                                         <ComboBoxItem Content="Planning" />
                                                         <ComboBoxItem Content="Active" />
@@ -1220,31 +1212,37 @@
                                                                Style="{StaticResource HelperTextStyle}" />
 
                                                     <TextBlock Text="Due date"
-                                                               Margin="0,14,0,6"
+                                                               Margin="0,10,0,6"
                                                                Style="{StaticResource FieldLabelStyle}" />
 
                                                     <DatePicker x:Name="ProjectDueDatePicker"
-                                                                Height="40" />
+                                                                Height="36" />
 
                                                     <TextBlock Text="Optional, but recommended for due-soon tracking."
                                                                Style="{StaticResource HelperTextStyle}" />
                                                 </StackPanel>
                                             </Border>
 
-                                            <Button x:Name="AddProjectButton"
-                                                    Content="Add project"
-                                                    Margin="0,18,0,0"
-                                                    Style="{StaticResource PrimaryButtonStyle}"
-                                                    Click="AddProjectButton_Click" />
+                                            <UniformGrid Columns="2" Margin="0,12,0,0">
+                                                        <Button x:Name="AddProjectButton"
+                                                                Content="Add project"
+                                                                Margin="0,0,5,0"
+                                                        Height="34"
+                                                        Padding="10,0"
+                                                        Style="{StaticResource PrimaryButtonStyle}"
+                                                        Click="AddProjectButton_Click" />
 
-                                            <Button x:Name="UpdateProjectStatusButton"
-                                                    Content="Update project status"
-                                                    Margin="0,10,0,0"
-                                                    Style="{StaticResource SecondaryButtonStyle}"
-                                                    IsEnabled="False"
-                                                    Click="UpdateProjectStatusButton_Click" />
+                                                        <Button x:Name="UpdateProjectStatusButton"
+                                                                Content="Update status"
+                                                                Margin="5,0,0,0"
+                                                        Height="34"
+                                                        Padding="10,0"
+                                                        Style="{StaticResource SecondaryButtonStyle}"
+                                                        IsEnabled="False"
+                                                        Click="UpdateProjectStatusButton_Click" />
+                                            </UniformGrid>
 
-                                            <Border Style="{StaticResource FormGroupStyle}" Margin="0,18,0,0">
+                                            <Border Style="{StaticResource FormGroupStyle}" Margin="0,12,0,0">
                                                 <StackPanel>
                                                     <TextBlock Text="Project team"
                                                                Style="{StaticResource FormGroupTitleStyle}" />
@@ -1320,7 +1318,7 @@
                                                 </StackPanel>
                                             </Border>
 
-                                            <Border Style="{StaticResource FormGroupStyle}" Margin="0,18,0,0">
+                                            <Border Style="{StaticResource FormGroupStyle}" Margin="0,12,0,0">
                                                 <StackPanel>
                                                     <TextBlock Text="Team note"
                                                                Style="{StaticResource FormGroupTitleStyle}" />
@@ -1329,8 +1327,8 @@
                                                                Style="{StaticResource HelperTextStyle}" />
 
                                                     <TextBox x:Name="ProjectNoteTextBox"
-                                                             Height="84"
-                                                             Margin="0,12,0,0"
+                                                             Height="56"
+                                                             Margin="0,8,0,0"
                                                              Padding="10,8"
                                                              TextWrapping="Wrap"
                                                              AcceptsReturn="True"
@@ -1345,7 +1343,7 @@
                                                 </StackPanel>
                                             </Border>
 
-                                            <Border Style="{StaticResource FormGroupStyle}" Margin="0,18,0,0">
+                                            <Border Style="{StaticResource FormGroupStyle}" Margin="0,12,0,0">
                                                 <StackPanel>
                                                     <TextBlock Text="Activity timeline"
                                                                Style="{StaticResource FormGroupTitleStyle}" />

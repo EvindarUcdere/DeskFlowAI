@@ -467,16 +467,16 @@ public sealed class DatabaseInitializer
 
     private static Customer GetCustomer(DeskFlowDbContext dbContext, string email)
     {
-        return dbContext.Customers.Single(customer => customer.Email == email);
+        return dbContext.Customers.First(customer => customer.Email == email);
     }
 
     private static WorkProject GetProject(DeskFlowDbContext dbContext, string name)
     {
-        return dbContext.Projects.Single(project => project.Name == name);
+        return dbContext.Projects.First(project => project.Name == name);
     }
 
     private static Employee GetEmployee(DeskFlowDbContext dbContext, string email)
     {
-        return dbContext.Employees.Single(employee => employee.Email == email);
+        return dbContext.Employees.First(employee => employee.Email == email);
     }
 }

@@ -19,7 +19,7 @@ public sealed class DemoAuthService
         UserAccount? user = dbContext.UserAccounts
             .AsNoTracking()
             .Include(user => user.Employee)
-            .SingleOrDefault(user => user.Email == normalizedEmail);
+            .FirstOrDefault(user => user.Email == normalizedEmail);
 
         if (user is null
             || !user.IsActive

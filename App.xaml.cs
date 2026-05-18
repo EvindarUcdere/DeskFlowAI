@@ -13,8 +13,15 @@ public partial class App : Application
 
     private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
+        Exception rootException = e.Exception;
+
+        while (rootException.InnerException is not null)
+        {
+            rootException = rootException.InnerException;
+        }
+
         MessageBox.Show(
-            $"Unexpected UI error:\n{e.Exception.Message}",
+            $"Unexpected UI error:\n{rootException.Message}",
             "DeskFlow AI",
             MessageBoxButton.OK,
             MessageBoxImage.Error);

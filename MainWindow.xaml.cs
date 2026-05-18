@@ -6,6 +6,7 @@ using System.Windows.Media;
 using DeskFlowAI.Data;
 using DeskFlowAI.Models;
 using DeskFlowAI.Services;
+using Microsoft.Win32;
 
 namespace DeskFlowAI;
 
@@ -22,6 +23,7 @@ public partial class MainWindow : Window
     private readonly DemoAuditLogService _auditLogService = new();
     private readonly DemoProjectCommunicationService _projectCommunicationService = new();
     private readonly DemoOverviewService _overviewService = new();
+    private readonly ProjectReportExportService _projectReportExportService = new();
     private readonly ObservableCollection<Customer> _customers = [];
     private readonly ObservableCollection<Customer> _filteredCustomers = [];
     private readonly ObservableCollection<WorkProject> _projects = [];
@@ -750,6 +752,40 @@ public partial class MainWindow : Window
         RefreshDashboardSummary();
         RecordAudit("Notified", "Project", $"{_selectedProject.Name}: Project note sent to {recipientCount} team member(s). Note: {message}");
         ShowProjectFormMessage($"Project note kaydedildi ve {recipientCount} ekip uyesine bildirim gonderildi.", isError: false);
+    }
+
+    private void ExportProjectReportButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selectedProject is null)
+        {
+            ShowProjectFormMessage("Select a project before exporting a report.", isError: true);
+            return;
+        }
+
+        SaveFileDialog dialog = new()
+        {
+            Title = "Export project PDF report",
+            Filter = "PDF files (*.pdf)|*.pdf",
+            FileName = $"{SanitizeFileName(_selectedProject.Name)}-report.pdf",
+            AddExtension = true,
+            DefaultExt = ".pdf"
+        };
+
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        try
+        {
+            _projectReportExportService.ExportProjectReport(_selectedProject.Id, dialog.FileName);
+            RecordAudit("Exported", "Project", $"{_selectedProject.Name} PDF report exported to {dialog.FileName}.");
+            ShowProjectFormMessage("Project PDF report exported.", isError: false);
+        }
+        catch (Exception exception)
+        {
+            ShowProjectFormMessage($"Report export failed: {exception.Message}", isError: true);
+        }
     }
 
     private void AddTaskButton_Click(object sender, RoutedEventArgs e)
@@ -2108,6 +2144,7 @@ public partial class MainWindow : Window
 
         UpdateProjectStatusButton.IsEnabled = canUpdateProject;
         SendProjectNoteButton.IsEnabled = canNotifyProjectTeam;
+        ExportProjectReportButton.IsEnabled = _selectedProject is not null && !IsStaffUser();
     }
 
     private void UpdateTaskActionState()
@@ -2372,6 +2409,13 @@ public partial class MainWindow : Window
             ? System.Windows.Media.Brushes.Firebrick
             : System.Windows.Media.Brushes.SeaGreen;
         ProjectFormMessageTextBlock.Visibility = Visibility.Visible;
+    }
+
+    private static string SanitizeFileName(string value)
+    {
+        char[] invalidChars = System.IO.Path.GetInvalidFileNameChars();
+        string sanitized = new(value.Select(character => invalidChars.Contains(character) ? '-' : character).ToArray());
+        return string.IsNullOrWhiteSpace(sanitized) ? "project" : sanitized;
     }
 
     private string GetSelectedTaskStatus()

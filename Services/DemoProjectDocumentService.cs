@@ -197,4 +197,17 @@ public sealed class DemoProjectDocumentService
 
         return document;
     }
+
+    public ProjectDocument MarkAIReviewAsReviewed(ProjectDocument existingDocument, string reviewedByEmail)
+    {
+        ProjectDocument document = _dbContext.ProjectDocuments
+            .Include(document => document.Project)
+            .ThenInclude(project => project!.Customer)
+            .Single(document => document.Id == existingDocument.Id);
+
+        document.MarkAIReviewAsReviewed(reviewedByEmail);
+        _dbContext.SaveChanges();
+
+        return document;
+    }
 }

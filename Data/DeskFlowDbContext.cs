@@ -20,6 +20,10 @@ public sealed class DeskFlowDbContext : DbContext
 
     public DbSet<AuditLogEntry> AuditLogs => Set<AuditLogEntry>();
 
+    public DbSet<ProjectNote> ProjectNotes => Set<ProjectNote>();
+
+    public DbSet<UserNotification> UserNotifications => Set<UserNotification>();
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         IConfigurationRoot configuration = new ConfigurationBuilder()
@@ -94,6 +98,8 @@ public sealed class DeskFlowDbContext : DbContext
             entity.Property(document => document.AISummary).HasMaxLength(1200);
             entity.Property(document => document.AIRiskNotes).HasMaxLength(1200);
             entity.Property(document => document.AIProviderName).HasMaxLength(80);
+            entity.Property(document => document.AIReviewStatus).HasMaxLength(40);
+            entity.Property(document => document.AIReviewedByEmail).HasMaxLength(180);
             entity.Property(document => document.AIRiskLevel).HasMaxLength(20);
             entity.Property(document => document.AIRecommendations).HasMaxLength(1200);
             entity.Property(document => document.AIDetectedIssues).HasMaxLength(1200);
@@ -107,6 +113,7 @@ public sealed class DeskFlowDbContext : DbContext
             entity.HasIndex(document => document.Status);
             entity.HasIndex(document => document.AIAnalysisStatus);
             entity.HasIndex(document => document.AIProviderName);
+            entity.HasIndex(document => document.AIReviewStatus);
             entity.HasIndex(document => document.AIRiskLevel);
             entity.HasIndex(document => document.AIProcessingPolicy);
             entity.HasIndex(document => document.FileCheckStatus);
@@ -161,6 +168,34 @@ public sealed class DeskFlowDbContext : DbContext
 
             entity.HasIndex(auditLog => auditLog.OccurredAt);
             entity.HasIndex(auditLog => auditLog.EntityName);
+        });
+
+        modelBuilder.Entity<ProjectNote>(entity =>
+        {
+            entity.Property(note => note.Message).HasMaxLength(1000);
+            entity.Property(note => note.CreatedByEmail).HasMaxLength(180);
+
+            entity.HasIndex(note => note.ProjectId);
+            entity.HasIndex(note => note.CreatedAt);
+
+            entity.HasOne(note => note.Project)
+                .WithMany()
+                .HasForeignKey(note => note.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserNotification>(entity =>
+        {
+            entity.Property(notification => notification.RecipientEmail).HasMaxLength(180);
+            entity.Property(notification => notification.Title).HasMaxLength(120);
+            entity.Property(notification => notification.Message).HasMaxLength(1000);
+            entity.Property(notification => notification.Severity).HasMaxLength(40);
+            entity.Property(notification => notification.CreatedByEmail).HasMaxLength(180);
+
+            entity.HasIndex(notification => notification.RecipientEmail);
+            entity.HasIndex(notification => notification.IsRead);
+            entity.HasIndex(notification => notification.CreatedAt);
+            entity.HasIndex(notification => notification.RelatedProjectId);
         });
     }
 }

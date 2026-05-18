@@ -13,6 +13,8 @@ public sealed class ProjectDocument
         AISummary = string.Empty;
         AIRiskNotes = string.Empty;
         AIProviderName = string.Empty;
+        AIReviewStatus = string.Empty;
+        AIReviewedByEmail = string.Empty;
         AIRiskLevel = string.Empty;
         AIRecommendations = string.Empty;
         AIDetectedIssues = string.Empty;
@@ -43,6 +45,8 @@ public sealed class ProjectDocument
         AIRiskNotes = string.Empty;
         AIProviderName = string.Empty;
         AIUsedFallback = false;
+        AIReviewStatus = AIReviewStatusNames.NotReady;
+        AIReviewedByEmail = string.Empty;
         AIRiskLevel = string.Empty;
         AIRecommendations = string.Empty;
         AIConfidenceScore = null;
@@ -81,6 +85,12 @@ public sealed class ProjectDocument
     public string AIProviderName { get; private set; }
 
     public bool AIUsedFallback { get; private set; }
+
+    public string AIReviewStatus { get; private set; }
+
+    public DateTime? AIReviewedAt { get; private set; }
+
+    public string AIReviewedByEmail { get; private set; }
 
     public string AIRiskLevel { get; private set; }
 
@@ -144,6 +154,18 @@ public sealed class ProjectDocument
         AIRecommendations = recommendations;
         AIConfidenceScore = confidenceScore;
         AIDetectedIssues = detectedIssues;
+        AIReviewStatus = analysisStatus == AIAnalysisStatusNames.Analyzed
+            ? AIReviewStatusNames.Ready
+            : AIReviewStatusNames.NotReady;
+        AIReviewedAt = null;
+        AIReviewedByEmail = string.Empty;
+    }
+
+    public void MarkAIReviewAsReviewed(string reviewedByEmail)
+    {
+        AIReviewStatus = AIReviewStatusNames.Reviewed;
+        AIReviewedAt = DateTime.Now;
+        AIReviewedByEmail = reviewedByEmail;
     }
 
     public void UpdateFileCheck(string fileCheckStatus, string fileCheckMessage, DateTime? fileCheckedAt)

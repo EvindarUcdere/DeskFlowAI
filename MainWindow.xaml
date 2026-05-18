@@ -7,6 +7,7 @@
         Height="720"
         MinWidth="900"
         MinHeight="640"
+        WindowState="Maximized"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <converters:StatusBadgeConverter x:Key="StatusBadgeConverter" />
@@ -271,6 +272,79 @@
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
         </Style>
 
+        <Style x:Key="ModernScrollBarButtonStyle" TargetType="RepeatButton">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="Opacity" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RepeatButton">
+                        <Border Background="Transparent" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ModernScrollBarThumbStyle" TargetType="Thumb">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border x:Name="ThumbBorder"
+                                Margin="2"
+                                Background="#CBD5E1"
+                                CornerRadius="4" />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ThumbBorder" Property="Background" Value="#94A3B8" />
+                            </Trigger>
+                            <Trigger Property="IsDragging" Value="True">
+                                <Setter TargetName="ThumbBorder" Property="Background" Value="#64748B" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ScrollBar">
+            <Setter Property="Width" Value="10" />
+            <Setter Property="Height" Value="10" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Border Background="#F1F5F9"
+                                CornerRadius="5">
+                            <Track x:Name="PART_Track"
+                                   Orientation="{TemplateBinding Orientation}"
+                                   IsDirectionReversed="True">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Style="{StaticResource ModernScrollBarButtonStyle}" />
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource ModernScrollBarThumbStyle}" />
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Style="{StaticResource ModernScrollBarButtonStyle}" />
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Orientation" Value="Horizontal">
+                                <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="1" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style TargetType="TabControl">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
@@ -460,113 +534,118 @@
 
             <Grid Grid.Row="1" Margin="22">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="150" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <Grid Grid.Row="0"
-                      Margin="0,0,0,14"
-                      VerticalAlignment="Top">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1.45*" />
-                        <ColumnDefinition Width="12" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="12" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="12" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
+                <Grid Grid.Row="0" Margin="0,0,0,18">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                    <Border Grid.Column="0" Style="{StaticResource MetricCardStyle}" Background="#ECFDF5" BorderBrush="#BBF7D0">
-                        <StackPanel>
-                            <DockPanel>
-                                <TextBlock Text="Acik gorevler"
-                                           Foreground="#166534"
-                                           FontSize="15"
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center" />
-                                <TextBlock x:Name="OpenTasksTextBlock"
-                                           DockPanel.Dock="Right"
-                                           Text="0"
-                                           FontSize="36"
-                                           FontWeight="SemiBold"
-                                           Foreground="#15803D"
-                                           HorizontalAlignment="Right" />
-                            </DockPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.45*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
 
-                            <TextBlock Text="Work currently waiting on the team"
-                                       Margin="0,4,0,10"
-                                       FontSize="12"
-                                       Foreground="#64748B" />
+                        <Border Grid.Column="0" Style="{StaticResource MetricCardStyle}" Background="#ECFDF5" BorderBrush="#BBF7D0">
+                            <StackPanel>
+                                <DockPanel>
+                                    <TextBlock Text="Acik gorevler"
+                                               Foreground="#166534"
+                                               FontSize="15"
+                                               FontWeight="SemiBold"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock x:Name="OpenTasksTextBlock"
+                                               DockPanel.Dock="Right"
+                                               Text="0"
+                                               FontSize="36"
+                                               FontWeight="SemiBold"
+                                               Foreground="#15803D"
+                                               HorizontalAlignment="Right" />
+                                </DockPanel>
 
-                            <Border Height="6" Background="#DCFCE7" CornerRadius="3">
-                                <Border Width="180"
-                                        HorizontalAlignment="Left"
-                                        Background="#22C55E"
-                                        CornerRadius="3" />
-                            </Border>
-                        </StackPanel>
-                    </Border>
+                                <TextBlock Text="Work currently waiting on the team"
+                                           Margin="0,4,0,10"
+                                           FontSize="12"
+                                           Foreground="#64748B" />
 
-                    <Border Grid.Column="2" Style="{StaticResource MetricCardStyle}" Background="#EFF6FF">
-                        <StackPanel>
-                            <DockPanel>
-                                <TextBlock Text="Aktif projeler" Foreground="#1E3A8A" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                <TextBlock x:Name="ActiveProjectsTextBlock" DockPanel.Dock="Right" Text="0" FontSize="26" FontWeight="SemiBold" Foreground="#1D4ED8" HorizontalAlignment="Right" />
-                            </DockPanel>
+                                <Border Height="6" Background="#DCFCE7" CornerRadius="3">
+                                    <Border Width="180"
+                                            HorizontalAlignment="Left"
+                                            Background="#22C55E"
+                                            CornerRadius="3" />
+                                </Border>
+                            </StackPanel>
+                        </Border>
 
-                            <TextBlock Text="In delivery or planning"
-                                       Margin="0,7,0,0"
-                                       FontSize="12"
-                                       Foreground="#64748B" />
-                        </StackPanel>
-                    </Border>
+                        <Border Grid.Column="2" Style="{StaticResource MetricCardStyle}" Background="#EFF6FF">
+                            <StackPanel>
+                                <DockPanel>
+                                    <TextBlock Text="Aktif projeler" Foreground="#1E3A8A" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ActiveProjectsTextBlock" DockPanel.Dock="Right" Text="0" FontSize="26" FontWeight="SemiBold" Foreground="#1D4ED8" HorizontalAlignment="Right" />
+                                </DockPanel>
 
-                    <Border Grid.Column="4" Style="{StaticResource MetricCardStyle}" Background="#FEF2F2" BorderBrush="#FECACA">
-                        <StackPanel>
-                            <DockPanel>
-                                <TextBlock Text="Geciken isler" Foreground="#991B1B" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                <TextBlock x:Name="OverdueTasksTextBlock" DockPanel.Dock="Right" Text="0" FontSize="26" FontWeight="SemiBold" Foreground="#B91C1C" HorizontalAlignment="Right" />
-                            </DockPanel>
+                                <TextBlock Text="In delivery or planning"
+                                           Margin="0,7,0,0"
+                                           FontSize="12"
+                                           Foreground="#64748B" />
+                            </StackPanel>
+                        </Border>
 
-                            <TextBlock Text="Needs attention"
-                                       Margin="0,7,0,8"
-                                       FontSize="12"
-                                       Foreground="#64748B" />
+                        <Border Grid.Column="4" Style="{StaticResource MetricCardStyle}" Background="#FEF2F2" BorderBrush="#FECACA">
+                            <StackPanel>
+                                <DockPanel>
+                                    <TextBlock Text="Geciken isler" Foreground="#991B1B" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="OverdueTasksTextBlock" DockPanel.Dock="Right" Text="0" FontSize="26" FontWeight="SemiBold" Foreground="#B91C1C" HorizontalAlignment="Right" />
+                                </DockPanel>
 
-                            <Border Height="5" Background="#FEE2E2" CornerRadius="3">
-                                <Border Width="90"
-                                        HorizontalAlignment="Left"
-                                        Background="#EF4444"
-                                        CornerRadius="3" />
-                            </Border>
-                        </StackPanel>
-                    </Border>
+                                <TextBlock Text="Needs attention"
+                                           Margin="0,7,0,8"
+                                           FontSize="12"
+                                           Foreground="#64748B" />
 
-                    <Border Grid.Column="6" Style="{StaticResource MetricCardStyle}" Background="#FFFBEB" BorderBrush="#FDE68A">
-                        <StackPanel>
-                            <DockPanel>
-                                <TextBlock Text="AI bekleyen belgeler" Foreground="#92400E" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                <TextBlock x:Name="PendingAiDocumentsTextBlock" DockPanel.Dock="Right" Text="0" FontSize="26" FontWeight="SemiBold" Foreground="#B45309" HorizontalAlignment="Right" />
-                            </DockPanel>
+                                <Border Height="5" Background="#FEE2E2" CornerRadius="3">
+                                    <Border Width="90"
+                                            HorizontalAlignment="Left"
+                                            Background="#EF4444"
+                                            CornerRadius="3" />
+                                </Border>
+                            </StackPanel>
+                        </Border>
 
-                            <TextBlock Text="Review queue"
-                                       Margin="0,7,0,8"
-                                       FontSize="12"
-                                       Foreground="#64748B" />
+                        <Border Grid.Column="6" Style="{StaticResource MetricCardStyle}" Background="#FFFBEB" BorderBrush="#FDE68A">
+                            <StackPanel>
+                                <DockPanel>
+                                    <TextBlock Text="AI bekleyen belgeler" Foreground="#92400E" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="PendingAiDocumentsTextBlock" DockPanel.Dock="Right" Text="0" FontSize="26" FontWeight="SemiBold" Foreground="#B45309" HorizontalAlignment="Right" />
+                                </DockPanel>
 
-                            <Border Height="5" Background="#FEF3C7" CornerRadius="3">
-                                <Border Width="110"
-                                        HorizontalAlignment="Left"
-                                        Background="#F59E0B"
-                                        CornerRadius="3" />
-                            </Border>
-                        </StackPanel>
-                    </Border>
-                </Grid>
+                                <TextBlock Text="Review queue"
+                                           Margin="0,7,0,8"
+                                           FontSize="12"
+                                           Foreground="#64748B" />
 
-                <Border Grid.Row="0"
-                        Margin="0,94,0,14"
+                                <Border Height="5" Background="#FEF3C7" CornerRadius="3">
+                                    <Border Width="110"
+                                            HorizontalAlignment="Left"
+                                            Background="#F59E0B"
+                                            CornerRadius="3" />
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                <Border Grid.Row="1"
+                        Margin="0,14,0,0"
                         Padding="12"
                         Background="White"
                         BorderBrush="#D8E1EC"
@@ -605,6 +684,66 @@
                         </UniformGrid>
                     </Grid>
                 </Border>
+
+                <Border Grid.Row="2"
+                        Margin="0,10,0,0"
+                        Padding="12"
+                        Background="#F8FAFC"
+                        BorderBrush="#D8E1EC"
+                        BorderThickness="1"
+                        CornerRadius="8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="Notifications"
+                                   VerticalAlignment="Center"
+                                   FontWeight="SemiBold"
+                                   Foreground="#334155" />
+
+                        <Grid Grid.Column="1" Margin="18,0,0,0">
+                            <ItemsControl x:Name="DashboardNotificationsItemsControl">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="0,0,8,0"
+                                                Padding="9,5"
+                                                Background="{Binding Severity, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Background}"
+                                                BorderBrush="{Binding Severity, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Border}"
+                                                BorderThickness="1"
+                                                CornerRadius="8">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Title}"
+                                                           FontSize="12"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{Binding Severity, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Foreground}" />
+                                                <TextBlock Text="{Binding Message}"
+                                                           Margin="8,0,0,0"
+                                                           FontSize="12"
+                                                           Foreground="#334155" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock x:Name="NotificationsEmptyTextBlock"
+                                       Text="No active notifications."
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="#64748B"
+                                       VerticalAlignment="Center"
+                                       Visibility="Visible" />
+                        </Grid>
+                    </Grid>
+                </Border>
+                </Grid>
 
                 <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
@@ -871,9 +1010,9 @@
                                     </Grid.ColumnDefinitions>
 
                                     <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}" Margin="0">
-                                        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
                                                       VerticalScrollBarVisibility="Auto">
-                                        <Grid>
+                                        <Grid MinWidth="680">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="*" />
@@ -947,8 +1086,9 @@
                                     </Border>
 
                                     <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Margin="0">
-                                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                        <StackPanel>
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                                      HorizontalScrollBarVisibility="Auto">
+                                        <StackPanel MinWidth="380">
                                             <TextBlock Text="Project details" Style="{StaticResource SectionTitleStyle}" />
 
                                             <TextBlock Text="Yeni proje ekle veya listeden sectigin projenin durumunu guncelle."
@@ -1037,6 +1177,107 @@
                                                     Style="{StaticResource SecondaryButtonStyle}"
                                                     IsEnabled="False"
                                                     Click="UpdateProjectStatusButton_Click" />
+
+                                            <Border Style="{StaticResource FormGroupStyle}" Margin="0,18,0,0">
+                                                <StackPanel>
+                                                    <TextBlock Text="Project team"
+                                                               Style="{StaticResource FormGroupTitleStyle}" />
+
+                                                    <TextBlock Text="Task atamalarina gore bu projede calisan ekip."
+                                                               Style="{StaticResource HelperTextStyle}" />
+
+                                                    <ItemsControl x:Name="ProjectTeamItemsControl"
+                                                                  Margin="0,12,0,0">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Margin="0,0,0,8"
+                                                                        Padding="10"
+                                                                        Background="White"
+                                                                        BorderBrush="#E2E8F0"
+                                                                        BorderThickness="1"
+                                                                        CornerRadius="8">
+                                                                    <Grid>
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="*" />
+                                                                            <ColumnDefinition Width="Auto" />
+                                                                        </Grid.ColumnDefinitions>
+
+                                                                        <StackPanel>
+                                                                            <TextBlock Text="{Binding FullName}"
+                                                                                       FontSize="13"
+                                                                                       FontWeight="SemiBold"
+                                                                                       Foreground="#0F172A" />
+
+                                                                            <TextBlock Text="{Binding RoleText}"
+                                                                                       Margin="0,3,0,0"
+                                                                                       FontSize="12"
+                                                                                       Foreground="#64748B" />
+
+                                                                            <TextBlock Text="{Binding Email}"
+                                                                                       Margin="0,3,0,0"
+                                                                                       FontSize="11"
+                                                                                       Foreground="#64748B" />
+                                                                        </StackPanel>
+
+                                                                        <StackPanel Grid.Column="1"
+                                                                                    Margin="10,0,0,0"
+                                                                                    HorizontalAlignment="Right">
+                                                                            <Border Style="{StaticResource BadgeBorderStyle}"
+                                                                                    HorizontalAlignment="Right"
+                                                                                    Background="{Binding AvailabilityStatus, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Background}"
+                                                                                    BorderBrush="{Binding AvailabilityStatus, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Border}">
+                                                                                <TextBlock Text="{Binding AvailabilityStatus, Converter={StaticResource StatusBadgeConverter}}"
+                                                                                           Foreground="{Binding AvailabilityStatus, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Foreground}"
+                                                                                           FontSize="11"
+                                                                                           FontWeight="SemiBold" />
+                                                                            </Border>
+
+                                                                            <TextBlock Text="{Binding WorkloadText}"
+                                                                                       Margin="0,6,0,0"
+                                                                                       FontSize="11"
+                                                                                       FontWeight="SemiBold"
+                                                                                       TextAlignment="Right"
+                                                                                       Foreground="#334155" />
+                                                                        </StackPanel>
+                                                                    </Grid>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+
+                                                    <TextBlock x:Name="ProjectTeamEmptyTextBlock"
+                                                               Text="Bu projede henuz atanmis ekip uyesi yok."
+                                                               Margin="0,10,0,0"
+                                                               FontSize="12"
+                                                               Foreground="#64748B"
+                                                               Visibility="Visible" />
+                                                </StackPanel>
+                                            </Border>
+
+                                            <Border Style="{StaticResource FormGroupStyle}" Margin="0,18,0,0">
+                                                <StackPanel>
+                                                    <TextBlock Text="Team note"
+                                                               Style="{StaticResource FormGroupTitleStyle}" />
+
+                                                    <TextBlock Text="Secili proje ekibine bildirim olarak gonderilir."
+                                                               Style="{StaticResource HelperTextStyle}" />
+
+                                                    <TextBox x:Name="ProjectNoteTextBox"
+                                                             Height="84"
+                                                             Margin="0,12,0,0"
+                                                             Padding="10,8"
+                                                             TextWrapping="Wrap"
+                                                             AcceptsReturn="True"
+                                                             BorderBrush="#CBD5E1"
+                                                             BorderThickness="1" />
+
+                                                    <Button x:Name="SendProjectNoteButton"
+                                                            Content="Send note to team"
+                                                            Margin="0,10,0,0"
+                                                            Style="{StaticResource SecondaryButtonStyle}"
+                                                            Click="SendProjectNoteButton_Click" />
+                                                </StackPanel>
+                                            </Border>
 
                                             <Border Style="{StaticResource FormGroupStyle}" Margin="0,18,0,0">
                                                 <StackPanel>
@@ -1146,6 +1387,9 @@
                                     </Grid.ColumnDefinitions>
 
                                     <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}" Margin="0">
+                                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                                      VerticalScrollBarVisibility="Auto">
+                                        <Grid MinWidth="760">
                                         <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
@@ -1289,12 +1533,14 @@
                                                        Foreground="#64748B"
                                                        Visibility="Collapsed" />
                                         </Grid>
+                                        </Grid>
+                                        </ScrollViewer>
                                     </Border>
 
                                     <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Margin="0">
                                         <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                                      HorizontalScrollBarVisibility="Disabled">
-                                        <StackPanel>
+                                                      HorizontalScrollBarVisibility="Auto">
+                                        <StackPanel MinWidth="360">
                                             <TextBlock x:Name="TaskDetailsTitleTextBlock"
                                                        Text="Task details"
                                                        Style="{StaticResource SectionTitleStyle}" />
@@ -1686,7 +1932,9 @@
                                     </Grid.ColumnDefinitions>
 
                                     <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}" Margin="0">
-                                        <Grid>
+                                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                                      VerticalScrollBarVisibility="Auto">
+                                        <Grid MinWidth="1180">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="*" />
@@ -1722,11 +1970,13 @@
                                                       SelectionChanged="DocumentsDataGrid_SelectionChanged"
                                                       HeadersVisibility="Column"
                                                       GridLinesVisibility="Horizontal"
+                                                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
                                                       BorderBrush="#E2E8F0"
                                                       BorderThickness="1">
                                                 <DataGrid.Columns>
-                                                    <DataGridTextColumn Header="File" Binding="{Binding FileName}" Width="1.6*" />
-                                                    <DataGridTemplateColumn Header="Status" Width="0.95*">
+                                                    <DataGridTextColumn Header="File" Binding="{Binding FileName}" Width="220" />
+                                                    <DataGridTemplateColumn Header="Status" Width="120">
                                                         <DataGridTemplateColumn.CellTemplate>
                                                             <DataTemplate>
                                                                 <Border Style="{StaticResource BadgeBorderStyle}"
@@ -1741,7 +1991,7 @@
                                                             </DataTemplate>
                                                         </DataGridTemplateColumn.CellTemplate>
                                                     </DataGridTemplateColumn>
-                                                    <DataGridTemplateColumn Header="AI policy" Width="1.15*">
+                                                    <DataGridTemplateColumn Header="AI policy" Width="150">
                                                         <DataGridTemplateColumn.CellTemplate>
                                                             <DataTemplate>
                                                                 <Border Style="{StaticResource BadgeBorderStyle}"
@@ -1756,7 +2006,7 @@
                                                             </DataTemplate>
                                                         </DataGridTemplateColumn.CellTemplate>
                                                     </DataGridTemplateColumn>
-                                                    <DataGridTemplateColumn Header="Check" Width="0.95*">
+                                                    <DataGridTemplateColumn Header="Check" Width="130">
                                                         <DataGridTemplateColumn.CellTemplate>
                                                             <DataTemplate>
                                                                 <Border Style="{StaticResource BadgeBorderStyle}"
@@ -1771,7 +2021,7 @@
                                                             </DataTemplate>
                                                         </DataGridTemplateColumn.CellTemplate>
                                                     </DataGridTemplateColumn>
-                                                    <DataGridTemplateColumn Header="Text" Width="0.95*">
+                                                    <DataGridTemplateColumn Header="Text" Width="130">
                                                         <DataGridTemplateColumn.CellTemplate>
                                                             <DataTemplate>
                                                                 <Border Style="{StaticResource BadgeBorderStyle}"
@@ -1786,7 +2036,7 @@
                                                             </DataTemplate>
                                                         </DataGridTemplateColumn.CellTemplate>
                                                     </DataGridTemplateColumn>
-                                                    <DataGridTemplateColumn Header="AI" Width="0.95*">
+                                                    <DataGridTemplateColumn Header="AI" Width="130">
                                                         <DataGridTemplateColumn.CellTemplate>
                                                             <DataTemplate>
                                                                 <Border Style="{StaticResource BadgeBorderStyle}"
@@ -1801,8 +2051,23 @@
                                                             </DataTemplate>
                                                         </DataGridTemplateColumn.CellTemplate>
                                                     </DataGridTemplateColumn>
-                                                    <DataGridTextColumn Header="Provider" Binding="{Binding AIProviderName}" Width="0.8*" />
-                                                    <DataGridTemplateColumn Header="Risk" Width="0.75*">
+                                                    <DataGridTextColumn Header="Provider" Binding="{Binding AIProviderName}" Width="120" />
+                                                    <DataGridTemplateColumn Header="Review" Width="130">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <Border Style="{StaticResource BadgeBorderStyle}"
+                                                                        Background="{Binding AIReviewStatus, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Background}"
+                                                                        BorderBrush="{Binding AIReviewStatus, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Border}">
+                                                                    <TextBlock Text="{Binding AIReviewStatus, Converter={StaticResource StatusBadgeConverter}}"
+                                                                               Foreground="{Binding AIReviewStatus, Converter={StaticResource StatusBadgeConverter}, ConverterParameter=Foreground}"
+                                                                               FontSize="12"
+                                                                               FontWeight="SemiBold"
+                                                                               VerticalAlignment="Center" />
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
+                                                    <DataGridTemplateColumn Header="Risk" Width="110">
                                                         <DataGridTemplateColumn.CellTemplate>
                                                             <DataTemplate>
                                                                 <Border Style="{StaticResource BadgeBorderStyle}"
@@ -1817,7 +2082,7 @@
                                                             </DataTemplate>
                                                         </DataGridTemplateColumn.CellTemplate>
                                                     </DataGridTemplateColumn>
-                                                    <DataGridTextColumn Header="Analyzed" Binding="{Binding AnalyzedAt, StringFormat={}{0:dd.MM.yyyy}}" Width="0.85*" />
+                                                    <DataGridTextColumn Header="Analyzed" Binding="{Binding AnalyzedAt, StringFormat={}{0:dd.MM.yyyy}}" Width="110" />
                                                 </DataGrid.Columns>
                                             </DataGrid>
 
@@ -1829,6 +2094,7 @@
                                                        Foreground="#64748B"
                                                        Visibility="Collapsed" />
                                         </Grid>
+                                        </ScrollViewer>
                                     </Border>
 
                                     <GridSplitter Grid.Column="1"
@@ -1998,6 +2264,13 @@
                                                                    FontSize="13"
                                                                    Foreground="#334155" />
 
+                                                        <TextBlock x:Name="DocumentAIReviewStatusTextBlock"
+                                                                   Text="Review: Not Ready"
+                                                                   Margin="0,4,0,0"
+                                                                   FontSize="13"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#334155" />
+
                                                         <TextBlock Text="Summary"
                                                                    Margin="0,10,0,4"
                                                                    Style="{StaticResource FieldLabelStyle}" />
@@ -2107,6 +2380,13 @@
                                                         Style="{StaticResource SecondaryButtonStyle}"
                                                         IsEnabled="False"
                                                         Click="ApproveExternalAIButton_Click" />
+
+                                                <Button x:Name="MarkAIReviewedButton"
+                                                        Content="Mark AI analysis as reviewed"
+                                                        Margin="0,10,0,0"
+                                                        Style="{StaticResource SecondaryButtonStyle}"
+                                                        IsEnabled="False"
+                                                        Click="MarkAIReviewedButton_Click" />
 
                                                 <Border Padding="12"
                                                         Margin="0,14,0,0"

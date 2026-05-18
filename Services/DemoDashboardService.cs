@@ -35,6 +35,8 @@ public sealed class DemoDashboardService
 
         int pendingAiDocuments = documentQuery.Count(document =>
             document.AIAnalysisStatus != AIAnalysisStatusNames.Analyzed);
+        int analyzedAiDocuments = documentQuery.Count(document =>
+            document.AIReviewStatus == AIReviewStatusNames.Ready);
         int internalOnlyDocuments = documentQuery.Count(document =>
             document.AIProcessingPolicy == DocumentAIProcessingPolicyNames.InternalOnly);
         int externalAIAllowedDocuments = documentQuery.Count(document =>
@@ -49,6 +51,7 @@ public sealed class DemoDashboardService
             openTasks: openTasks,
             overdueTasks: overdueTasks,
             pendingAiDocuments: pendingAiDocuments,
+            analyzedAiDocuments: analyzedAiDocuments,
             internalOnlyDocuments: internalOnlyDocuments,
             externalAIAllowedDocuments: externalAIAllowedDocuments,
             needsApprovalDocuments: needsApprovalDocuments,

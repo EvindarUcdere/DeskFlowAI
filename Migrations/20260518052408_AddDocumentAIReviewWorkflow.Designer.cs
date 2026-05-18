@@ -4,6 +4,7 @@ using DeskFlowAI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DeskFlowAI.Migrations
 {
     [DbContext(typeof(DeskFlowDbContext))]
-    partial class DeskFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260518052408_AddDocumentAIReviewWorkflow")]
+    partial class AddDocumentAIReviewWorkflow
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -316,39 +319,6 @@ namespace DeskFlowAI.Migrations
                     b.ToTable("ProjectDocuments");
                 });
 
-            modelBuilder.Entity("DeskFlowAI.Models.ProjectNote", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedByEmail")
-                        .IsRequired()
-                        .HasMaxLength(180)
-                        .HasColumnType("nvarchar(180)");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("ProjectNotes");
-                });
-
             modelBuilder.Entity("DeskFlowAI.Models.UserAccount", b =>
                 {
                     b.Property<int>("Id")
@@ -393,64 +363,6 @@ namespace DeskFlowAI.Migrations
                     b.HasIndex("Role");
 
                     b.ToTable("UserAccounts");
-                });
-
-            modelBuilder.Entity("DeskFlowAI.Models.UserNotification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedByEmail")
-                        .IsRequired()
-                        .HasMaxLength(180)
-                        .HasColumnType("nvarchar(180)");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<DateTime?>("ReadAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("RecipientEmail")
-                        .IsRequired()
-                        .HasMaxLength(180)
-                        .HasColumnType("nvarchar(180)");
-
-                    b.Property<int?>("RelatedProjectId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Severity")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("IsRead");
-
-                    b.HasIndex("RecipientEmail");
-
-                    b.HasIndex("RelatedProjectId");
-
-                    b.ToTable("UserNotifications");
                 });
 
             modelBuilder.Entity("DeskFlowAI.Models.WorkProject", b =>
@@ -552,17 +464,6 @@ namespace DeskFlowAI.Migrations
                 {
                     b.HasOne("DeskFlowAI.Models.WorkProject", "Project")
                         .WithMany("Documents")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-                });
-
-            modelBuilder.Entity("DeskFlowAI.Models.ProjectNote", b =>
-                {
-                    b.HasOne("DeskFlowAI.Models.WorkProject", "Project")
-                        .WithMany()
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

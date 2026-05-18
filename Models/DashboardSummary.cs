@@ -7,6 +7,7 @@ public sealed class DashboardSummary
         int openTasks,
         int overdueTasks,
         int pendingAiDocuments,
+        int analyzedAiDocuments,
         int internalOnlyDocuments,
         int externalAIAllowedDocuments,
         int needsApprovalDocuments,
@@ -16,6 +17,7 @@ public sealed class DashboardSummary
         OpenTasks = openTasks;
         OverdueTasks = overdueTasks;
         PendingAiDocuments = pendingAiDocuments;
+        AnalyzedAiDocuments = analyzedAiDocuments;
         InternalOnlyDocuments = internalOnlyDocuments;
         ExternalAIAllowedDocuments = externalAIAllowedDocuments;
         NeedsApprovalDocuments = needsApprovalDocuments;
@@ -29,6 +31,8 @@ public sealed class DashboardSummary
     public int OverdueTasks { get; }
 
     public int PendingAiDocuments { get; }
+
+    public int AnalyzedAiDocuments { get; }
 
     public int InternalOnlyDocuments { get; }
 

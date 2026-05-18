@@ -20,6 +20,7 @@ public partial class MainWindow : Window
     private readonly DemoEmployeeService _employeeService = new();
     private readonly DemoUserAccountService _userAccountService = new();
     private readonly DemoAuditLogService _auditLogService = new();
+    private readonly DemoProjectCommunicationService _projectCommunicationService = new();
     private readonly ObservableCollection<Customer> _customers = [];
     private readonly ObservableCollection<Customer> _filteredCustomers = [];
     private readonly ObservableCollection<WorkProject> _projects = [];
@@ -30,7 +31,9 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<WorkProject> _allProjects = [];
     private readonly ObservableCollection<WorkProject> _dueSoonProjects = [];
     private readonly ObservableCollection<AuditLogEntry> _auditLogs = [];
+    private readonly ObservableCollection<DashboardNotification> _dashboardNotifications = [];
     private readonly ObservableCollection<ProjectTimelineEntry> _projectTimelineEntries = [];
+    private readonly ObservableCollection<ProjectTeamMemberSummary> _projectTeamMembers = [];
     private readonly ObservableCollection<WorkTask> _kanbanToDoTasks = [];
     private readonly ObservableCollection<WorkTask> _kanbanInProgressTasks = [];
     private readonly ObservableCollection<WorkTask> _kanbanReviewTasks = [];
@@ -54,7 +57,9 @@ public partial class MainWindow : Window
         LoadAuditLogs();
         ProjectsDataGrid.ItemsSource = _projects;
         TasksDataGrid.ItemsSource = _tasks;
+        DashboardNotificationsItemsControl.ItemsSource = _dashboardNotifications;
         ProjectTimelineItemsControl.ItemsSource = _projectTimelineEntries;
+        ProjectTeamItemsControl.ItemsSource = _projectTeamMembers;
         KanbanToDoListBox.ItemsSource = _kanbanToDoTasks;
         KanbanInProgressListBox.ItemsSource = _kanbanInProgressTasks;
         KanbanReviewListBox.ItemsSource = _kanbanReviewTasks;
@@ -147,6 +152,67 @@ public partial class MainWindow : Window
         ExternalAIAllowedDocumentsTextBlock.Text = $"External AI Allowed: {summary.ExternalAIAllowedDocuments}";
         NeedsApprovalDocumentsTextBlock.Text = $"Needs Approval: {summary.NeedsApprovalDocuments}";
         BlockedDocumentsTextBlock.Text = $"Blocked: {summary.BlockedDocuments}";
+        RefreshDashboardNotifications(summary);
+    }
+
+    private void RefreshDashboardNotifications(DashboardSummary summary)
+    {
+        _dashboardNotifications.Clear();
+
+        if (_currentUser is not null)
+        {
+            foreach (UserNotification notification in _projectCommunicationService.GetUnreadNotificationsFor(_currentUser.Email))
+            {
+                _dashboardNotifications.Add(new DashboardNotification(
+                    notification.Title,
+                    notification.Message,
+                    notification.Severity));
+            }
+        }
+
+        if (summary.OverdueTasks > 0)
+        {
+            _dashboardNotifications.Add(new DashboardNotification(
+                "Geciken gorevler",
+                $"{summary.OverdueTasks} gorev gecikti.",
+                "Danger"));
+        }
+
+        if (summary.PendingAiDocuments > 0)
+        {
+            _dashboardNotifications.Add(new DashboardNotification(
+                "AI review queue",
+                $"{summary.PendingAiDocuments} belge AI analizi bekliyor.",
+                "Warning"));
+        }
+
+        if (summary.AnalyzedAiDocuments > 0)
+        {
+            _dashboardNotifications.Add(new DashboardNotification(
+                "AI analizi hazir",
+                $"{summary.AnalyzedAiDocuments} belge analizi hazir.",
+                "Success"));
+        }
+
+        if (summary.NeedsApprovalDocuments > 0)
+        {
+            _dashboardNotifications.Add(new DashboardNotification(
+                "Onay gerekli",
+                $"{summary.NeedsApprovalDocuments} belge external AI onayi bekliyor.",
+                "Warning"));
+        }
+
+        if (summary.BlockedDocuments > 0)
+        {
+            _dashboardNotifications.Add(new DashboardNotification(
+                "Blocked belgeler",
+                $"{summary.BlockedDocuments} belge AI akisi disinda tutuluyor.",
+                "Danger"));
+        }
+
+        NotificationsEmptyTextBlock.Visibility = _dashboardNotifications.Count == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
     private void LoadCustomers()
@@ -297,7 +363,9 @@ public partial class MainWindow : Window
         ProjectNameTextBox.Text = selectedProject.Name;
         SelectProjectStatus(selectedProject.Status);
         ProjectDueDatePicker.SelectedDate = selectedProject.DueDate;
+        ProjectNoteTextBox.Clear();
         ProjectFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        RefreshProjectTeam();
         LoadTasksForSelectedProject(selectFirstTask: true);
         LoadDocumentsForCurrentContext(selectFirstDocument: true);
         UpdateProjectActionState();
@@ -491,6 +559,8 @@ public partial class MainWindow : Window
         ProjectNameTextBox.Clear();
         ProjectDueDatePicker.SelectedDate = DateTime.Today.AddDays(14);
         ProjectFormMessageTextBlock.Visibility = Visibility.Collapsed;
+        ProjectNoteTextBox.Clear();
+        RefreshProjectTeam();
         TaskTitleTextBox.Clear();
         SelectAssignedEmployee(null);
         TaskDueDatePicker.SelectedDate = DateTime.Today.AddDays(7);
@@ -578,6 +648,37 @@ public partial class MainWindow : Window
         RefreshProjectOverview();
         RecordAudit("Updated", "Project", $"{updatedProject.Name}: Status '{oldStatus}' -> '{newStatus}'");
         ShowProjectFormMessage("Project status guncellendi.", isError: false);
+    }
+
+    private void SendProjectNoteButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsurePermission(PermissionNames.ProjectUpdate, "proje notu gonderme"))
+        {
+            return;
+        }
+
+        if (_selectedProject is null || _currentUser is null)
+        {
+            ShowProjectFormMessage("Not gondermek icin once bir project sec.", isError: true);
+            return;
+        }
+
+        string message = ProjectNoteTextBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            ShowProjectFormMessage("Project note bos olamaz.", isError: true);
+            return;
+        }
+
+        int recipientCount = _projectCommunicationService.CreateProjectNoteAndNotifyTeam(
+            _selectedProject.Id,
+            message,
+            _currentUser);
+
+        ProjectNoteTextBox.Clear();
+        RefreshDashboardSummary();
+        RecordAudit("Notified", "Project", $"{_selectedProject.Name}: Project note sent to {recipientCount} team member(s). Note: {message}");
+        ShowProjectFormMessage($"Project note kaydedildi ve {recipientCount} ekip uyesine bildirim gonderildi.", isError: false);
     }
 
     private void AddTaskButton_Click(object sender, RoutedEventArgs e)
@@ -992,6 +1093,31 @@ public partial class MainWindow : Window
         RefreshDashboardSummary();
         RecordAudit("Approved", "Document", $"{document.FileName}: External AI processing approved.");
         ShowDocumentFormMessage("Dis AI kullanimi icin onay verildi.", isError: false);
+    }
+
+    private void MarkAIReviewedButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsurePermission(PermissionNames.DocumentUpdate, "AI review"))
+        {
+            return;
+        }
+
+        if (_selectedDocument is null || _currentUser is null)
+        {
+            return;
+        }
+
+        if (_selectedDocument.AIReviewStatus != AIReviewStatusNames.Ready)
+        {
+            ShowDocumentFormMessage("Review icin once AI analiz sonucunun Ready olmasi gerekir.", isError: true);
+            return;
+        }
+
+        ProjectDocument document = _documentService.MarkAIReviewAsReviewed(_selectedDocument, _currentUser.Email);
+        LoadDocumentsForCurrentContext(document.Id);
+        RefreshDashboardSummary();
+        RecordAudit("Reviewed", "Document", $"{document.FileName}: AI analysis reviewed by {_currentUser.Email}.");
+        ShowDocumentFormMessage("AI analizi reviewed olarak isaretlendi.", isError: false);
     }
 
     private void CheckDocumentFileButton_Click(object sender, RoutedEventArgs e)
@@ -1412,6 +1538,8 @@ public partial class MainWindow : Window
             ProjectNameTextBox.Clear();
             SelectProjectStatus(ProjectStatusNames.Planning);
             ProjectDueDatePicker.SelectedDate = DateTime.Today.AddDays(14);
+            ProjectNoteTextBox.Clear();
+            RefreshProjectTeam();
             TaskTitleTextBox.Clear();
             TaskDueDatePicker.SelectedDate = DateTime.Today.AddDays(7);
             ClearDocumentForm();
@@ -1434,6 +1562,7 @@ public partial class MainWindow : Window
         ProjectNameTextBox.Text = project.Name;
         SelectProjectStatus(project.Status);
         ProjectDueDatePicker.SelectedDate = project.DueDate;
+        RefreshProjectTeam();
         RefreshProjectTimeline();
         LoadTasksForSelectedProject();
         LoadDocumentsForCurrentContext();
@@ -1478,6 +1607,47 @@ public partial class MainWindow : Window
         }
 
         ProjectTimelineEmptyTextBlock.Visibility = _projectTimelineEntries.Count == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    private void RefreshProjectTeam()
+    {
+        _projectTeamMembers.Clear();
+
+        if (_selectedProject is null)
+        {
+            ProjectTeamEmptyTextBlock.Visibility = Visibility.Visible;
+            return;
+        }
+
+        List<ProjectTeamMemberSummary> teamMembers = _taskService.GetTasksForProject(_selectedProject.Id)
+            .Where(task => task.AssignedEmployee is not null)
+            .GroupBy(task => task.AssignedEmployee!.Id)
+            .Select(group =>
+            {
+                Employee employee = group.First().AssignedEmployee!;
+                int taskCount = group.Count();
+                int openTaskCount = group.Count(task => task.Status != TaskStatusNames.Done);
+
+                return new ProjectTeamMemberSummary(
+                    employee.FullName,
+                    employee.Email,
+                    employee.Department,
+                    employee.RoleTitle,
+                    employee.AvailabilityStatus,
+                    taskCount,
+                    openTaskCount);
+            })
+            .OrderBy(member => member.FullName)
+            .ToList();
+
+        foreach (ProjectTeamMemberSummary teamMember in teamMembers)
+        {
+            _projectTeamMembers.Add(teamMember);
+        }
+
+        ProjectTeamEmptyTextBlock.Visibility = _projectTeamMembers.Count == 0
             ? Visibility.Visible
             : Visibility.Collapsed;
     }
@@ -1863,6 +2033,7 @@ public partial class MainWindow : Window
             && _selectedProject is not null;
 
         UpdateProjectStatusButton.IsEnabled = canUpdateProject;
+        SendProjectNoteButton.IsEnabled = canUpdateProject;
     }
 
     private void UpdateTaskActionState()
@@ -1890,6 +2061,9 @@ public partial class MainWindow : Window
         CheckDocumentFileButton.IsEnabled = canPrepareDocumentForAnalysis && !IsStaffUser();
         ExtractDocumentTextButton.IsEnabled = canPrepareDocumentForAnalysis && !IsStaffUser();
         AnalyzeDocumentButton.IsEnabled = canUpdateDocument && !IsStaffUser();
+        MarkAIReviewedButton.IsEnabled = canUpdateDocument
+            && !IsStaffUser()
+            && _selectedDocument?.AIReviewStatus == AIReviewStatusNames.Ready;
     }
 
     private void UpdateEmployeeActionState()
@@ -2420,6 +2594,7 @@ public partial class MainWindow : Window
         DocumentAIStatusTextBlock.Text = AIAnalysisStatusNames.NotAnalyzed;
         DocumentAIProviderTextBlock.Text = "Provider: none";
         DocumentAIRiskLevelTextBlock.Text = "Risk: none";
+        DocumentAIReviewStatusTextBlock.Text = $"Review: {AIReviewStatusNames.NotReady}";
         DocumentAISummaryTextBox.Clear();
         DocumentAIRiskNotesTextBox.Clear();
         DocumentAIRecommendationsTextBox.Clear();
@@ -2459,8 +2634,15 @@ public partial class MainWindow : Window
         string fallbackText = document.AIUsedFallback ? " | fallback" : string.Empty;
         string confidenceText = document.AIConfidenceScore.HasValue ? $" | confidence {document.AIConfidenceScore.Value:P0}" : string.Empty;
         string riskLevelText = string.IsNullOrWhiteSpace(document.AIRiskLevel) ? "none" : document.AIRiskLevel;
+        string reviewText = document.AIReviewStatus;
+        if (document.AIReviewStatus == AIReviewStatusNames.Reviewed && document.AIReviewedAt.HasValue)
+        {
+            reviewText = $"{reviewText} by {document.AIReviewedByEmail} at {document.AIReviewedAt.Value:dd.MM.yyyy HH:mm}";
+        }
+
         DocumentAIProviderTextBlock.Text = $"Provider: {providerText}{fallbackText}{confidenceText}";
         DocumentAIRiskLevelTextBlock.Text = $"Risk: {riskLevelText}";
+        DocumentAIReviewStatusTextBlock.Text = $"Review: {reviewText}";
         DocumentAISummaryTextBox.Text = document.AISummary;
         DocumentAIRiskNotesTextBox.Text = document.AIRiskNotes;
         DocumentAIRecommendationsTextBox.Text = document.AIRecommendations;
